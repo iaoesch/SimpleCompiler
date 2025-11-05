@@ -27,6 +27,15 @@
 # include "driver.hh"
 # include "compact.h"
 }
+// typen: integer, float, string, stack, liste, array, map, function, dynamic, fixed
+
+// fixed a = 5.0;
+// fixed b = array of nnn integer
+// c = "Hallo"
+// a = 7;   ok
+// b[n] = 7; ok
+// a = {1, 4, 8} -> error change type not allowed
+// c = 7; -> ok, change type
 
 %define api.token.prefix {TOK_}
 %token
