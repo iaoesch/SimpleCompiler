@@ -10,6 +10,7 @@ SOURCES += \
    calc++.cc \
    compact.cpp \
    driver.cc \
+   variableclass.cpp \
    varmanag.cpp
 
 #FLEXSOURCES += my_lex_sourcefile.l
@@ -44,6 +45,7 @@ HEADERS += \
    ParserManual.hpp \
    compact.h \
    driver.hh \
+   variableclass.h \
    varmanag.hpp
 
 DISTFILES += \

@@ -1,21 +1,22 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include "variableclass.h"
 
 
-class VariableClass {
+class VariableClasse {
    std::string Name;
    double      Value;
 
    public:
 
-               VariableClass(std::string N, double V) : Name(N), Value(V) {}
+               VariableClasse(std::string N, double V) : Name(N), Value(V) {}
    std::string GetName()  const {return Name; }
    double      GetValue() const {return Value; }
    void        SetValue(double v) {Value = v; }
 };
 
-typedef  VariableClass *VariableReferenceType;
+typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:

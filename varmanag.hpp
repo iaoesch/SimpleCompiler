@@ -30,21 +30,37 @@
 /* Class data declaration      */
 #include <map>
 #include <string>
+#include "variableclass.h"
 
-class VariableClass;
+
+class VariableContextClass {
+    std::map<std::string, std::shared_ptr<VariableClass>> Variables;
+    VariableContextClass *ParentContext;
+    std::vector<std::shared_ptr<VariableContextClass>> Children;
+    const std::string Name;
+
+public:
+
+    VariableContextClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr) : ParentContext(Parent_), Name(Name_) {}
+    std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name) {Children.push_back(std::make_shared<VariableContextClass>(Name, this)); return Children.back();}
+
+    std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false);
+    std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
+
+};
 
 /* Class definition            */
 class VariableManager
 {
-   std::map<std::string, std::shared_ptr<VariableClass>> Variables;
+    std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
    
    // Data
    public:
 
-   VariableClass *CreateNewContext();
-   VariableClass *ActivateContext();
-   VariableClass *CreateVariable(std::string Name);
-   VariableClass *GetVariableReference(std::string Name);
+   void CreateNewContext(std::string Name);
+   void LeaveContext();
+   std::shared_ptr<VariableClass> CreateVariable(std::string Name, double Value);
+   std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
 };
 
 

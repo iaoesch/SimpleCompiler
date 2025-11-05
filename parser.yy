@@ -47,6 +47,10 @@
   SLASH   "/"
   LPAREN  "("
   RPAREN  ")"
+  LBRACKET "["
+  RBRACKET  "]"
+  LBRACE   "{"
+  RBRACE   "}"
   KOMMA   ","
   SEMICOLON  ";"
   REPEAT  "repeat"
@@ -56,6 +60,7 @@
   AND     "and"
   OR      "or"
   NOT     "not"
+  REFERTO "->"
   LESSTHAN "<"
   LESSORSAME "<="
   EQUAL   "=="
@@ -99,7 +104,7 @@ assignment:
   "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetVariableReference($1)); }
 
 functiondefinition:
-  "function" "identifier" {drv.Variables.StartNewContext($2)); } "(" argumentlist ")" statements "endfunction"
+  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params")); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2+"Params")); } statements "endfunction"
 
 argumentlist:
   "identifier"           {$$ = std::list<std::string>(); $$.push_back($1);}
@@ -134,6 +139,38 @@ exp:
 | "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReference($1)); }
 | "number"      { $$ = std::make_shared<ConstantClass>($1); };
 %%
+
+/*
+expr
+: term
+| term '+' term
+| term '-' term
+;
+
+term
+: factor
+| factor '*' factor
+| factor '/' factor
+| factor '%' factor // if you have the % operator
+;
+
+factor
+: unary
+| unary '^' factor // if you have an exponentiation operator. Note right-associativity
+;
+
+unary
+: primary
+| '+' unary
+| '-' unary
+;
+
+primary
+: id
+| constant
+| '(' expr ')'
+;
+*/
 
 void
 yy::parser::error (const location_type& l, const std::string& m)

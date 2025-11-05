@@ -40,6 +40,7 @@
 #include "ParserManual.hpp"
 #include <ctype.h>
 #include <string.h>
+#include "Errclass.hpp"
 
 /* Class constant declaration  */
 
@@ -54,6 +55,7 @@
 #define isalnum(x) (isdigit(x)||isalpha(x))
 #endif
 
+#if 0
 /* Class Type declaration      */
 
 /* Class data declaration      */
@@ -111,7 +113,7 @@ ParserClass::ParserClass(std::istream &InputStream) : Input(InputStream)
 void ParserClass::ConsumeToken(ParserClass::TokenEnum T)
 {
    if (Token != T) {
-      throw (BTError(_BTERROR::BT_UNEXPECTED_TOKEN));
+      throw (ErrorBaseClass(_BTERROR::BT_UNEXPECTED_TOKEN));
    }
    NextSymbol();
 }
@@ -122,7 +124,7 @@ void ParserClass::ConsumeTokenAndNewline(ParserClass::TokenEnum T)
       NextSymbol();
    }
    if (Token != T) {
-      throw (BTError(_BTERROR::BT_UNEXPECTED_TOKEN));
+      throw (ErrorBaseClass(_BTERROR::BT_UNEXPECTED_TOKEN));
    }
    NextSymbol();
 }
@@ -131,7 +133,7 @@ void ParserClass::ConsumeAllExcept(ParserClass::TokenEnum T)
 {
    while (Token != T) {
       if (Token == T_EOF) {
-         throw (BTError(_BTERROR::BT_UNEXPECTED_END_OF_FILE));
+         throw (ErrorBaseClass(_BTERROR::BT_UNEXPECTED_END_OF_FILE));
       }
       NextSymbol();
    }
@@ -141,7 +143,7 @@ void ParserClass::ConsumeIdentifier(const char *Name)
 {
    if (  (Token != T_IDENTIFIER)
        ||(strcmp (Buffer, Name) != 0)) {
-      throw (BTError(_BTERROR::BT_UNEXPECTED_TOKEN));
+      throw (ErrorBaseClass(_BTERROR::BT_UNEXPECTED_TOKEN));
    }
    NextSymbol();
 }
@@ -222,7 +224,7 @@ void ParserClass::NextSymbol(void)
    {
       if (!Input)//!Input.good())
       {
-         throw (BTError(_BTERROR::BT_IO_ERROR, 0, CurrentLine));
+         throw (ErrorBaseClass(_BTERROR::BT_IO_ERROR, 0, CurrentLine));
       }
 
       /* entrypoint for comment-filter */
@@ -275,11 +277,11 @@ void ParserClass::NextSymbol(void)
            *Ptr++ = c;
             if (!Input)//!Input.good())
             {
-               throw (BTError(_BTERROR::BT_IO_ERROR, 1, CurrentLine));
+               throw (ErrorBaseClass(_BTERROR::BT_IO_ERROR, 1, CurrentLine));
             }
             if (Ptr >= (&(Buffer[MAX_BUFFER-2])))
             {
-               throw (BTError(_BTERROR::BT_IDENTIFIER_TOO_LONG, 0, CurrentLine));
+               throw (ErrorBaseClass(_BTERROR::BT_IDENTIFIER_TOO_LONG, 0, CurrentLine));
             }
             /* get next character */
             Input.get(c);
@@ -304,15 +306,15 @@ void ParserClass::NextSymbol(void)
            *Ptr++ = c;
             if (!Input)//!Input.good())
             {
-               throw (BTError(_BTERROR::BT_IO_ERROR, 2, CurrentLine));
+               throw (ErrorBaseClass(_BTERROR::BT_IO_ERROR, 2, CurrentLine));
             }
             if (Ptr >= (&(Buffer[MAX_BUFFER-2])))
             {
-               throw (BTError(_BTERROR::BT_STRING_TOO_LONG, 0, CurrentLine));
+               throw (ErrorBaseClass(_BTERROR::BT_STRING_TOO_LONG, 0, CurrentLine));
             }
             if (!isprint(c))
             {
-               throw (BTError(_BTERROR::BT_ILLEGAL_CHARACTER_IN_STRING, 0, CurrentLine));
+               throw (ErrorBaseClass(_BTERROR::BT_ILLEGAL_CHARACTER_IN_STRING, 0, CurrentLine));
             }
             /* get next character */
             Input.get(c);
@@ -343,7 +345,7 @@ void ParserClass::NextSymbol(void)
 
                if (Input.eof())
                {
-                  throw (BTError(_BTERROR::BT_UNEXPECTED_FILEEND_IN_COMMENT, 1, CurrentLine));
+                  throw (ErrorBaseClass(_BTERROR::BT_UNEXPECTED_FILEEND_IN_COMMENT, 1, CurrentLine));
                }
                if ((Lastchar == '*')&&(c=='/')) {
                   /* End of comment found */
@@ -424,7 +426,7 @@ void ParserClass::NextSymbol(void)
          Token = T_CHARACTER;
          Character = c;
       } else {
-         throw (BTError(_BTERROR::BT_ILLEGAL_CHARACTER, c, CurrentLine));
+         throw (ErrorBaseClass(_BTERROR::BT_ILLEGAL_CHARACTER, c, CurrentLine));
       }
    } else {
       Token = T_EOF;
@@ -495,7 +497,7 @@ void ParserClass::AnalyzeKeyWord(const char *String)
       Token = T_IDENTIFIER;
    }
 }
-
+#endif
 /*****************************************************************************/
 /*  End  Method : AnalyzeKeyWord                                             */
 /*****************************************************************************/
