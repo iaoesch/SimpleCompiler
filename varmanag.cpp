@@ -476,7 +476,7 @@ void ClearLocalTable(void)
 void VariableManager::CreateNewContext(std::string Name)
 {
     if (ContextStack.empty()) {
-        ContextStack.push_back(std::make_shared<VariableContextClass>(nullptr));
+        ContextStack.push_back(std::make_shared<VariableContextClass>(Name));
     } else {
         ContextStack.push_back(ContextStack.back()->CreateSubContext(Name));
     }

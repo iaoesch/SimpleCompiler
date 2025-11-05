@@ -13,6 +13,7 @@
   class ExpressionClass;
   class StatementClass;
   class ConditionalExpressionClass;
+  class VariableClass;
 }
 
 // The parsing context.
@@ -78,11 +79,12 @@
 %type  <std::shared_ptr<StatementClass>> loopstatement
 %type  <std::shared_ptr<StatementClass>> functiondefinition
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
-%type  <std::list<std::string>>          argumentlist
+%type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
 
 
 %printer { yyoutput << $$; } <*>;
 %printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>;
+%printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>;
 
 %%
 %start unit;
@@ -96,6 +98,7 @@ statements:
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
+| functiondefinition ";" {$$ = $1;}
 
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);}
@@ -104,11 +107,11 @@ assignment:
   "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetVariableReference($1)); }
 
 functiondefinition:
-  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params")); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2+"Params")); } statements "endfunction"
+  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2); } statements "endfunction" {$$ = std::make_shared<FunctionClass>($2, $5, $8);}
 
 argumentlist:
-  "identifier"           {$$ = std::list<std::string>(); $$.push_back($1);}
-| argumentlist "," "identifier" {$$ = $1.push_back($3);}
+  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, 0.0); $$.push_back(var);}
+| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, 0.0); $1.push_back(var); $$ = $1; }
 
 %left or;
 %left and;

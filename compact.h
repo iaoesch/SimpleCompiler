@@ -333,4 +333,21 @@ public:
 
 };
 
+class FunctionClass : public StatementClass {
+    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::list<std::shared_ptr<VariableClass>> Parameters;
+    const std::string Name;
+
+public:
+    FunctionClass(const std::string Name_, std::list<std::shared_ptr<VariableClass>> _Parameters, std::list<std::shared_ptr<StatementClass>> _Statements) :
+        Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
+
+    virtual                  ~FunctionClass() {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+};
+
 

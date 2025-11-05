@@ -55,9 +55,12 @@ blank [ \t]
 "=="     return yy::parser::make_EQUAL (loc);
 "<"      return yy::parser::make_LESSTHAN (loc);
 ";"      return yy::parser::make_SEMICOLON (loc);
+","      return yy::parser::make_KOMMA (loc);
 "->"     return yy::parser::make_REFERTO (loc);
 "repeat"      return yy::parser::make_REPEAT (loc);
 "until"      return yy::parser::make_UNTIL (loc);
+"function"      return yy::parser::make_FUNCTION (loc);
+"endfunction"      return yy::parser::make_ENDFUNCTION (loc);
 "$"      return yy::parser::make_END (loc);
 
 {int}      {
