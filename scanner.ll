@@ -47,7 +47,12 @@ blank [ \t]
 "("      return yy::parser::make_LPAREN (loc);
 ")"      return yy::parser::make_RPAREN (loc);
 ":="     return yy::parser::make_ASSIGN (loc);
+"=="     return yy::parser::make_EQUAL (loc);
+"<"      return yy::parser::make_LESSTHAN (loc);
+";"      return yy::parser::make_SEMICOLON (loc);
 "$"      return yy::parser::make_END (loc);
+"repeat"      return yy::parser::make_REPEAT (loc);
+"until"      return yy::parser::make_UNTIL (loc);
 
 {int}      {
   errno = 0;
@@ -63,14 +68,24 @@ blank [ \t]
                (loc, "invalid character: " + std::string(yytext));
 }
 <<EOF>>    return yy::parser::make_END (loc);
+
+"//".*                                    { /* eat one line comments */ }
+[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       { /* eat multi line comments */ }
+[/][*]                                    { yy_fatal_error("Unterminated comment"); }
+
 %%
+
+static bool DoNotCloseyyin = false;
 
 void
 driver::scan_begin ()
 {
   yy_flex_debug = trace_scanning;
-  if (file.empty () || file == "-")
-    yyin = stdin;
+    DoNotCloseyyin = false;
+    if (file.empty () || file == "-") {
+        yyin = stdin;
+        DoNotCloseyyin = true;
+    }
   else if (!(yyin = fopen (file.c_str (), "r")))
     {
       std::cerr << "cannot open " << file << ": " << strerror(errno) << '\n';
@@ -81,5 +96,7 @@ driver::scan_begin ()
 void
 driver::scan_end ()
 {
+    if (DoNotCloseyyin == false) {
   fclose (yyin);
+    }
 }

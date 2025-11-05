@@ -16,7 +16,13 @@ driver::parse (const std::string &f)
   scan_begin ();
   yy::parser parser (*this);
   parser.set_debug_level (trace_parsing);
-  int res = parser.parse ();
+  int res = 0;
+  res = parser.parse ();
   scan_end ();
   return res;
+}
+
+void driver::halt()
+{
+    std::cout << "Error happened" << std::endl;
 }

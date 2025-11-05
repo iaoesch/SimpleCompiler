@@ -1,4 +1,5 @@
 #include <iostream>
+#include <list>
 #include <memory>
 
 
@@ -222,4 +223,113 @@ class AdditionClass : public BinaryOperationClass {
    virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
+
+class ConditionalExpressionClass : public std::enable_shared_from_this<ConditionalExpressionClass>{
+public:
+    virtual                  ~ConditionalExpressionClass() {}
+    virtual bool              Evaluate() const;// = 0;
+    virtual void              Print(std::ostream &s) const;// = 0;
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const;// = 0;
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize();// = 0;
+    virtual bool              IsConstant();// = 0;
+    virtual bool              IsSame(std::shared_ptr<ConditionalExpressionClass>Other);// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+};
+
+class BinaryConditionalOperationClass : public ConditionalExpressionClass {
+
+public:
+    //protected:
+    std::shared_ptr<ConditionalExpressionClass>LeftOperand;
+    std::shared_ptr<ConditionalExpressionClass>RightOperand;
+
+public:
+    BinaryConditionalOperationClass(std::shared_ptr<ConditionalExpressionClass>l, std::shared_ptr<ConditionalExpressionClass>r) : LeftOperand(l), RightOperand(r) {}
+    virtual                  ~BinaryConditionalOperationClass() override {/*delete LeftOperand; delete RightOperand;*/}
+    virtual bool              IsConstant() override {return LeftOperand->IsConstant()&&RightOperand->IsConstant();}
+    virtual bool              IsSame(std::shared_ptr<ConditionalExpressionClass>Other) override;// = 0;
+};
+
+
+class AndClass : public BinaryConditionalOperationClass {
+
+public:
+    AndClass(std::shared_ptr<ConditionalExpressionClass>e1, std::shared_ptr<ConditionalExpressionClass>e2) : BinaryConditionalOperationClass(e1, e2) {}
+    AndClass(const AndClass &v) : BinaryConditionalOperationClass(v) {}
+    virtual                  ~AndClass() override {}
+    virtual bool              Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize() override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
+class BinaryRelationalOperationClass : public ConditionalExpressionClass {
+
+public:
+    //protected:
+    std::shared_ptr<ExpressionClass>LeftOperand;
+    std::shared_ptr<ExpressionClass>RightOperand;
+
+public:
+    BinaryRelationalOperationClass(std::shared_ptr<ExpressionClass>l, std::shared_ptr<ExpressionClass>r) : LeftOperand(l), RightOperand(r) {}
+    virtual                  ~BinaryRelationalOperationClass() override {/*delete LeftOperand; delete RightOperand;*/}
+    virtual bool              IsConstant() override {return LeftOperand->IsConstant()&&RightOperand->IsConstant();}
+    virtual bool              IsSame(std::shared_ptr<ConditionalExpressionClass>Other) override;// = 0;
+};
+
+class LessThanClass : public BinaryRelationalOperationClass {
+
+public:
+    LessThanClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryRelationalOperationClass(e1, e2) {}
+    LessThanClass(const LessThanClass &v) : BinaryRelationalOperationClass(v) {}
+    virtual                  ~LessThanClass() override {}
+    virtual bool              Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize() override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
+class StatementClass : public std::enable_shared_from_this<StatementClass>{
+public:
+    virtual                  ~StatementClass() {}
+    virtual void              Print(std::ostream &s) const;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+};
+
+class AssignementClass : public StatementClass {
+    std::shared_ptr<ExpressionClass> AssignedExpression;
+    const VariableReferenceType Variable;
+
+public:
+    AssignementClass(std::shared_ptr<ExpressionClass> _AssignedExpression, VariableReferenceType _Variable) :
+        AssignedExpression(_AssignedExpression), Variable(_Variable) {}
+
+    virtual                  ~AssignementClass() override;
+    virtual void              Print(std::ostream &s) const;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+
+};
+
+class RepeatLoopClass : public StatementClass {
+    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::shared_ptr<ConditionalExpressionClass> Condition;
+
+public:
+    RepeatLoopClass(std::list<std::shared_ptr<StatementClass>> _Statements, std::shared_ptr<ConditionalExpressionClass> _Condition) :
+        Statements(_Statements), Condition(_Condition) {}
+
+    virtual                  ~RepeatLoopClass() {}
+    virtual void              Print(std::ostream &s) const;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+
+};
+
 

@@ -2,6 +2,7 @@
 # define DRIVER_HH
 # include <string>
 # include <map>
+#include <list>
 # include "parser.hpp"
 #include"varmanag.hpp"
 
@@ -20,7 +21,8 @@ public:
   // std::map<std::string, int> variables;
   VariableManager Variables;
 
-  std::shared_ptr<ExpressionClass> result;
+   std::shared_ptr<ExpressionClass> resulte;
+  std::list<std::shared_ptr<StatementClass>> result;
 
   // Run the parser on file F.  Return 0 on success.
   int parse (const std::string& f);
@@ -36,5 +38,7 @@ public:
   bool trace_scanning;
   // The token's location used by the scanner.
   yy::location location;
+
+  void halt();
 };
 #endif // ! DRIVER_HH

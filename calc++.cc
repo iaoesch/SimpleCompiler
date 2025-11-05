@@ -12,11 +12,21 @@ main (int argc, char *argv[])
       drv.trace_parsing = true;
     else if (argv[i] == std::string ("-s"))
       drv.trace_scanning = true;
-    else if (!drv.parse (argv[i])) {
-      std::cout << drv.result << '\n';
-      drv.result->Print(std::cout);
+    else {
+        do {
+            drv.result.clear();
+            if (drv.parse (argv[i]) != 0) {
+                std::cout << "Abnormal parsing end" << std::endl;
+            }
+            if (drv.result.empty()) {
+                std::cout << "<empty list>" << std::endl;
+            }
+            for (auto &s: drv.result) {
+               s->Print(std::cout);
+            }
+        } while (argv[i] == std::string ("-"));
+        std::cout << "argv = '" << argv[i] << "'" << std::endl;
+
     }
-    else
-      res = 1;
   return res;
 }

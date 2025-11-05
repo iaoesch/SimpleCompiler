@@ -477,3 +477,186 @@ void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
 };
 
+
+
+void StatementClass::Print(std::ostream &s) const
+{
+   std::cout << "\nVirtual Call StatementClass print()";
+}
+
+std::shared_ptr<StatementClass> StatementClass::Clone() const
+{
+    std::cout << "\nVirtual Call StatementClass Clone()";
+
+}
+
+std::shared_ptr<StatementClass> StatementClass::Optimize()
+{
+    std::cout << "\nVirtual Call StatementClass Optimize()";
+
+}
+
+void StatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    std::cout << "\nVirtual Call StatementClass DrawNode()";
+
+}
+
+AssignementClass::~AssignementClass()
+{
+
+}
+
+void AssignementClass::Print(std::ostream &s) const
+{
+    { s << Variable->GetName() << " = ";
+    AssignedExpression->Print(s);
+      s << ";" << std::endl; }
+}
+
+std::shared_ptr<StatementClass> AssignementClass::Clone() const
+{
+    return std::make_shared<AssignementClass>(*this);
+}
+
+std::shared_ptr<StatementClass> AssignementClass::Optimize()
+{
+
+}
+
+void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    
+}
+
+bool ConditionalExpressionClass::Evaluate() const
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass Evaluate()";
+}
+
+void ConditionalExpressionClass::Print(std::ostream &s) const
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass print()";
+}
+
+std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Clone() const
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass Clone()";
+}
+
+std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Optimize()
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass Optimize()";
+}
+
+bool ConditionalExpressionClass::IsConstant()
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass IsConstant()";
+
+}
+
+bool ConditionalExpressionClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass IsSame()";
+
+}
+
+void ConditionalExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    std::cout << "\nVirtual Call ConditionalExpressionClass DrawNode()";
+
+}
+
+bool BinaryConditionalOperationClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
+{
+    if (typeid(*this) == typeid(*Other)) {
+        return  ( LeftOperand->IsSame(std::dynamic_pointer_cast<BinaryConditionalOperationClass>(Other)->LeftOperand))
+        &&( RightOperand->IsSame(std::dynamic_pointer_cast<BinaryConditionalOperationClass>(Other)->RightOperand));
+    }
+    return false;
+ }
+
+bool AndClass::Evaluate() const
+{
+    return LeftOperand->Evaluate() && RightOperand->Evaluate();
+}
+
+void AndClass::Print(std::ostream &s) const
+{
+   s << "("; LeftOperand->Print(s); s << ") AND ("; RightOperand->Print(s); s << ")";
+}
+
+std::shared_ptr<ConditionalExpressionClass> AndClass::Clone() const
+{
+    return std::make_shared<AndClass>(*this);
+}
+
+std::shared_ptr<ConditionalExpressionClass> AndClass::Optimize()
+{
+    return shared_from_this();
+}
+
+void AndClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}
+
+bool BinaryRelationalOperationClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
+{
+    if (typeid(*this) == typeid(*Other)) {
+        return  ( LeftOperand->IsSame(std::dynamic_pointer_cast<BinaryRelationalOperationClass>(Other)->LeftOperand))
+        &&( RightOperand->IsSame(std::dynamic_pointer_cast<BinaryRelationalOperationClass>(Other)->RightOperand));
+    }
+    return false;
+
+}
+
+bool LessThanClass::Evaluate() const
+{
+    return LeftOperand->Evaluate() < RightOperand->Evaluate();
+}
+
+void LessThanClass::Print(std::ostream &s) const
+{
+    s << "("; LeftOperand->Print(s); s << ") < ("; RightOperand->Print(s); s << ")";
+}
+
+std::shared_ptr<ConditionalExpressionClass> LessThanClass::Clone() const
+{
+    return std::make_shared<LessThanClass>(*this);
+}
+
+std::shared_ptr<ConditionalExpressionClass> LessThanClass::Optimize()
+{
+    return shared_from_this();
+}
+
+void LessThanClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}
+
+void RepeatLoopClass::Print(std::ostream &s) const
+{
+    s << "repeat\n";
+    for(auto &r: Statements) {
+        r->Print(s);
+    }
+    s << "until (";
+    Condition->Print(s); s << ");\n";
+}
+
+std::shared_ptr<StatementClass> RepeatLoopClass::Clone() const
+{
+    return std::make_shared<RepeatLoopClass>(*this);
+}
+
+std::shared_ptr<StatementClass> RepeatLoopClass::Optimize()
+{
+    return shared_from_this();
+}
+
+void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}

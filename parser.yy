@@ -8,8 +8,11 @@
 
 %code requires {
   # include <string>
+  # include <list>
   class driver;
   class ExpressionClass;
+  class StatementClass;
+  class ConditionalExpressionClass;
 }
 
 // The parsing context.
@@ -35,24 +38,81 @@
   SLASH   "/"
   LPAREN  "("
   RPAREN  ")"
+  KOMMA   ","
+  SEMICOLON  ";"
+  REPEAT  "repeat"
+  UNTIL   "until"
+  FUNCTION "function"
+  ENDFUNCTION "endfunction"
+  AND     "and"
+  OR      "or"
+  NOT     "not"
+  LESSTHAN "<"
+  LESSORSAME "<="
+  EQUAL   "=="
+  NOTEQUAL "!="
+  MORETHAN   ">"
+  MOREORSAME   ">="
 ;
 
 %token <std::string> IDENTIFIER "identifier"
 %token <int> NUMBER "number"
 %type  <std::shared_ptr<ExpressionClass>> exp
+%type  <std::list<std::shared_ptr<StatementClass>>> statements
+%type  <std::shared_ptr<StatementClass>> statement
+%type  <std::shared_ptr<StatementClass>> assignment
+%type  <std::shared_ptr<StatementClass>> loopstatement
+%type  <std::shared_ptr<StatementClass>> functiondefinition
+%type  <std::shared_ptr<ConditionalExpressionClass>> condexp
+%type  <std::list<std::string>>          argumentlist
+
 
 %printer { yyoutput << $$; } <*>;
+%printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>;
 
 %%
 %start unit;
-unit: assignments exp  { drv.result = $2; };
+unit: statements {drv.result = $1;}
 
-assignments:
-  %empty                 {}
-| assignments assignment {};
+statements:
+  statement              {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
+| statements statement   {$1.push_back($2); $$ = $1;}
+| statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ }
+
+statement:
+  assignment ";"        {$$ = $1;}
+| loopstatement ";"     {$$ = $1;}
+
+loopstatement:
+  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);}
 
 assignment:
-  "identifier" ":=" exp { drv.Variables.GetVariableReference($1); }
+  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetVariableReference($1)); }
+
+functiondefinition:
+  "function" "identifier" {drv.Variables.StartNewContext($2)); } "(" argumentlist ")" statements "endfunction"
+
+argumentlist:
+  "identifier"           {$$ = std::list<std::string>(); $$.push_back($1);}
+| argumentlist "," "identifier" {$$ = $1.push_back($3);}
+
+%left or;
+%left and;
+%left not;
+%left ">" ">=" "==" "!=" "<" "<=";
+
+condexp:
+  condexp and condexp   { $$ = std::make_shared<AndClass>($1, $3); }
+| condexp or condexp   { $$ = std::make_shared<AndClass>($1, $3); }
+| not condexp    { $$ = std::make_shared<AndClass>($2, $2); }
+| exp ">" exp    { $$ = std::make_shared<LessThanClass>($1, $3); }
+| exp ">=" exp   { $$ = std::make_shared<LessThanClass>($1, $3);}
+| exp "==" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
+| exp "!=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
+| exp "<" exp    { $$ = std::make_shared<LessThanClass>($1, $3); }
+| exp "<=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
+| "(" condexp ")"   { std::swap ($$, $2); }
+
 
 %left "+" "-";
 %left "*" "/";
@@ -72,5 +132,12 @@ yy::parser::error (const location_type& l, const std::string& m)
   std::cerr << l;
   std::cerr << ": ";
   std::cerr << m << '\n';
+  for (int i = 0; i < l.begin.column; i++) {
+     std::cerr << "~";
+  }
+  for (int i = l.begin.column; i <= l.end.column; i++) {
+     std::cerr << "^";
+  }
+  std::cerr << '\n';
   //std::cerr << l << ": " << m << '\n';
 }

@@ -41,6 +41,9 @@ class VariableManager
    // Data
    public:
 
+   VariableClass *CreateNewContext();
+   VariableClass *ActivateContext();
+   VariableClass *CreateVariable(std::string Name);
    VariableClass *GetVariableReference(std::string Name);
 };
 
