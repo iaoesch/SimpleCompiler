@@ -493,9 +493,29 @@ void VariableManager::LeaveContext()
 
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, double Value)
 {
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
     auto Var = std::make_shared<DoubleVariableClass>(Name, Value);
     return ContextStack.back()->RegisterVariable(Name, Var, false);
 }
+
+
+std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, double Value)
+{
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    auto Var = ContextStack.back()->LookupVariable(Name);
+    if (Var != nullptr) {
+        return Var;
+    } else {
+        return CreateVariable(Name, Value);
+    }
+}
+
 
 std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string Name)
 {

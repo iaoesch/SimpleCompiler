@@ -104,7 +104,7 @@ loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);}
 
 assignment:
-  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetVariableReference($1)); }
+  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); }
 
 functiondefinition:
   "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2); } statements "endfunction" {$$ = std::make_shared<FunctionClass>($2, $5, $8);}

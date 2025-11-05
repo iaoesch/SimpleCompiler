@@ -59,6 +59,7 @@ class VariableManager
 
    void CreateNewContext(std::string Name);
    void LeaveContext();
+   std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
 };
