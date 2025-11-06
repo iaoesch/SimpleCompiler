@@ -12,6 +12,19 @@
 // ... and declare it for the parser's sake.
 YY_DECL;
 
+class FunctionNodeHelper {
+    VariableManager &Variables;
+
+public:
+    explicit FunctionNodeHelper(VariableManager &Variables)
+        : Variables(Variables) {}
+    void Set(std::string);
+
+    void MakeRef(VariableClass &Referer, VariableClass Refered);
+    void MakeAssign(VariableClass &Assignee, VariableClass Assigned);
+
+};
+
 // Conducting the whole scanning and parsing of Calc++.
 class driver
 {
@@ -20,6 +33,7 @@ public:
 
   // std::map<std::string, int> variables;
   VariableManager Variables;
+  FunctionNodeHelper Currentfunction;
 
    std::shared_ptr<ExpressionClass> resulte;
   std::list<std::shared_ptr<StatementClass>> result;

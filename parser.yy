@@ -76,8 +76,10 @@
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
+%type  <std::shared_ptr<StatementClass>> definition
 %type  <std::shared_ptr<StatementClass>> loopstatement
 %type  <std::shared_ptr<StatementClass>> functiondefinition
+%type  <std::shared_ptr<ExpressionClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
 %type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
 
@@ -96,15 +98,34 @@ statements:
 | statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ }
 
 statement:
-  assignment ";"        {$$ = $1;}
+  definition ";"
+| assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
-| functiondefinition ";" {$$ = $1;}
+| functioncall ";"      {$$ = $1;}
 
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);}
 
 assignment:
   "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); }
+
+referement:
+  "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); }
+
+definition:
+  functiondefinition {$$ = $1;}
+
+functioncall:
+  "identifier" {drv.Currentfunction.Set($1);} "(" parameterlist ")"
+
+parameterlist:
+  %empty                    {$$ = std::list<>();}
+| parameterlist parameter   {$$ = $1; $$.push_back($2);}
+
+parameter:
+   "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3);}
+|  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3);}
+
 
 functiondefinition:
   "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2); } statements "endfunction" {$$ = std::make_shared<FunctionClass>($2, $5, $8);}
