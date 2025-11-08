@@ -76,12 +76,15 @@
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
+%type  <std::shared_ptr<StatementClass>> referement
 %type  <std::shared_ptr<StatementClass>> definition
 %type  <std::shared_ptr<StatementClass>> loopstatement
 %type  <std::shared_ptr<StatementClass>> functiondefinition
 %type  <std::shared_ptr<ExpressionClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
 %type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
+%type  <std::shared_ptr<StatementClass>> parameter
+%type  <std::list<std::shared_ptr<StatementClass>>> parameterlist
 
 
 %printer { yyoutput << $$; } <*>;
@@ -90,49 +93,53 @@
 
 %%
 %start unit;
-unit: statements {drv.result = $1;}
+unit: statements {drv.result = $1;};
 
 statements:
   statement              {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
 | statements statement   {$1.push_back($2); $$ = $1;}
-| statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ }
+| statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ };
 
 statement:
   definition ";"
 | assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
-| functioncall ";"      {$$ = $1;}
+| functioncall ";"      {$$ = $1;};
 
 loopstatement:
-  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);}
+  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);};
 
 assignment:
-  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); }
+  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type())); };
 
 referement:
-  "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); }
+  "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); };
 
 definition:
-  functiondefinition {$$ = $1;}
+  functiondefinition {$$ = $1;};
 
 functioncall:
-  "identifier" {drv.Currentfunction.Set($1);} "(" parameterlist ")"
+  "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {std::make_shared<FunctionCallClass>($<const Variables::FunctionDefinitionClass &>2, $4);};
 
 parameterlist:
-  %empty                    {$$ = std::list<>();}
-| parameterlist parameter   {$$ = $1; $$.push_back($2);}
+  %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}
+| parameterlist parameter   {$$ = $1; $$.push_back($2);};
 
 parameter:
    "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3);}
-|  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3);}
+|  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3);};
 
 
 functiondefinition:
-  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); } "(" argumentlist ")" {drv.Variables.CreateNewContext($2); } statements "endfunction" {$$ = std::make_shared<FunctionClass>($2, $5, $8);}
+  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); }
+  "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
+  statements
+  "endfunction" {$$ = std::make_shared<FunctionDefinitionClass>($2, $5, $8);}
+  ;
 
 argumentlist:
   "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, 0.0); $$.push_back(var);}
-| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, 0.0); $1.push_back(var); $$ = $1; }
+| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, 0.0); $1.push_back(var); $$ = $1; };
 
 %left or;
 %left and;
@@ -149,7 +156,7 @@ condexp:
 | exp "!=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
 | exp "<" exp    { $$ = std::make_shared<LessThanClass>($1, $3); }
 | exp "<=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
-| "(" condexp ")"   { std::swap ($$, $2); }
+| "(" condexp ")"   { std::swap ($$, $2); };
 
 
 %left "+" "-";

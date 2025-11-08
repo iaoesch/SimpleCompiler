@@ -12,19 +12,43 @@ void VariableClass::SetContext(VariableContextClass *Context)
     MyContext = Context;
 }
 
-
-double DoubleVariableClass::GetValue() const
+const TypeDescriptorClass &VariableClass::GetType() const
 {
-    return Value;
+    return Content.getType();
 }
 
-void DoubleVariableClass::SetValue(double v)
+
+Variables::VariableContentClass DoubleVariableClass::GetValue() const
 {
-    Value = v;
+    Variables::VariableContentClass C = TypeDescriptorClass(TypeDescriptorClass::Type::Float);
+    return C;
 }
 
-DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value) : VariableClass(Name_),
+void DoubleVariableClass::SetValue(Variables::VariableContentClass v)
+{
+    Value = v.GetValue<double>();
+}
+
+DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value) : VariableClass(Name_, TypeDescriptorClass(TypeDescriptorClass::Type::Float)),
     Value(Value)
 {
+
+}
+
+
+namespace Variables {
+FunctionDefinitionClass::FunctionDefinitionClass(const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements) : Parameters(Parameters),
+    Statements(Statements)
+{}
+
+TypeDescriptorClass const &VariableContentClass::getType() const
+{
+    return Type;
+}
+
+void VariableContentClass::setType(const TypeDescriptorClass &newType)
+{
+    Type = newType;
+}
 
 }

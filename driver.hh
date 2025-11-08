@@ -12,16 +12,20 @@
 // ... and declare it for the parser's sake.
 YY_DECL;
 
+class ReferementClass;
+class AssignementClass;
+
 class FunctionNodeHelper {
     VariableManager &Variables;
+    std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
 
 public:
     explicit FunctionNodeHelper(VariableManager &Variables)
-        : Variables(Variables) {}
-    void Set(std::string);
+        : Variables(Variables) , CurrentFunction(nullptr) {}
+    const Variables::FunctionDefinitionClass &Set(std::string Name, const yy::parser::location_type &l);
 
-    void MakeRef(VariableClass &Referer, VariableClass Refered);
-    void MakeAssign(VariableClass &Assignee, VariableClass Assigned);
+    std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered);
+    std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned);
 
 };
 

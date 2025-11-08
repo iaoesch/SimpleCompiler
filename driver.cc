@@ -2,7 +2,7 @@
 #include "parser.hpp"
 
 driver::driver ()
-  : trace_parsing (false), trace_scanning (false)
+    : Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
 {
 //  variables["one"] = 1;
 //  variables["two"] = 2;
@@ -25,4 +25,13 @@ driver::parse (const std::string &f)
 void driver::halt()
 {
     std::cout << "Error happened" << std::endl;
+}
+
+const Variables::FunctionDefinitionClass &FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
+{
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
+    if (Var == nullptr) {
+        throw(yy::parser::syntax_error(l, "Symbol not found"));
+    }
+    return Var->GetValue().GetValue<Variables::FunctionDefinitionClass>();
 }
