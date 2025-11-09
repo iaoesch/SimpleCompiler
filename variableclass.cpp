@@ -20,7 +20,12 @@ Variables::VariableContentClass VariableClass::GetValue() const
 
 void VariableClass::SetValue(Variables::VariableContentClass v)
 {
+    Content = v;
+}
 
+void VariableClass::Print(std::ostream &s)
+{
+    s << Content;
 }
 
 const TypeDescriptorClass &VariableClass::GetType() const

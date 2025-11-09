@@ -47,13 +47,16 @@ public:
     std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false);
     std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
 
+    void Dump(std::ostream &s);
+
 };
 
 /* Class definition            */
 class VariableManager
 {
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
-   
+    std::vector<std::shared_ptr<VariableContextClass>> Contexts;
+
    // Data
    public:
 
@@ -62,6 +65,8 @@ class VariableManager
    std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
+
+   void Dump(std::ostream &s);
 };
 
 

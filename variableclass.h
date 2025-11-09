@@ -9,6 +9,7 @@
 #include <vector>
 #include <variant>
 #include <iostream>
+#include "Errclass.hpp"
 
 class ExpressionClass;
 class StatementClass;
@@ -130,12 +131,12 @@ private:
         case Type::Map:
         case Type::Function:
         case Type::String:
+        case Type::Dynamic:
             Descriptor = std::monostate();
             break;
 
         case Type::Stack:
         case Type::Array:
-        case Type::Dynamic:
             throw std::runtime_error("Invalid Type");
             break;
         }
@@ -150,40 +151,40 @@ class VariableContentClass;
 class StackClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
-    StackClass(const StackClass &s){}
-    StackClass &operator = (const StackClass &s){}
+    StackClass(const StackClass &s){SIGNAL_UNIMPLEMENTED();}
+    StackClass &operator = (const StackClass &s){SIGNAL_UNIMPLEMENTED();}
 
 };
 
 class ListClass {
     std::list<std::unique_ptr<VariableContentClass>> Data;
 public:
-    ListClass(const ListClass &s){}
-    ListClass &operator = (const ListClass &s){}
+    ListClass(const ListClass &s){SIGNAL_UNIMPLEMENTED();}
+    ListClass &operator = (const ListClass &s){SIGNAL_UNIMPLEMENTED();}
 };
 
 class ArrayClass {
 
     std::vector<std::unique_ptr<ArrayClass>> Data;
 public:
-    ArrayClass(const ArrayClass &s){}
-    ArrayClass &operator = (const ArrayClass &s){}
+    ArrayClass(const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
 };
 
 class SparseArrayClass {
 
     std::map<int, std::unique_ptr<VariableContentClass>> Data;
 public:
-    SparseArrayClass(const SparseArrayClass &s){}
-    SparseArrayClass &operator = (const SparseArrayClass &s){}
+    SparseArrayClass(const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    SparseArrayClass &operator = (const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
 };
 
 class MapClass {
 
     std::map<std::string, std::unique_ptr<VariableContentClass>> Data;
 public:
-    MapClass(const MapClass &s) {}
-    MapClass &operator = (const MapClass &s){}
+    MapClass(const MapClass &s) {SIGNAL_UNIMPLEMENTED();}
+    MapClass &operator = (const MapClass &s){SIGNAL_UNIMPLEMENTED();}
 };
 
 class FunctionDefinitionClass {
@@ -343,6 +344,7 @@ public:
     const std::string GetName()  const {return Name;}
     virtual Variables::VariableContentClass      GetValue() const;
     virtual void        SetValue(Variables::VariableContentClass v);
+    virtual void        Print(std::ostream &s);
 
     const TypeDescriptorClass &Type() {return GetType();}
 private:

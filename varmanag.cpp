@@ -480,6 +480,7 @@ void VariableManager::CreateNewContext(std::string Name)
     } else {
         ContextStack.push_back(ContextStack.back()->CreateSubContext(Name));
     }
+    Contexts.push_back(ContextStack.back());
 }
 
 void VariableManager::LeaveContext(int Levels)
@@ -529,6 +530,14 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string
     return ContextStack.back()->LookupVariable(Name);
 }
 
+void VariableManager::Dump(std::ostream &s)
+{
+    s << "Scopes:" << std::endl;
+    for (auto &c: Contexts) {
+        c->Dump(s);
+    }
+}
+
 std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed)
 {
     auto it = Variables.find(Name);
@@ -552,5 +561,28 @@ std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::s
         return nullptr;
     }
     return it->second;
+}
+
+void VariableContextClass::Dump(std::ostream &s)
+{
+    s << "Context <" << Name << ">" << std::endl;
+    s << "Parent: <" << ((ParentContext != nullptr) ? ParentContext->Name : std::string(" --- ")) << ">" << std::endl;
+    s << "Children:";
+    if (Children.empty()) {
+        s << " None " << std::endl;
+    } else {
+        for (auto &c: Children) {
+            s << c->Name << ",";
+        }
+        s << std::endl;
+    }
+    s << "Content:" << std::endl;
+    for (auto &i: Variables) {
+        std::cout << i.first << "{ " << std::endl;
+        i.second->Print(s);
+        std::cout << "}" << std::endl;
+
+    }
+
 }
 

@@ -16,6 +16,7 @@ driver::parse (const std::string &f)
   scan_begin ();
   yy::parser parser (*this);
   parser.set_debug_level (trace_parsing);
+  Variables.CreateNewContext("$$Global_Context$$");
   int res = 0;
   res = parser.parse ();
   scan_end ();
@@ -31,9 +32,11 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std:
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
     if (Var == nullptr) {
-        throw(yy::parser::syntax_error(l, "Symbol not found"));
+        throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
     CurrentFunction = Var->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
+    if (Var == nullptr) {ERROR_OBJECT("Not a function object");}
+    FunctionDefinitionClassSharedPtr p = CurrentFunction;
     return CurrentFunction;
 }
 
@@ -46,6 +49,18 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(s
     Var = Variables.CreateVariable(Name, TypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
     Var->SetValue(Variables::VariableContentClass(CurrentFunction));
+    auto &i = typeid(CurrentFunction);
+    return CurrentFunction;
+}
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(const Variables::FunctionDefinitionClass &f, const yy::parser::location_type &l)
+{
+    *CurrentFunction = f;
+    return CurrentFunction;
+}
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
+{
     return CurrentFunction;
 }
 

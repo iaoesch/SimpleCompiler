@@ -36,8 +36,13 @@
 // throw (BTError(_BTERROR::WHAT_REASON_EVER_IS_APROPRIATE));
 // throw (BTError(_BTERROR::WHAT_REASON_EVER_IS_APROPRIATE, additional, arguments));
 
-#define ERROR_OBJECT_HELPER(Message, FILE, LINE) ErrorBaseClass(Message "in" FILE "at line " #LINE)
-#define ERROR_OBJECT(Message) ERROR_OBJECT_HELPER(Message, __FILE__,  __LINE__)
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define AT __FILE__ ":" TOSTRING(__LINE__)
+
+#define ERROR_OBJECT(Message) ErrorBaseClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
+#define SIGNAL_UNIMPLEMENTED() throw (ERROR_OBJECT("Unimplemented Funcion"))
+
 /* Class Type declaration      */
 
 /* Class data declaration      */

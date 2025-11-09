@@ -9,6 +9,7 @@
 %code requires {
   # include <string>
   # include <list>
+  #include"variableclass.h"
   class driver;
   class ExpressionClass;
   class FunctionCallClass;
@@ -20,6 +21,12 @@
      class VariableContentClass;
   }
   typedef std::shared_ptr<Variables::FunctionDefinitionClass> FunctionDefinitionClassSharedPtr;
+
+  class FktDefContainer {
+     public:
+     std::shared_ptr<Variables::FunctionDefinitionClass> ptr;
+  };
+
 }
 
 // The parsing context.
@@ -138,10 +145,14 @@ parameter:
 
 
 functiondefinition:
-  "function" "identifier" {$<FunctionDefinitionClassSharedPtr>$ = drv.Currentfunction.Create($2, @2); drv.Variables.CreateNewContext($2+"Params"); }
+  "function" "identifier" {
+                             /*FktDefContainer tmp;*/
+                             /*tmp.ptr = */drv.Currentfunction.Create($2, @2);
+                             /*$<FktDefContainer>$ = tmp;*/
+                             drv.Variables.CreateNewContext($2+"Params"); }
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {*$<FunctionDefinitionClassSharedPtr>3 = Variables::FunctionDefinitionClass($5, $8); $$ = $<FunctionDefinitionClassSharedPtr>3; drv.Variables.LeaveContext(2);}
+  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
   ;
 
 argumentlist:
