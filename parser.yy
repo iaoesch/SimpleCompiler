@@ -109,7 +109,7 @@ statements:
 | statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ };
 
 statement:
-| assignment ";"        {$$ = $1;}
+  assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
 | functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);};
 
@@ -138,10 +138,10 @@ parameter:
 
 
 functiondefinition:
-  "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); }
+  "function" "identifier" {$<FunctionDefinitionClassSharedPtr>$ = drv.Currentfunction.Create($2, @2); drv.Variables.CreateNewContext($2+"Params"); }
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>($5, $8); drv.Variables.LeaveContext(2);}
+  "endfunction" {*$<FunctionDefinitionClassSharedPtr>3 = Variables::FunctionDefinitionClass($5, $8); $$ = $<FunctionDefinitionClassSharedPtr>3; drv.Variables.LeaveContext(2);}
   ;
 
 argumentlist:

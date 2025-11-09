@@ -25,7 +25,7 @@ using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayD
 class StackDescriptorClass  {
 public:
     StackDescriptorClass(const StackDescriptorClass &s);
-    StackDescriptorClass &operator = (const StackDescriptorClass &s);
+    StackDescriptorClass &operator=(const StackDescriptorClass &s);
     std::unique_ptr<TypeDescriptor> BaseType;
 };
 
@@ -37,6 +37,7 @@ public:
     std::unique_ptr<TypeDescriptor> BaseType;
 };
 
+
 class DynamicDescriptorClass {
 public:
     DynamicDescriptorClass(const DynamicDescriptorClass &s);
@@ -44,6 +45,40 @@ public:
     std::unique_ptr<TypeDescriptor> CurrentType;
 };
 
+inline DynamicDescriptorClass::DynamicDescriptorClass(const DynamicDescriptorClass &s)
+    : CurrentType(std::make_unique<TypeDescriptor>(*s.CurrentType))
+{
+}
+
+inline DynamicDescriptorClass &DynamicDescriptorClass::operator =(const DynamicDescriptorClass &s)
+{
+    CurrentType = std::make_unique<TypeDescriptor>(*s.CurrentType);
+    return *this;
+}
+
+inline StackDescriptorClass::StackDescriptorClass(const StackDescriptorClass &s) :
+    BaseType(std::make_unique<TypeDescriptor>(*s.BaseType))
+{
+}
+
+inline StackDescriptorClass &StackDescriptorClass::operator=(const StackDescriptorClass &s)
+{
+    BaseType = std::make_unique<TypeDescriptor>(*s.BaseType);
+    return *this;
+}
+
+inline ArrayDescriptorClass::ArrayDescriptorClass(const ArrayDescriptorClass &s)
+    : Dimensions(s.Dimensions), BaseType(std::make_unique<TypeDescriptor>(*s.BaseType))
+{
+
+}
+
+inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescriptorClass &s)
+{
+    Dimensions = s.Dimensions;
+    BaseType = std::make_unique<TypeDescriptor>(*s.BaseType);
+    return *this;
+}
 
 
 
@@ -51,6 +86,7 @@ class TypeDescriptorClass {
 
 public:
     enum class Type {
+        Undefined,
         Integer,
         Float,
         Bool,
@@ -114,40 +150,40 @@ class VariableContentClass;
 class StackClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
-    StackClass(const StackClass &s);
-    StackClass &operator = (const StackClass &s);
+    StackClass(const StackClass &s){}
+    StackClass &operator = (const StackClass &s){}
 
 };
 
 class ListClass {
     std::list<std::unique_ptr<VariableContentClass>> Data;
 public:
-    ListClass(const ListClass &s);
-    ListClass &operator = (const ListClass &s);
+    ListClass(const ListClass &s){}
+    ListClass &operator = (const ListClass &s){}
 };
 
 class ArrayClass {
 
     std::vector<std::unique_ptr<ArrayClass>> Data;
 public:
-    ArrayClass(const ArrayClass &s);
-    ArrayClass &operator = (const ArrayClass &s);
+    ArrayClass(const ArrayClass &s){}
+    ArrayClass &operator = (const ArrayClass &s){}
 };
 
 class SparseArrayClass {
 
     std::map<int, std::unique_ptr<VariableContentClass>> Data;
 public:
-    SparseArrayClass(const SparseArrayClass &s);
-    SparseArrayClass &operator = (const SparseArrayClass &s);
+    SparseArrayClass(const SparseArrayClass &s){}
+    SparseArrayClass &operator = (const SparseArrayClass &s){}
 };
 
 class MapClass {
 
     std::map<std::string, std::unique_ptr<VariableContentClass>> Data;
 public:
-    MapClass(const MapClass &s);
-    MapClass &operator = (const MapClass &s);
+    MapClass(const MapClass &s) {}
+    MapClass &operator = (const MapClass &s){}
 };
 
 class FunctionDefinitionClass {
@@ -155,9 +191,10 @@ class FunctionDefinitionClass {
     std::list<std::shared_ptr<StatementClass>> Statements;
 public:
     FunctionDefinitionClass(const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements);
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass(std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >());}
 public:
-    FunctionDefinitionClass(const FunctionDefinitionClass &s);
-    FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+  //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
+  //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
     void              Print(std::ostream &s) const;
 
 };
@@ -182,6 +219,7 @@ public:
     VariableContentClass(int64_t Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(double Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
 
     const TypeDescriptorClass &getType() const;
@@ -220,7 +258,7 @@ std::monostate,
                          MapClass,
                          FunctionDefinitionClass
  */
-std::ostream &operator << (std::ostream &s, const VariableContentClass &v)
+inline std::ostream &operator << (std::ostream &s, const VariableContentClass &v)
 {
     std::visit(overloaded{
                    [&s](const std::monostate &arg) { s << "empty"; },
@@ -236,57 +274,57 @@ std::ostream &operator << (std::ostream &s, const VariableContentClass &v)
     return s;
 }
 
-bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
+inline bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 {
     return false;
 }
 
-bool operator <(const VariableContentClass &r, const VariableContentClass &l)
+inline bool operator <(const VariableContentClass &r, const VariableContentClass &l)
 {
     return false;
 }
 
-VariableContentClass operator *(const VariableContentClass &r, const VariableContentClass &l)
+inline VariableContentClass operator *(const VariableContentClass &r, const VariableContentClass &l)
 {
     return r;
 }
 
-VariableContentClass operator /(const VariableContentClass &r, const VariableContentClass &l)
+inline VariableContentClass operator /(const VariableContentClass &r, const VariableContentClass &l)
 {
     return r;
 }
 
-VariableContentClass operator +(const VariableContentClass &r, const VariableContentClass &l)
+inline VariableContentClass operator +(const VariableContentClass &r, const VariableContentClass &l)
 {
     return r;
 }
 
-VariableContentClass operator -(const VariableContentClass &r, const VariableContentClass &l)
+inline VariableContentClass operator -(const VariableContentClass &r, const VariableContentClass &l)
 {
     return r;
 }
 
-VariableContentClass operator -(const VariableContentClass &o)
+inline VariableContentClass operator -(const VariableContentClass &o)
 {
     return o;
 }
 
-VariableContentClass log(const VariableContentClass &o)
+inline VariableContentClass log(const VariableContentClass &o)
 {
     return o;
 }
 
-VariableContentClass exp(const VariableContentClass &o)
+inline VariableContentClass exp(const VariableContentClass &o)
 {
     return o;
 }
 
-VariableContentClass sqrt(const VariableContentClass &o)
+inline VariableContentClass sqrt(const VariableContentClass &o)
 {
     return o;
 }
 
-VariableContentClass pow(const VariableContentClass &l, const VariableContentClass &r)
+inline VariableContentClass pow(const VariableContentClass &l, const VariableContentClass &r)
 {
     return l;
 }

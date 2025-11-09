@@ -13,6 +13,16 @@ void VariableClass::SetContext(VariableContextClass *Context)
     MyContext = Context;
 }
 
+Variables::VariableContentClass VariableClass::GetValue() const
+{
+
+}
+
+void VariableClass::SetValue(Variables::VariableContentClass v)
+{
+
+}
+
 const TypeDescriptorClass &VariableClass::GetType() const
 {
     return Content.getType();
@@ -73,3 +83,4 @@ void VariableContentClass::setType(const TypeDescriptorClass &newType)
 }
 
 }
+
