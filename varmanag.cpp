@@ -482,13 +482,16 @@ void VariableManager::CreateNewContext(std::string Name)
     }
 }
 
-void VariableManager::LeaveContext()
+void VariableManager::LeaveContext(int Levels)
 {
-    if (ContextStack.empty()) {
-        throw ERROR_OBJECT("popping empty contextstack");
-    }
+    while (Levels > 0) {
+        if (ContextStack.empty()) {
+            throw ERROR_OBJECT("popping empty contextstack");
+        }
 
-    ContextStack.pop_back();
+        ContextStack.pop_back();
+        Levels--;
+    }
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
@@ -535,6 +538,8 @@ std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std:
         return Var;
     }
     return nullptr;
+
+
 }
 
 std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::string Name)

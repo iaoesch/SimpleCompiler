@@ -27,11 +27,12 @@ void driver::halt()
     std::cout << "Error happened" << std::endl;
 }
 
-const Variables::FunctionDefinitionClass &FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
     if (Var == nullptr) {
         throw(yy::parser::syntax_error(l, "Symbol not found"));
     }
-    return Var->GetValue().GetValue<Variables::FunctionDefinitionClass>();
+    CurrentFunction = Var->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
+    return CurrentFunction;
 }

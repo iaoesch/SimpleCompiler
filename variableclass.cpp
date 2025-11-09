@@ -1,5 +1,6 @@
 #include "variableclass.h"
 #include "Errclass.hpp"
+#include "compact.h"
 
 
 
@@ -40,6 +41,26 @@ namespace Variables {
 FunctionDefinitionClass::FunctionDefinitionClass(const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements) : Parameters(Parameters),
     Statements(Statements)
 {}
+
+void FunctionDefinitionClass::Print(std::ostream &s) const
+{
+    {
+        bool first = true;
+        for(auto &r: Parameters) {
+            if (first) {
+                first = false;
+            } else {
+                std::cout << ", ";
+            }
+            std::cout << r->GetName();
+        }
+        s << ")" << std::endl;
+        for(auto &r: Statements) {
+            r->Print(s);
+        }
+    }
+
+}
 
 TypeDescriptorClass const &VariableContentClass::getType() const
 {

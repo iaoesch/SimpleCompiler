@@ -158,6 +158,7 @@ public:
 public:
     FunctionDefinitionClass(const FunctionDefinitionClass &s);
     FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    void              Print(std::ostream &s) const;
 
 };
 
@@ -174,7 +175,7 @@ public:
                          ListClass,
                          ArrayClass,
                          MapClass,
-                         FunctionDefinitionClass> dataType;
+                         std::shared_ptr<FunctionDefinitionClass>> dataType;
 
     VariableContentClass(const TypeDescriptorClass &Type_) : Type(Type_), Data(std::monostate()), AssignedExpression(nullptr) {}
 
@@ -229,9 +230,10 @@ std::ostream &operator << (std::ostream &s, const VariableContentClass &v)
                    [&s](const ListClass &arg) { s << "<list>"; },
                    [&s](const ArrayClass &arg) { s << "<Array>"; },
                    [&s](const MapClass &arg) { s << "<map>"; },
-                   [&s](const FunctionDefinitionClass &arg) { s << "<function>"; },
+                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>"; },
                    [&s](const std::string& arg) { s << '"' << arg << '"'; }
                }, v.Data);
+    return s;
 }
 
 bool operator ==(const VariableContentClass &r, const VariableContentClass &l)

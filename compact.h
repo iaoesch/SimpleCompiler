@@ -117,12 +117,12 @@ class VariableValueClass : public ValueClass {
 class FunctionClass;
 
 class FunctionCallClass : public ValueClass {
-    std::shared_ptr<FunctionClass> TheFunction;
+    std::shared_ptr<Variables::FunctionDefinitionClass> TheFunction;
     std::list<std::shared_ptr<StatementClass>> Assignements;
 
 
 public:
-    FunctionCallClass(std::shared_ptr<FunctionClass> f, std::list<std::shared_ptr<StatementClass>> a) : TheFunction(f), Assignements(a) {}
+    FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionClass> f, std::list<std::shared_ptr<StatementClass>> a) : TheFunction(f), Assignements(a) {}
     FunctionCallClass(const FunctionCallClass &f) = default;
     virtual                  ~FunctionCallClass() override {}
     virtual Variables::VariableContentClass            Evaluate() const override{ return 0.0;}//Val->GetValue(); }
@@ -360,6 +360,10 @@ public:
 
 };
 
+class ReferementClass  : public AssignementClass {
+    using AssignementClass::AssignementClass;
+};
+
 class RepeatLoopClass : public StatementClass {
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::shared_ptr<ConditionalExpressionClass> Condition;
@@ -376,16 +380,19 @@ public:
 
 };
 
-class FunctionClass : public StatementClass {
+class FunctionCallStatementClass : public StatementClass {
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::list<std::shared_ptr<VariableClass>> Parameters;
     const std::string Name;
+    std::shared_ptr<FunctionCallClass> Function;
 
 public:
-    FunctionClass(const std::string Name_, std::list<std::shared_ptr<VariableClass>> _Parameters, std::list<std::shared_ptr<StatementClass>> _Statements) :
-        Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
+ //   FunctionCallStatementClass(const std::string Name_, std::list<std::shared_ptr<VariableClass>> _Parameters, std::list<std::shared_ptr<StatementClass>> _Statements) :
+ //       Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
+    FunctionCallStatementClass(std::shared_ptr<FunctionCallClass> f) :
+        Function(f) {}
 
-    virtual                  ~FunctionClass() {}
+    virtual                  ~FunctionCallStatementClass() {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;

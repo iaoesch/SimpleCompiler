@@ -661,36 +661,24 @@ void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-void FunctionClass::Print(std::ostream &s) const
+void FunctionCallStatementClass::Print(std::ostream &s) const
 {
     s << "function " << Name << "(";
-    bool first = true;
-    for(auto &r: Parameters) {
-        if (first) {
-            first = false;
-        } else {
-            std::cout << ", ";
-        }
-        std::cout << r->GetName();
-    }
-    s << ")" << std::endl;
-    for(auto &r: Statements) {
-        r->Print(s);
-    }
+    Function->Print(s);
     s << "endfunction" << std::endl;
 }
 
-std::shared_ptr<StatementClass> FunctionClass::Clone() const
+std::shared_ptr<StatementClass> FunctionCallStatementClass::Clone() const
 {
-    return std::make_shared<FunctionClass>(*this);
+    return std::make_shared<FunctionCallStatementClass>(*this);
 }
 
-std::shared_ptr<StatementClass> FunctionClass::Optimize()
+std::shared_ptr<StatementClass> FunctionCallStatementClass::Optimize()
 {
     return shared_from_this();
 }
 
-void FunctionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     
 }

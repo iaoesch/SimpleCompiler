@@ -11,9 +11,15 @@
   # include <list>
   class driver;
   class ExpressionClass;
+  class FunctionCallClass;
   class StatementClass;
   class ConditionalExpressionClass;
   class VariableClass;
+  namespace Variables {
+     class FunctionDefinitionClass;
+     class VariableContentClass;
+  }
+  typedef std::shared_ptr<Variables::FunctionDefinitionClass> FunctionDefinitionClassSharedPtr;
 }
 
 // The parsing context.
@@ -27,6 +33,7 @@
 %code {
 # include "driver.hh"
 # include "compact.h"
+# include "variableclass.h"
 }
 // typen: integer, float, string, stack, liste, array, map, function, dynamic, fixed
 
@@ -71,16 +78,15 @@
 ;
 
 %token <std::string> IDENTIFIER "identifier"
-%token <int> NUMBER "number"
+%token <int64_t> NUMBER "number"
 %type  <std::shared_ptr<ExpressionClass>> exp
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
-%type  <std::shared_ptr<StatementClass>> definition
 %type  <std::shared_ptr<StatementClass>> loopstatement
-%type  <std::shared_ptr<StatementClass>> functiondefinition
-%type  <std::shared_ptr<ExpressionClass>> functioncall
+%type  <std::shared_ptr<Variables::FunctionDefinitionClass>> functiondefinition
+%type  <std::shared_ptr<FunctionCallClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
 %type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
 %type  <std::shared_ptr<StatementClass>> parameter
@@ -96,30 +102,31 @@
 unit: statements {drv.result = $1;};
 
 statements:
-  statement              {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
+  definition             {$$ = std::list<std::shared_ptr<StatementClass>>();}
+| statements definition  {$$ = $1;}
+| statement              {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
 | statements statement   {$1.push_back($2); $$ = $1;}
 | statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ };
 
 statement:
-  definition ";"
 | assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
-| functioncall ";"      {$$ = $1;};
+| functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);};
 
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);};
 
 assignment:
-  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type())); };
+  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); };
 
 referement:
   "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); };
 
 definition:
-  functiondefinition {$$ = $1;};
+  functiondefinition {};
 
 functioncall:
-  "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {std::make_shared<FunctionCallClass>($<const Variables::FunctionDefinitionClass &>2, $4);};
+  "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($<FunctionDefinitionClassSharedPtr>2, $4);};
 
 parameterlist:
   %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}
@@ -134,12 +141,12 @@ functiondefinition:
   "function" "identifier" {drv.Variables.CreateNewContext($2+"Params"); }
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {$$ = std::make_shared<FunctionDefinitionClass>($2, $5, $8);}
+  "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>($5, $8); drv.Variables.LeaveContext(2);}
   ;
 
 argumentlist:
-  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, 0.0); $$.push_back(var);}
-| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, 0.0); $1.push_back(var); $$ = $1; };
+  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
+| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $1.push_back(var); $$ = $1; };
 
 %left or;
 %left and;
@@ -168,7 +175,7 @@ exp:
 | exp "/" exp   { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
 | "(" exp ")"   { std::swap ($$, $2); }
 | "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReference($1)); }
-| "number"      { $$ = std::make_shared<ConstantClass>($1); };
+| "number"      { $$ = std::make_shared<ConstantClass>(Variables::VariableContentClass($1)); };
 %%
 
 /*
