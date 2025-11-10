@@ -61,5 +61,11 @@ public:
   yy::location location;
 
   void halt();
+  void Run();
+  void Run(std::string id);
+  void execute(std::shared_ptr<StatementClass> s);
+  void compile(std::string id);
+  void Print(std::string id);
+  void Dump();
 };
 #endif // ! DRIVER_HH

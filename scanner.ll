@@ -25,6 +25,9 @@
 id    [a-zA-Z][a-zA-Z_0-9]*
 int   [0-9]+
 float [0-9]*([0-9]\.?|\.[0-9])[0-9]*([Ee][-+]?[0-9]+)
+string   \"(\(.|\n)|[^\\"\n])*\"
+string2  \"(\\.|\\\n|[^"\])*\"
+string3  ["]([^"\n\\]|\\(.|\n))*["]
 blank [ \t]
 
 %{
@@ -61,6 +64,10 @@ blank [ \t]
 "until"      return yy::parser::make_UNTIL (loc);
 "function"      return yy::parser::make_FUNCTION (loc);
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);
+"compile"   return yy::parser::make_COMPILE (loc);
+"run"    return yy::parser::make_RUN (loc);
+"dump"   return yy::parser::make_DUMP (loc);
+"exit"   return yy::parser::make_END (loc);
 "$"      return yy::parser::make_END (loc);
 
 {int}      {
@@ -69,13 +76,42 @@ blank [ \t]
   if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
     throw yy::parser::syntax_error (loc, "integer is out of range: "
                                     + std::string(yytext));
-  return yy::parser::make_NUMBER (n, loc);
+  return yy::parser::make_INTEGER (n, loc);
 }
+
+{float}    {
+             errno = 0;
+             char *end;
+             double f = std::strtod(yytext, &end);
+
+             if (errno == ERANGE)
+             {
+                 errno = 0;
+                 throw yy::parser::syntax_error (loc, "float is out of range: "
+                                                         + std::string(yytext));
+             }
+             if ((end - yytext) != yyleng) {
+                 throw yy::parser::syntax_error (loc, "float internal error: used only "
+                                                         + std::to_string(end - yytext)
+                                                         + " characters of <"
+                                                         + std::string(yytext)
+                                                         + ">");
+
+             }
+
+
+             return yy::parser::make_FLOAT (f, loc);
+      }
+
 {id}       return yy::parser::make_IDENTIFIER (yytext, loc);
+
 .          {
              throw yy::parser::syntax_error
                (loc, "invalid character: " + std::string(yytext));
-}
+            }
+
+{string3}   return yy::parser::make_STRING (std::string(yytext), loc);
+
 <<EOF>>    return yy::parser::make_END (loc);
 
 "//".*                                    { /* eat one line comments */ }

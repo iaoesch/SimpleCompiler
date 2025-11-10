@@ -82,10 +82,17 @@
   NOTEQUAL "!="
   MORETHAN   ">"
   MOREORSAME   ">="
+  COMPILE "compile"
+  RUN     "run"
+  DUMP    "dump"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
-%token <int64_t> NUMBER "number"
+%token <int64_t> INTEGER "integer"
+%token <std::string> STRING "string"
+%token <double> FLOAT "float"
+
+
 %type  <std::shared_ptr<ExpressionClass>> exp
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
@@ -98,6 +105,7 @@
 %type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
 %type  <std::shared_ptr<StatementClass>> parameter
 %type  <std::list<std::shared_ptr<StatementClass>>> parameterlist
+%type  <std::shared_ptr<VariableClass>> assignable
 
 
 %printer { yyoutput << $$; } <*>;
@@ -106,31 +114,70 @@
 
 %%
 %start unit;
-unit: statements {drv.result = $1;};
+unit:
+   input
+|  unit input
+;
+
+input:
+   statement {drv.execute($1);};
+|  definition
+|  command
+
+command:
+   "dump" {drv.Dump();}
+|  "run"  {drv.Run();}
+|  "run" "identifier" {drv.Run($2);}
+|  "identifier" {drv.Print($1);}
 
 statements:
   definition             {$$ = std::list<std::shared_ptr<StatementClass>>();}
 | statements definition  {$$ = $1;}
 | statement              {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
 | statements statement   {$1.push_back($2); $$ = $1;}
-| statements error '\n'  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery */ };
+;
+
+/*| statements error ";"  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery  };*/
 
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
-| functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);};
+| functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);}
+| error ";"             {$$ = std::make_shared<ErrorStatement>();}
+;
 
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);};
 
 assignment:
-  "identifier" ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); };
+  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1); };
+
+/* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
+
+assignable:
+  "identifier"  { drv.Variables.GetOrCreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
+| assignable "[" rangedindexes "]"
+| assignable "{" rangedindex "}"
+;
+
+rangedindexes:
+   rangedindex
+|  rangedindexes "," rangedindex
+;
+
+rangedindex:
+   exp
+|  exp "-" exp
+|  "*"
+
+
 
 referement:
   "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); };
 
 definition:
   functiondefinition {};
+
 
 functioncall:
   "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($<FunctionDefinitionClassSharedPtr>2, $4);};
@@ -153,7 +200,8 @@ functiondefinition:
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
   "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
-  ;
+| error "endfunction"
+;
 
 argumentlist:
   "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
@@ -186,8 +234,56 @@ exp:
 | exp "/" exp   { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
 | "(" exp ")"   { std::swap ($$, $2); }
 | "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReference($1)); }
-| "number"      { $$ = std::make_shared<ConstantClass>(Variables::VariableContentClass($1)); };
+| "integer"      { $$ = std::make_shared<ConstantClass>(Variables::VariableContentClass($1)); };
+
+literal:
+  "integer"
+| "float"
+| arrayliteral
+;
+
+arrayliteral:
+   "[" arrayentries "]"
+;
+
+arrayentries:
+   arrayentry
+|  arrayentries "," arrayentry
+;
+
+arrayentry:
+   literal
+|  "[" arrayentries "]"
+
+listliteral:
+   "{" listentries "}"
+;
+
+listentries:
+   literal
+|  listentries "," literal
+;
+
+mapliteral:
+   "[" mapentries "]"
+;
+
+mapentries:
+   mapentry
+|  mapentries "," mapentry
+;
+
+mapentry:
+   "<" key ":=" literal ">"
+;
+
+key:
+   "string"
+|  "integer"
+
+
 %%
+
 
 /*
 expr

@@ -131,6 +131,7 @@ private:
         case Type::Map:
         case Type::Function:
         case Type::String:
+        case Type::Undefined:
         case Type::Dynamic:
             Descriptor = std::monostate();
             break;
@@ -164,8 +165,21 @@ public:
 };
 
 class ArrayClass {
+    std::vector<uint32_t> Dimensions;
+    typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>> DataType;
+    //std::vector<std::unique_ptr<ArrayClass>> Data;
+    DataType Data;
 
-    std::vector<std::unique_ptr<ArrayClass>> Data;
+    // or
+    class Entry;
+
+    typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::vector<std::unique_ptr<Entry>>> RecursiveDataType;
+
+    class Entry {
+        RecursiveDataType Data;
+    };
+    RecursiveDataType Data2;
+
 public:
     ArrayClass(const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
     ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
@@ -269,7 +283,7 @@ inline std::ostream &operator << (std::ostream &s, const VariableContentClass &v
                    [&s](const ListClass &arg) { s << "<list>"; },
                    [&s](const ArrayClass &arg) { s << "<Array>"; },
                    [&s](const MapClass &arg) { s << "<map>"; },
-                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>"; },
+                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>\n"; arg->Print(s);  },
                    [&s](const std::string& arg) { s << '"' << arg << '"'; }
                }, v.Data);
     return s;

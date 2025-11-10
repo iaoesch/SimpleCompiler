@@ -61,6 +61,7 @@ void FunctionDefinitionClass::Print(std::ostream &s) const
 {
     {
         bool first = true;
+        s << "(";
         for(auto &r: Parameters) {
             if (first) {
                 first = false;

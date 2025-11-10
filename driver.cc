@@ -28,6 +28,43 @@ void driver::halt()
     std::cout << "Error happened" << std::endl;
 }
 
+void driver::Run()
+{
+
+}
+
+void driver::Run(std::string id)
+{
+
+}
+
+void driver::execute(std::shared_ptr<StatementClass> s)
+{
+
+}
+
+void driver::compile(std::string id)
+{
+
+}
+
+void driver::Print(std::string id)
+{
+    auto Var = Variables.GetVariableReference(id);
+    if (Var == nullptr) {
+        std::cout << "Error, variabe <" << id << "> does not exist\n";
+    } else {
+        std::cout << id << " = ";
+        Var->Print(std::cout);
+        std::cout << std::endl;
+    }
+}
+
+void driver::Dump()
+{
+    Variables.Dump(std::cout);
+}
+
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);

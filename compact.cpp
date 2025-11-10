@@ -719,3 +719,24 @@ const TypeDescriptorClass &UnaryOperationClass::GetType() const
 {
     return Operand->Type();
 }
+
+void ErrorStatement::Print(std::ostream &s) const
+{
+    s << "<Error Node>";
+}
+
+std::shared_ptr<StatementClass> ErrorStatement::Clone() const
+{
+    return std::make_shared<ErrorStatement>(*this);
+}
+
+std::shared_ptr<StatementClass> ErrorStatement::Optimize()
+{
+    return shared_from_this();
+}
+
+void ErrorStatement::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}
+
