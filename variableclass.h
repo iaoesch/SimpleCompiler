@@ -229,13 +229,22 @@ public:
                          MapClass,
                          std::shared_ptr<FunctionDefinitionClass>> dataType;
 
-    VariableContentClass(const TypeDescriptorClass &Type_) : Type(Type_), Data(std::monostate()), AssignedExpression(nullptr) {}
+    VariableContentClass(const VariableContentClass &) = default;
+    VariableContentClass(VariableContentClass &&) = default;
+    VariableContentClass &operator=(const VariableContentClass &) = default;
+    VariableContentClass &operator=(VariableContentClass &&) = default;
+    VariableContentClass()
+        : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), Data(std::monostate()), AssignedExpression(nullptr) {}
+    VariableContentClass(const TypeDescriptorClass &Type_)
+        : Type(Type_), Data(std::monostate()), AssignedExpression(nullptr) {}
 
     VariableContentClass(int64_t Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(double Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
+   // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
+    static VariableContentClass MakeUndefined() {return VariableContentClass(TypeDescriptorClass(TypeDescriptorClass::Type::Undefined));}
 
     const TypeDescriptorClass &getType() const;
     void setType(const TypeDescriptorClass &newType);

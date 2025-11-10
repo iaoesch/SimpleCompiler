@@ -106,6 +106,9 @@
 %type  <std::shared_ptr<StatementClass>> parameter
 %type  <std::list<std::shared_ptr<StatementClass>>> parameterlist
 %type  <std::shared_ptr<VariableClass>> assignable
+%type  <Variables::VariableContentClass> literal
+%type  <Variables::VariableContentClass> numericliteral
+
 
 
 %printer { yyoutput << $$; } <*>;
@@ -155,7 +158,7 @@ assignment:
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
 assignable:
-  "identifier"  { drv.Variables.GetOrCreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
+  "identifier"  { $$ = drv.Variables.GetOrCreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
 | assignable "[" rangedindexes "]"
 | assignable "{" rangedindex "}"
 ;
@@ -234,12 +237,20 @@ exp:
 | exp "/" exp   { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
 | "(" exp ")"   { std::swap ($$, $2); }
 | "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReference($1)); }
-| "integer"      { $$ = std::make_shared<ConstantClass>(Variables::VariableContentClass($1)); };
+| literal       { $$ = std::make_shared<ConstantClass>($1); }
+;
 
 literal:
-  "integer"
-| "float"
-| arrayliteral
+  numericliteral {$$ = $1;}
+| "string"       {$$ = Variables::VariableContentClass($1); }
+| arrayliteral   {$$ = Variables::VariableContentClass::MakeUndefined();}
+| listliteral    {$$ = Variables::VariableContentClass::MakeUndefined();}
+| mapliteral     {$$ = Variables::VariableContentClass::MakeUndefined();}
+;
+
+numericliteral:
+  "integer"   { $$ = Variables::VariableContentClass($1); }
+| "float"     { $$ = Variables::VariableContentClass($1); }
 ;
 
 arrayliteral:

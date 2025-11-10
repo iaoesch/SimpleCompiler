@@ -1,5 +1,6 @@
 #include "driver.hh"
 #include "parser.hpp"
+#include "compact.h"
 
 driver::driver ()
     : Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
@@ -40,7 +41,8 @@ void driver::Run(std::string id)
 
 void driver::execute(std::shared_ptr<StatementClass> s)
 {
-
+    std::cout << ">>>";
+    s->Print(std::cout);
 }
 
 void driver::compile(std::string id)
