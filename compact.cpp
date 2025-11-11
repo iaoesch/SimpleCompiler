@@ -7,7 +7,7 @@ static int NodeNumber = 1;
 
 using std::endl;
 
-double            ExpressionClass::Evaluate() const {std::cout << "\nVirtual Call expression Evaluate()"; return 0;};
+Variables::VariableContentClass            ExpressionClass::Evaluate() const {std::cout << "\nVirtual Call expression Evaluate()"; return 0.0;};
 std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const {std::cout << "\nVirtual Call expression Derive()"; return NULL;};
 void              ExpressionClass::Print(std::ostream &s) const {std::cout << "\nVirtual Call expression print()"; };
 std::shared_ptr<ExpressionClass> ExpressionClass::Clone() const {std::cout << "\nVirtual Call expression Clone()"; return NULL;};
@@ -19,7 +19,7 @@ void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) c
 
 
 
-double            InverseClass::Evaluate() const {return (1 / Operand->Evaluate()); };
+Variables::VariableContentClass            InverseClass::Evaluate() const {return (1LL / Operand->Evaluate()); };
 std::shared_ptr<ExpressionClass> InverseClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(std::make_shared<MultiplyClass>(std::make_shared<InverseClass>( std::make_shared<SquareClass>(Operand->Clone())), Operand->Derive(TD))); };
 void              InverseClass::Print(std::ostream &s) const { s << "1.0 / ("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> InverseClass::Clone() const {return std::make_shared<InverseClass>(*this); };
@@ -39,7 +39,7 @@ void              InverseClass::DrawNode(std::ostream &s, int MyNodeNumber) cons
 
 
 
-double            SquareClass::Evaluate() const {double tmp = Operand->Evaluate(); return tmp*tmp; };
+Variables::VariableContentClass            SquareClass::Evaluate() const {Variables::VariableContentClass tmp = Operand->Evaluate(); return tmp*tmp; };
 std::shared_ptr<ExpressionClass> SquareClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0), Operand->Clone()), Operand->Derive(TD)); };
 void              SquareClass::Print(std::ostream &s) const { s << "("; Operand->Print(s); s << ")^2.0";  };
 std::shared_ptr<ExpressionClass> SquareClass::Clone() const {return std::make_shared<SquareClass>(*this); };
@@ -57,7 +57,7 @@ void              SquareClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 };
 
 
-double            NegationClass::Evaluate() const {return - Operand->Evaluate(); };
+Variables::VariableContentClass            NegationClass::Evaluate() const {return - Operand->Evaluate(); };
 std::shared_ptr<ExpressionClass> NegationClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(Operand->Derive(TD)); };
 void              NegationClass::Print(std::ostream &s) const { s << "-("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> NegationClass::Clone() const {return std::make_shared<NegationClass>(*this); };
@@ -75,7 +75,7 @@ void              NegationClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 };
 
 
-double            LogarithmClass::Evaluate() const {return log(Operand->Evaluate()); };
+Variables::VariableContentClass            LogarithmClass::Evaluate() const {return log(Operand->Evaluate()); };
 std::shared_ptr<ExpressionClass> LogarithmClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(Operand->Clone()), Operand->Derive(TD)); };
 void              LogarithmClass::Print(std::ostream &s) const { s << "ln("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> LogarithmClass::Clone() const {return std::make_shared<LogarithmClass>(*this); };
@@ -93,7 +93,7 @@ void              LogarithmClass::DrawNode(std::ostream &s, int MyNodeNumber) co
 };
 
 
-double            ExponentialClass::Evaluate() const {return exp(Operand->Evaluate()); };
+Variables::VariableContentClass            ExponentialClass::Evaluate() const {return exp(Operand->Evaluate()); };
 std::shared_ptr<ExpressionClass> ExponentialClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(*this), Operand->Derive(TD)); };
 void              ExponentialClass::Print(std::ostream &s) const { s << "exp("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> ExponentialClass::Clone() const {return std::make_shared<ExponentialClass>(*this); };
@@ -138,7 +138,7 @@ void              ExponentialClass::DrawNode(std::ostream &s, int MyNodeNumber) 
 };
 
 
-double            SquareRootClass::Evaluate() const {return sqrt(Operand->Evaluate()); };
+Variables::VariableContentClass            SquareRootClass::Evaluate() const {return sqrt(Operand->Evaluate()); };
 std::shared_ptr<ExpressionClass> SquareRootClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0), std::make_shared<SquareRootClass>(*this))), Operand->Derive(TD)); };
 void              SquareRootClass::Print(std::ostream &s) const { s << "sqrt("; Operand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> SquareRootClass::Clone() const {return std::make_shared<SquareRootClass>(*this); };
@@ -155,7 +155,7 @@ void              SquareRootClass::DrawNode(std::ostream &s, int MyNodeNumber) c
    Operand->DrawNode(s, NodeNumber1);
 };
 
-double            PowerClass::Evaluate() const {return pow(LeftOperand->Evaluate(), RightOperand->Evaluate()); };
+Variables::VariableContentClass            PowerClass::Evaluate() const {return pow(LeftOperand->Evaluate(), RightOperand->Evaluate()); };
 std::shared_ptr<ExpressionClass> PowerClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(std::make_shared<MultiplyClass>(std::make_shared<LogarithmClass>(LeftOperand->Clone()),
                                                                                                                                    RightOperand->Clone()
                                                                                                                                )),
@@ -202,8 +202,8 @@ std::shared_ptr<ExpressionClass> PowerClass::Optimize()
 #endif
   bool LeftConst  = LeftOperand->IsConstant();
   bool RightConst = RightOperand->IsConstant();
-  double ValLeft  = LeftOperand->Evaluate();
-  double ValRight = RightOperand->Evaluate();
+  Variables::VariableContentClass ValLeft  = LeftOperand->Evaluate();
+  Variables::VariableContentClass ValRight = RightOperand->Evaluate();
 
   if (LeftConst  && (ValLeft == 0.0)) {
      //delete this; // Dangerous !!!
@@ -240,7 +240,7 @@ void              PowerClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 
 
-double            MultiplyClass::Evaluate() const {return LeftOperand->Evaluate() * RightOperand->Evaluate(); };
+Variables::VariableContentClass            MultiplyClass::Evaluate() const {return LeftOperand->Evaluate() * RightOperand->Evaluate(); };
 std::shared_ptr<ExpressionClass> MultiplyClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(std::make_shared<MultiplyClass>(LeftOperand->Clone(), RightOperand->Derive(TD)), std::make_shared<MultiplyClass>(LeftOperand->Derive(TD), RightOperand->Clone())); };
 void              MultiplyClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") * ("; RightOperand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> MultiplyClass::Clone() const {return std::make_shared<MultiplyClass>(*this); };
@@ -292,8 +292,8 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize()
 
   bool LeftConst  = LeftOperand->IsConstant();
   bool RightConst = RightOperand->IsConstant();
-  double ValLeft  = LeftOperand->Evaluate();
-  double ValRight = RightOperand->Evaluate();
+  Variables::VariableContentClass ValLeft = LeftOperand->Evaluate();
+  Variables::VariableContentClass ValRight = RightOperand->Evaluate();
 
   if (   (LeftConst  && (ValLeft == 0.0))
        ||(RightConst && (ValRight == 0.0))) {
@@ -330,7 +330,7 @@ void              MultiplyClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 };
 
 
-double            AdditionClass::Evaluate() const {return LeftOperand->Evaluate() + RightOperand->Evaluate(); };
+Variables::VariableContentClass            AdditionClass::Evaluate() const {return LeftOperand->Evaluate() + RightOperand->Evaluate(); };
 std::shared_ptr<ExpressionClass> AdditionClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(LeftOperand->Derive(TD), RightOperand->Derive(TD)); };
 void              AdditionClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") + ("; RightOperand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> AdditionClass::Clone() const {return std::make_shared<AdditionClass>(*this); };
@@ -341,8 +341,8 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize()
 
   bool LeftConst  = LeftOperand->IsConstant();
   bool RightConst = RightOperand->IsConstant();
-  double ValLeft  = LeftOperand->Evaluate();
-  double ValRight = RightOperand->Evaluate();
+  Variables::VariableContentClass ValLeft  = LeftOperand->Evaluate();
+  Variables::VariableContentClass ValRight = RightOperand->Evaluate();
 
   if (LeftConst && RightConst) {
      //delete this; // Dangerous !!!
@@ -449,6 +449,11 @@ bool BinaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
    return false;
 }
 
+const TypeDescriptorClass BinaryOperationClass::GetType() const
+{
+    return CommonType(LeftOperand->Type(), RightOperand->Type());
+}
+
 bool ConstantClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
    if (typeid(*this) == typeid(*Other)) {
@@ -459,6 +464,11 @@ bool ConstantClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 void              ConstantClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Value << "|<f2> \"];" << endl;
+}
+
+const TypeDescriptorClass ConstantClass::GetType() const
+{
+    return Value.getType();
 };
 
 
@@ -475,6 +485,11 @@ bool VariableValueClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
+}
+
+const TypeDescriptorClass VariableValueClass::GetType() const
+{
+    return Val->Type();
 };
 
 
@@ -660,3 +675,68 @@ void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
 
 }
+
+void FunctionCallStatementClass::Print(std::ostream &s) const
+{
+    s << "function " << Name << "(";
+    Function->Print(s);
+    s << "endfunction" << std::endl;
+}
+
+std::shared_ptr<StatementClass> FunctionCallStatementClass::Clone() const
+{
+    return std::make_shared<FunctionCallStatementClass>(*this);
+}
+
+std::shared_ptr<StatementClass> FunctionCallStatementClass::Optimize()
+{
+    return shared_from_this();
+}
+
+void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    
+}
+
+void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }
+
+bool FunctionCallClass::IsSame(std::shared_ptr<ExpressionClass> Other)
+{
+    return false;
+}
+
+void FunctionCallClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}
+
+const TypeDescriptorClass FunctionCallClass::GetType() const
+{
+    return TypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
+}
+
+const TypeDescriptorClass UnaryOperationClass::GetType() const
+{
+    return Operand->Type();
+}
+
+void ErrorStatement::Print(std::ostream &s) const
+{
+    s << "<Error Node>";
+}
+
+std::shared_ptr<StatementClass> ErrorStatement::Clone() const
+{
+    return std::make_shared<ErrorStatement>(*this);
+}
+
+std::shared_ptr<StatementClass> ErrorStatement::Optimize()
+{
+    return shared_from_this();
+}
+
+void ErrorStatement::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+
+}
+

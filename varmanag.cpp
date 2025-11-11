@@ -23,6 +23,7 @@
 /* imports */
 #include "varmanag.hpp"
 #include "compact.h"
+#include "Errclass.hpp"
 
 /* Class constant declaration  */
 
@@ -205,6 +206,262 @@ const char *BTError::GetDebugInfo(void)
    }      
 }
 #endif
+
+extern VariableType RecursiveDefined;
+#define RECURSIVE_ERROR_FLAG (&RecursiveDefined)
+
+extern VariableType *MakeVariable(char *Name, ExpressionNodeType *Value);
+extern ExpressionNodeType *EvaluateVariable(VariableType *Variable);
+extern char *GetVariableName(VariableType *Variable);
+extern void  AssignVariable(VariableType *Variable, ExpressionNodeType *Value);
+extern ExpressionNodeType *EvaluateGlobalVariableByName(char *Name);
+extern void DumpVariableTable(OutputStreamType *Stream);
+
+
+
+extern FunctionType *DefineFunction(char *Name, ExpressionNodeType *Formula, ExpressionNodeType *ParameterList);
+extern ExpressionNodeType *GetFunctionFormula(FunctionType *Variable);
+extern ExpressionNodeType *GetFunctionParameterList(FunctionType *Variable);
+extern char *GetFunctionName(FunctionType *Variable);
+extern void DumpFunctionTable(OutputStreamType *Stream);
+
+
+extern void StartLocalTable(void);
+extern void StopLocalTable(void);
+extern void ClearLocalTable(void);
+
+
+
+enum VariableLookup {GLOBAL_ONLY = 1, LOCAL_ONLY = 2};
+
+struct Variable {
+   char *Name;
+   ExpressionNodeType *Value;
+   VariableType *Next;
+};
+
+struct Function {
+   char *Name;
+   ExpressionNodeType *Formula;
+   ExpressionNodeType *Parameters;
+   FunctionType *Next;
+};
+
+VariableType RecursiveDefined = {"<Recursive Defined!>", NULL, NULL};
+
+static FunctionType *GlobalFunctionTable = NULL;
+static VariableType *GlobalVariableTable = NULL;
+static VariableType *LocalVariableTable = NULL;
+static int CreateLocalVariablesEnabled = 0;
+
+static VariableType *CreateVariable(char *Name, ExpressionNodeType *Value)
+{
+   VariableType *Var = malloc(sizeof(VariableType) + strlen(Name) + 2);
+   if (Var == NULL) {
+      printf("\nOut of Memory in CreateVariable\n");
+      return NULL;
+   }
+   Var->Name = ((char *)Var) + sizeof(VariableType);
+   strcpy(Var->Name, Name);
+   Var->Value = Value;
+   Var->Next  = NULL;
+   return Var;
+}
+
+static VariableType *FindVariable(char *Name, int LocalOrGlobal)
+{
+   VariableType *p = NULL;
+
+   if ((LocalOrGlobal & GLOBAL_ONLY) == 0) {
+      for (p = LocalVariableTable; p != NULL; p = p->Next) {
+         if (strcmp(p->Name, Name) == 0) {
+            break;
+         }
+      }
+   }
+   if (((LocalOrGlobal & LOCAL_ONLY) == 0) && (p == NULL)) {
+      for (p = GlobalVariableTable; p != NULL; p = p->Next) {
+         if (strcmp(p->Name, Name) == 0) {
+            break;
+         }
+      }
+   }
+   return p;
+}
+
+void DumpVariableTable(OutputStreamType *Stream)
+{
+   VariableType *p = NULL;
+
+   for (p = GlobalVariableTable; p != NULL; p = p->Next) {
+
+      PRINTF(Stream, "%5s: ", p->Name);
+      if (p->Value == NULL) {
+         PRINTF(Stream, "<empty>\n");
+      } else {
+         PrintTree(p->Value, Stream);
+         PRINTF(Stream, "\n");
+      }
+   }
+}
+
+VariableType *MakeVariable(char *Name, ExpressionNodeType *Value)
+{
+   VariableType *p;
+
+
+#if 0
+   for (p = LocalVariableTable; p != NULL; p = p->Next) {
+      if (strcmp(p->Name, Name) == 0) {
+         break;
+      }
+   }
+   if ((CreateLocalVariablesEnabled == 0) && (p == NULL)) {
+      for (p = GlobalVariableTable; p != NULL; p = p->Next) {
+         if (strcmp(p->Name, Name) == 0) {
+            break;
+         }
+      }
+   }
+#else
+   p = FindVariable(Name, CreateLocalVariablesEnabled==0?0:LOCAL_ONLY);
+#endif
+
+   if (p == NULL) {
+      p = CreateVariable(Name, Value);
+      if (CreateLocalVariablesEnabled == 1) {
+         p->Next = LocalVariableTable;
+         LocalVariableTable = p;
+      } else {
+         p->Next = GlobalVariableTable;
+         GlobalVariableTable = p;
+      }
+      return p;
+   } else {
+      if (Value != NULL) {
+         p->Value = Value;
+      }
+      return p;
+   }
+}
+
+ExpressionNodeType *EvaluateVariable(VariableType *Variable)
+{
+      return Variable->Value;
+}
+
+ExpressionNodeType *EvaluateGlobalVariableByName(char *Name)
+{
+   VariableType *Variable = FindVariable(Name, GLOBAL_ONLY);
+   if (Variable != NULL) {
+      return Variable->Value;
+   } else {
+      return NULL;
+   }
+}
+
+void  AssignVariable(VariableType *Variable, ExpressionNodeType *Value)
+{
+   Variable->Value = Value;
+}
+
+
+char *GetVariableName(VariableType *Variable)
+{
+      return Variable->Name;
+}
+
+static FunctionType *CreateFunction(char *Name, ExpressionNodeType *Formula, ExpressionNodeType *ParameterList)
+{
+   FunctionType *Var = malloc(sizeof(FunctionType) + strlen(Name) + 2);
+   if (Var == NULL) {
+      printf("\nOut of Memory in CreateFunction\n");
+      return NULL;
+   }
+   Var->Name = ((char *)Var) + sizeof(FunctionType);
+   strcpy(Var->Name, Name);
+   Var->Formula = Formula;
+   Var->Parameters = ParameterList;
+   Var->Next  = NULL;
+   return Var;
+}
+
+FunctionType *DefineFunction(char *Name, ExpressionNodeType *Formula, ExpressionNodeType *ParameterList)
+{
+   FunctionType *p;
+
+   for (p = GlobalFunctionTable; p != NULL; p = p->Next) {
+      if (strcmp(p->Name, Name) == 0) {
+         break;
+      }
+   }
+   if (p == NULL) {
+      p = CreateFunction(Name, Formula, ParameterList);
+      p->Next = GlobalFunctionTable;
+      GlobalFunctionTable = p;
+      return p;
+   } else {
+      if (Formula != NULL) {
+         p->Formula = Formula;
+         p->Parameters = ParameterList;
+      }
+      return p;
+   }
+}
+
+void DumpFunctionTable(OutputStreamType *Stream)
+{
+   FunctionType *p;
+
+   for (p = GlobalFunctionTable; p != NULL; p = p->Next) {
+      PRINTF(Stream, "%5s(", p->Name);
+      if (p->Parameters != NULL) {
+         PrintTree(p->Parameters, Stream);
+      }
+      PRINTF(Stream, "):");
+      if (p->Formula == NULL) {
+         PRINTF(Stream, "<empty>\n");
+      } else {
+         PrintTree(p->Formula, Stream);
+         PRINTF(Stream, "\n");
+      }
+   }
+}
+
+
+ExpressionNodeType *GetFunctionFormula(FunctionType *Variable)
+{
+      return Variable->Formula;
+}
+
+ExpressionNodeType *GetFunctionParameterList(FunctionType *Variable)
+{
+   return Variable->Parameters;
+}
+
+char *GetFunctionName(FunctionType *Variable)
+{
+      return Variable->Name;
+}
+
+
+
+void StartLocalTable(void)
+{
+   CreateLocalVariablesEnabled = 1;
+}
+
+void StopLocalTable(void)
+{
+   CreateLocalVariablesEnabled = 0;
+}
+
+void ClearLocalTable(void)
+{
+   LocalVariableTable = NULL;
+   CreateLocalVariablesEnabled = 0;
+}
+
 #endif
 /*****************************************************************************/
 /*  End  Method : GetDebugInfo                                               */
@@ -216,10 +473,116 @@ const char *BTError::GetDebugInfo(void)
 
 
 
-VariableClass *VariableManager::GetVariableReference(std::string Name)
+void VariableManager::CreateNewContext(std::string Name)
 {
-    if (Variables.find(Name) == Variables.end()) {
-        Variables[Name] = std::make_shared<VariableClass>(Name, 0.0);
+    if (ContextStack.empty()) {
+        ContextStack.push_back(std::make_shared<VariableContextClass>(Name));
+    } else {
+        ContextStack.push_back(ContextStack.back()->CreateSubContext(Name));
     }
-    return &(*Variables[Name]);
+    Contexts.push_back(ContextStack.back());
 }
+
+void VariableManager::LeaveContext(int Levels)
+{
+    while (Levels > 0) {
+        if (ContextStack.empty()) {
+            throw ERROR_OBJECT("popping empty contextstack");
+        }
+
+        ContextStack.pop_back();
+        Levels--;
+    }
+}
+
+std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
+{
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    auto Var = std::make_shared<VariableClass>(Name, Type);
+    return ContextStack.back()->RegisterVariable(Name, Var, false);
+}
+
+
+std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
+{
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    auto Var = ContextStack.back()->LookupVariable(Name);
+    if (Var != nullptr) {
+        return Var;
+    } else {
+        return CreateVariable(Name, Type, Value);
+    }
+}
+
+
+std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string Name)
+{
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    return ContextStack.back()->LookupVariable(Name);
+}
+
+void VariableManager::Dump(std::ostream &s)
+{
+    s << "Scopes:" << std::endl;
+    for (auto &c: Contexts) {
+        c->Dump(s);
+    }
+}
+
+std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed)
+{
+    auto it = Variables.find(Name);
+    if (it == Variables.end() || OverwriteAllowed) {
+        Var->SetContext(this);
+        Variables[Name] = Var;
+        return Var;
+    }
+    return nullptr;
+
+
+}
+
+std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::string Name)
+{
+    auto it = Variables.find(Name);
+    if (it == Variables.end()) {
+        if (ParentContext != nullptr) {
+            return ParentContext->LookupVariable(Name);
+        }
+        return nullptr;
+    }
+    return it->second;
+}
+
+void VariableContextClass::Dump(std::ostream &s)
+{
+    s << "Context <" << Name << ">" << std::endl;
+    s << "Parent: <" << ((ParentContext != nullptr) ? ParentContext->Name : std::string(" --- ")) << ">" << std::endl;
+    s << "Children:";
+    if (Children.empty()) {
+        s << " None " << std::endl;
+    } else {
+        for (auto &c: Children) {
+            s << c->Name << ",";
+        }
+        s << std::endl;
+    }
+    s << "Content:" << std::endl;
+    for (auto &i: Variables) {
+        std::cout << i.first << "{ " << std::endl;
+        i.second->Print(s);
+        std::cout << "}" << std::endl;
+
+    }
+
+}
+

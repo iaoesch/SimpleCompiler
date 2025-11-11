@@ -1,26 +1,27 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include "variableclass.h"
 
 
-class VariableClass {
+class VariableClasse {
    std::string Name;
    double      Value;
 
    public:
 
-               VariableClass(std::string N, double V) : Name(N), Value(V) {}
+               VariableClasse(std::string N, double V) : Name(N), Value(V) {}
    std::string GetName()  const {return Name; }
    double      GetValue() const {return Value; }
    void        SetValue(double v) {Value = v; }
 };
 
-typedef  VariableClass *VariableReferenceType;
+typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:
    virtual                  ~ExpressionClass() {}
-   virtual double            Evaluate() const;// = 0;
+   virtual Variables::VariableContentClass            Evaluate() const;// = 0;
    virtual std::shared_ptr<ExpressionClass>  Derive(VariableReferenceType ToDerive) const;// = 0;
    virtual void              Print(std::ostream &s) const;// = 0;
    virtual std::shared_ptr<ExpressionClass> Clone() const;// = 0;
@@ -28,6 +29,10 @@ class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    virtual bool              IsConstant();// = 0;
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other);// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+   const TypeDescriptorClass           Type() {return GetType();}
+   private:
+   virtual const TypeDescriptorClass   GetType() const = 0;
+
 };
 
 class ValueClass : public ExpressionClass {
@@ -47,6 +52,10 @@ class UnaryOperationClass : public ExpressionClass {
    virtual                  ~UnaryOperationClass() override {/* delete Operand;*/ }
    virtual bool              IsConstant() override {return Operand->IsConstant();}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override ;// = 0;
+
+   // ExpressionClass interface
+   private:
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class BinaryOperationClass : public ExpressionClass {
@@ -61,15 +70,18 @@ class BinaryOperationClass : public ExpressionClass {
    virtual                  ~BinaryOperationClass() override {/*delete LeftOperand; delete RightOperand;*/}
    virtual bool              IsConstant() override {return LeftOperand->IsConstant()&&RightOperand->IsConstant();}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
+
+   private:
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class ConstantClass : public ValueClass {
-   double Value;
+   Variables::VariableContentClass Value;
 
    public:
-                             ConstantClass(double v) : Value(v) {}
+                             ConstantClass(Variables::VariableContentClass v) : Value(v) {}
    virtual                  ~ConstantClass() override {}
-   virtual double            Evaluate() const override { return Value; }
+   virtual Variables::VariableContentClass            Evaluate() const override { return Value; }
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { return std::make_shared<ConstantClass>(0.0); }
    virtual void              Print(std::ostream &s) const override { s << Value; }
    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<ConstantClass>(*this); }
@@ -77,6 +89,9 @@ class ConstantClass : public ValueClass {
    virtual bool              IsConstant() override {return true;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+   private:
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class VariableValueClass : public ValueClass {
@@ -86,7 +101,7 @@ class VariableValueClass : public ValueClass {
                              VariableValueClass(VariableReferenceType v) : Val(v) {}
                              VariableValueClass(const VariableValueClass &v) : Val(v.Val) {}
    virtual                  ~VariableValueClass() override {}
-   virtual double            Evaluate() const override{ return Val->GetValue(); }
+   virtual Variables::VariableContentClass  Evaluate() const override{ return Val->GetValue(); }
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == Val) {return std::make_shared<ConstantClass>(1.0);} else {return std::make_shared<ConstantClass>(0.0);}}
    virtual void              Print(std::ostream &s) const override { s << Val->GetName(); }
    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<VariableValueClass>(*this); }
@@ -94,7 +109,35 @@ class VariableValueClass : public ValueClass {
    virtual bool              IsConstant() override {return false;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+   private:
+   virtual const TypeDescriptorClass GetType() const override;
 };
+
+class FunctionClass;
+
+class FunctionCallClass : public ValueClass {
+    std::shared_ptr<Variables::FunctionDefinitionClass> TheFunction;
+    std::list<std::shared_ptr<StatementClass>> Assignements;
+
+
+public:
+    FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionClass> f, std::list<std::shared_ptr<StatementClass>> a) : TheFunction(f), Assignements(a) {}
+    FunctionCallClass(const FunctionCallClass &f) = default;
+    virtual                  ~FunctionCallClass() override {}
+    virtual Variables::VariableContentClass            Evaluate() const override{ return 0.0;}//Val->GetValue(); }
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == ToDerive) {return std::make_shared<ConstantClass>(1.0);} else {return std::make_shared<ConstantClass>(0.0);}}
+    virtual void              Print(std::ostream &s) const override;
+    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<FunctionCallClass>(*this); }
+    virtual std::shared_ptr<ExpressionClass> Optimize() override { return shared_from_this(); }
+    virtual bool              IsConstant() override {return false;}
+    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+private:
+    virtual const TypeDescriptorClass GetType() const override;
+};
+
 
 class InverseClass : public UnaryOperationClass {
 
@@ -102,12 +145,13 @@ class InverseClass : public UnaryOperationClass {
                              InverseClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              InverseClass(const InverseClass &v) : UnaryOperationClass(v) {}
    virtual                  ~InverseClass() override {}
-   virtual double            Evaluate() const override;//{return (1 / Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return (1 / Operand->Evaluate()); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;// {return new NegationClass(new MultiplyClass(new InverseClass( new SquareClass(Operand->Clone())), Operand->Derive())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "1.0 / ("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new InverseClass(*this); };
    virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
 };
 
 class SquareClass : public UnaryOperationClass {
@@ -116,7 +160,7 @@ class SquareClass : public UnaryOperationClass {
                              SquareClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              SquareClass(const SquareClass &v) : UnaryOperationClass(v) {}
    virtual                  ~SquareClass() override {}
-   virtual double            Evaluate() const override;//{double tmp = Operand->Evaluate(); return tmp*tmp; };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{double tmp = Operand->Evaluate(); return tmp*tmp; };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new MultiplyClass(new ConstantClass(2.0), Operand->Clone()), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; Operand->Print(s); s << ")^2.0";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new SquareClass(*this); };
@@ -130,7 +174,7 @@ class NegationClass : public UnaryOperationClass {
                              NegationClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              NegationClass(const NegationClass &v) : UnaryOperationClass(v) {}
    virtual                  ~NegationClass() override {}
-   virtual double            Evaluate() const override;//{return - Operand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return - Operand->Evaluate(); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new NegateClass(Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "-("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new NegationClass(*this); };
@@ -144,7 +188,7 @@ class LogarithmClass : public UnaryOperationClass {
                              LogarithmClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              LogarithmClass(const LogarithmClass &v) : UnaryOperationClass(v) {}
    virtual                  ~LogarithmClass() override{}
-   virtual double            Evaluate() const override;//{return (log(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return (log(Operand->Evaluate()); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new InverseClass(Operand->Clone()), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "ln("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new LogarithmClass(*this); };
@@ -158,7 +202,7 @@ class ExponentialClass : public UnaryOperationClass {
                              ExponentialClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              ExponentialClass(const ExponentialClass &v) : UnaryOperationClass(v) {}
    virtual                  ~ExponentialClass() override {}
-   virtual double            Evaluate() const override;//{return (exp(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return (exp(Operand->Evaluate()); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new ExponentialClass(*this)), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "exp("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new ExponentialClass(*this); };
@@ -172,7 +216,7 @@ class SquareRootClass : public UnaryOperationClass {
     SquareRootClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              SquareRootClass(const SquareRootClass &v) : UnaryOperationClass(v) {}
    virtual                  ~SquareRootClass() override {}
-   virtual double            Evaluate() const override;//{return (sqrt(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return (sqrt(Operand->Evaluate()); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new InverseClass(new MultiplyClass(new ConstantClass(2.0), new SquareRootClass(*this))), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "sqrt("; Operand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new SquareRootClass(*this); };
@@ -187,7 +231,7 @@ class PowerClass : public BinaryOperationClass {
                              PowerClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              PowerClass(const PowerClass &v) : BinaryOperationClass(v) {}
    virtual                  ~PowerClass() override {}
-   virtual double            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new AdditionClass(new MultiplyClass(LeftOperand->Clone(), RigthOperand->Derive()), new MultiplyClass(LeftOperand->Derive(), RigthOperand->Clone())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new MultiplyClass(*this); };
@@ -201,7 +245,7 @@ class MultiplyClass : public BinaryOperationClass {
                              MultiplyClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              MultiplyClass(const MultiplyClass &v) : BinaryOperationClass(v) {}
    virtual                  ~MultiplyClass() override {}
-   virtual double            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new AdditionClass(new MultiplyClass(LeftOperand->Clone(), RigthOperand->Derive()), new MultiplyClass(LeftOperand->Derive(), RigthOperand->Clone())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new MultiplyClass(*this); };
@@ -216,7 +260,7 @@ class AdditionClass : public BinaryOperationClass {
                              AdditionClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              AdditionClass(const AdditionClass &v) : BinaryOperationClass(v) {}
    virtual                  ~AdditionClass() override {}
-   virtual double            Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override ;//{return new AdditionClass(LeftOperand->Derive()), RigthOperand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
@@ -316,6 +360,10 @@ public:
 
 };
 
+class ReferementClass  : public AssignementClass {
+    using AssignementClass::AssignementClass;
+};
+
 class RepeatLoopClass : public StatementClass {
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::shared_ptr<ConditionalExpressionClass> Condition;
@@ -331,5 +379,41 @@ public:
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
 
 };
+
+class FunctionCallStatementClass : public StatementClass {
+    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::list<std::shared_ptr<VariableClass>> Parameters;
+    const std::string Name;
+    std::shared_ptr<FunctionCallClass> Function;
+
+public:
+ //   FunctionCallStatementClass(const std::string Name_, std::list<std::shared_ptr<VariableClass>> _Parameters, std::list<std::shared_ptr<StatementClass>> _Statements) :
+ //       Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
+    FunctionCallStatementClass(std::shared_ptr<FunctionCallClass> f) :
+        Function(f) {}
+
+    virtual                  ~FunctionCallStatementClass() {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+};
+
+class ErrorStatement : public StatementClass {
+
+public:
+    //   FunctionCallStatementClass(const std::string Name_, std::list<std::shared_ptr<VariableClass>> _Parameters, std::list<std::shared_ptr<StatementClass>> _Statements) :
+    //       Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
+    ErrorStatement() {}
+
+    virtual                  ~ErrorStatement() {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+};
+
 
 

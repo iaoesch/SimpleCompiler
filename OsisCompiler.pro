@@ -6,7 +6,8 @@ CONFIG -= qt
 SOURCES += \
         expression.cpp \
         main.cpp \
-        main_copy.cpp
+        main_copy.cpp \
+        variableclass.cpp
 
 #FLEXSOURCES += my_lex_sourcefile.l
 FLEXSOURCES += lexer.l
@@ -35,7 +36,8 @@ QMAKE_EXTRA_COMPILERS += bison
 
 
 HEADERS += \
-   expression.h
+   expression.h \
+   variableclass.h
 
 DISTFILES += \
    lexer.l \

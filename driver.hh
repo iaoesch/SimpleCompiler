@@ -12,6 +12,26 @@
 // ... and declare it for the parser's sake.
 YY_DECL;
 
+class ReferementClass;
+class AssignementClass;
+
+class FunctionNodeHelper {
+    VariableManager &Variables;
+    std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+
+public:
+    explicit FunctionNodeHelper(VariableManager &Variables)
+        : Variables(Variables) , CurrentFunction(nullptr) {}
+    std::shared_ptr<Variables::FunctionDefinitionClass> Set(std::string Name, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> Create(std::string Name, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> Define(const Variables::FunctionDefinitionClass &f, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
+
+    std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered);
+    std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned);
+
+};
+
 // Conducting the whole scanning and parsing of Calc++.
 class driver
 {
@@ -20,6 +40,7 @@ public:
 
   // std::map<std::string, int> variables;
   VariableManager Variables;
+  FunctionNodeHelper Currentfunction;
 
    std::shared_ptr<ExpressionClass> resulte;
   std::list<std::shared_ptr<StatementClass>> result;
@@ -40,5 +61,12 @@ public:
   yy::location location;
 
   void halt();
+  void Run();
+  void Run(std::string id);
+  void execute(std::shared_ptr<StatementClass> s);
+  void compile(std::string id);
+  void Print(std::string id);
+  void Dump();
+  void SetParserDebugLevel(int Level);
 };
 #endif // ! DRIVER_HH

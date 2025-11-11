@@ -10,6 +10,7 @@ SOURCES += \
    calc++.cc \
    compact.cpp \
    driver.cc \
+   variableclass.cpp \
    varmanag.cpp
 
 #FLEXSOURCES += my_lex_sourcefile.l
@@ -29,7 +30,7 @@ BISONSOURCES += parser.yy
 
 bison.input = BISONSOURCES
 bison.output = ${QMAKE_FILE_BASE}.cpp
-bison.commands = /opt/homebrew/Cellar/bison/3.8.2/bin/bison  --debug --locations -o ${QMAKE_FILE_IN_BASE}.cpp ${QMAKE_FILE_IN}
+bison.commands = /opt/homebrew/Cellar/bison/3.8.2/bin/bison  -Wcounterexamples --debug --locations -o ${QMAKE_FILE_IN_BASE}.cpp ${QMAKE_FILE_IN}
 bison.variable_out = SOURCES
 bison.CONFIG += target_predeps
 bison.clean =  ${QMAKE_FILE_IN_BASE}.cpp
@@ -44,6 +45,7 @@ HEADERS += \
    ParserManual.hpp \
    compact.h \
    driver.hh \
+   variableclass.h \
    varmanag.hpp
 
 DISTFILES += \

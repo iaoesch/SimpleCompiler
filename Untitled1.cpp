@@ -4,12 +4,12 @@
 #include "compact.h"
 #include "ParserManual.hpp"
 #include "varmanag.hpp"
-
+#if 0
 /* forward declaration */
 std::shared_ptr<ExpressionClass>GetExpression(ParserClass &Parser);
 
 /* Special variable for derivation */
-VariableClass VarX("x", 3);
+std::shared_ptr<DoubleVariableClass> VarX = std::make_shared<DoubleVariableClass>("x", 3);
 
 static VariableManager Variables;
 
@@ -72,7 +72,7 @@ std::shared_ptr<ExpressionClass>GetFunction(ParserClass &Parser)
          /* since currently we derivate fixed for x                 */
          if (Parser.GetLastString()[0] == 'x') {
             /* Create reference to Variable x */
-            Ep1 = std::make_shared<VariableValueClass>(&VarX);
+            Ep1 = std::make_shared<VariableValueClass>(VarX);
          } else {
             /* Create reference and new variable */
             Ep1 = std::make_shared<VariableValueClass>(Variables.GetVariableReference(Parser.GetLastString()));
@@ -82,7 +82,7 @@ std::shared_ptr<ExpressionClass>GetFunction(ParserClass &Parser)
 
       /* Everything else is an error */
       default:
-         throw (BTError(_BTERROR::BT_SYNTAX_ERROR));
+        // throw (ErrorBaseClass(_BTERROR::BT_SYNTAX_ERROR));
 
    }
    return Ep1;
@@ -291,7 +291,7 @@ int main2(int argc, char *argv[])
       std::cout << std::endl;
 
       /* Create the derivate of the expression */
-      Derivated = Expression->Derive(&VarX);
+      Derivated = Expression->Derive(VarX);
       Derivated->Print(std::cout);
       std::cout << std::endl;
 
@@ -313,7 +313,7 @@ int main2(int argc, char *argv[])
 
       for (int i = -3; i < 4; i++) {
          /* Set x to the actual Value and evaluate the expressions */
-         VarX.SetValue(i);
+         VarX->SetValue(i);
          std::cout << i << "    " << Expression->Evaluate() << "    ";
          std::cout << Derivated->Evaluate() << std::endl;
       }
@@ -323,7 +323,7 @@ int main2(int argc, char *argv[])
       do {
          std::cout << "Enter Value to evaluate formula for (99 to end):";
          std::cin >> x;
-         VarX.SetValue(x);
+         VarX->SetValue(x);
          std::cout << "\nf(" << x << ") = " << Expression->Evaluate() << std::endl;
          std::cout << "\nf'(" << x << ") = " << Derivated->Evaluate() << std::endl;
       } while (x != 99);
@@ -347,9 +347,9 @@ int main2(int argc, char *argv[])
       system("N:\\Labor\\Info\\Tools\\executables\\graphviz-2.8\\bin\\dot.exe -Tpng DrawDot2.dot -o tree2.png");
       //system("N:\\Labor\\Info\\Tools\\Graphviz\\bin\\dot.exe -Tpng DrawDot2.dot -o tree2.png");
   }
-  catch (BTError &e) {
+  catch (ErrorBaseClass &e) {
      /* Catch any error who might have happened in the above code */
-     std::cout << "Error: " << e.GetString() << std::endl;
+    // std::cout << "Error: " << e.GetString() << std::endl;
   }
 
   /*  Just for Test purposes */
@@ -384,6 +384,7 @@ int main2(int argc, char *argv[])
   system("PAUSE");
   return 0;
 }
+#endif
 /*****************************************************************************/
 /*  End  Method : main                                                       */
 /*****************************************************************************/

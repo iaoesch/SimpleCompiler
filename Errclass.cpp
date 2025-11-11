@@ -34,7 +34,7 @@
 /* Class procedure declaration */
 
 /*****************************************************************************/
-/*  Method      : BTError                                                    */
+/*  Method      : ErrorBaseClass                                                    */
 /*****************************************************************************/
 /*                                                                           */
 /*  Function    : Constructors for errorclass                                */
@@ -50,8 +50,8 @@
 /*  History     : 15.02.1997  IO  Created                                    */
 /*                                                                           */
 /*****************************************************************************/
-
-BTError::BTError(BTError::ErrorCodes e, int q, int l) 
+#if 0
+ErrorBaseClass::ErrorBaseClass(ErrorBaseClass::ErrorCodes e, int q, int l) 
   : Line(l), 
     Qualifier(q), 
     Where(NULL),
@@ -62,7 +62,7 @@ BTError::BTError(BTError::ErrorCodes e, int q, int l)
 { 
 }
 
-BTError::BTError(BTError::ErrorCodes e, const char *aWhere, const char *aWhat) 
+ErrorBaseClass::ErrorBaseClass(ErrorBaseClass::ErrorCodes e, const char *aWhere, const char *aWhat) 
   : Line(0),
     Qualifier(0), 
     Where(aWhere), 
@@ -75,7 +75,7 @@ BTError::BTError(BTError::ErrorCodes e, const char *aWhere, const char *aWhat)
 
 
 #ifdef DEBUG_INFO_ENABLED
-BTError::BTError(const char *File, int CodeLine, BTError::ErrorCodes e, int q, int l)
+ErrorBaseClass::ErrorBaseClass(const char *File, int CodeLine, ErrorBaseClass::ErrorCodes e, int q, int l)
   : Line(l),
     Qualifier(q), 
     Where(NULL),
@@ -86,7 +86,7 @@ BTError::BTError(const char *File, int CodeLine, BTError::ErrorCodes e, int q, i
 {  
 }
 
-BTError::BTError(const char *File, int CodeLine, BTError::ErrorCodes e, const char *aWhere, const char *aWhat)
+ErrorBaseClass::ErrorBaseClass(const char *File, int CodeLine, ErrorBaseClass::ErrorCodes e, const char *aWhere, const char *aWhat)
   : Line(0),
     Qualifier(0), 
     Where(aWhere), 
@@ -121,7 +121,7 @@ BTError::BTError(const char *File, int CodeLine, BTError::ErrorCodes e, const ch
 /*                                                                           */
 /*****************************************************************************/
 
-const char *BTError::GetString(void) 
+const char *ErrorBaseClass::GetString(void) 
 {
 /* Class data declaration      */
 
@@ -191,7 +191,7 @@ const char *BTError::GetString(void)
 
 #ifdef DEBUG_INFO_ENABLED
 
-const char *BTError::GetDebugInfo(void) 
+const char *ErrorBaseClass::GetDebugInfo(void) 
 {
 /* Class data declaration      */
 
@@ -212,8 +212,11 @@ const char *BTError::GetDebugInfo(void)
 /*****************************************************************************/
 
 /*****************************************************************************/
-/*  End Class   : BTError                                                    */
+/*  End Class   : ErrorBaseClass                                                    */
 /*****************************************************************************/
+
+#endif
+
 
 
 
