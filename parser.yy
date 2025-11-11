@@ -68,6 +68,12 @@
   RBRACE   "}"
   KOMMA   ","
   SEMICOLON  ";"
+  TRIPPLEDOT  "..."
+  SHIFTLEFT  "<<"
+  SHIFTRIGHT  ">>"
+  IF       "if"
+  ELSE     "else"
+  ENDIF    "endif"
   REPEAT  "repeat"
   UNTIL   "until"
   FUNCTION "function"
@@ -75,7 +81,8 @@
   AND     "and"
   OR      "or"
   NOT     "not"
-  REFERTO "->"
+  ARROWRIGHT "->"
+  ARROWLEFT "<-"
   LESSTHAN "<"
   LESSORSAME "<="
   EQUAL   "=="
@@ -85,6 +92,7 @@
   COMPILE "compile"
   RUN     "run"
   DUMP    "dump"
+  DEBUG   "debug"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -108,10 +116,21 @@
 %type  <std::shared_ptr<VariableClass>> assignable
 %type  <Variables::VariableContentClass> literal
 %type  <Variables::VariableContentClass> numericliteral
+%type  <Variables::VariableContentClass> arrayliteral
+%type  <Variables::VariableContentClass> arraycontentliteral
+%type  <Variables::ArrayClass::ArrayContentType> arrayentries
+%type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
+%type  <Variables::ArrayClass::VectorOfRows> arraysequence
+%type  <Variables::ArrayClass::Row>literalsequence
+
+
 
 
 
 %printer { yyoutput << $$; } <*>;
+%printer { yyoutput << "array row [ , , ..."  << "]"; } <Variables::ArrayClass::Row>
+%printer { yyoutput << "array vector of rows [[],[] .. []"  << "]"; } <Variables::ArrayClass::VectorOfRows>
+%printer { yyoutput << "array content"; } <Variables::ArrayClass::ArrayContentType>
 %printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>;
 %printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>;
 
@@ -123,15 +142,18 @@ unit:
 ;
 
 input:
-   statement {drv.execute($1);};
+   statement {drv.execute($1);}
 |  definition
 |  command
+;
 
 command:
    "dump" {drv.Dump();}
+|  "debug" "integer" {set_debug_level($2);}
 |  "run"  {drv.Run();}
 |  "run" "identifier" {drv.Run($2);}
 |  "identifier" {drv.Print($1);}
+;
 
 statements:
   definition             {$$ = std::list<std::shared_ptr<StatementClass>>();}
@@ -170,9 +192,11 @@ rangedindexes:
 
 rangedindex:
    exp
-|  exp "-" exp
-|  "*"
-
+|  "..." exp
+|  exp "..."
+|  exp "..." exp
+|  "..."
+;
 
 
 referement:
@@ -203,7 +227,7 @@ functiondefinition:
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
   "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
-| error "endfunction"
+| error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;
 
 argumentlist:
@@ -241,9 +265,13 @@ exp:
 ;
 
 literal:
+  arraycontentliteral {$$ = $1;}
+| arrayliteral   {$$ = $1;}
+;
+
+arraycontentliteral:
   numericliteral {$$ = $1;}
 | "string"       {$$ = Variables::VariableContentClass($1); }
-| arrayliteral   {$$ = Variables::VariableContentClass::MakeUndefined();}
 | listliteral    {$$ = Variables::VariableContentClass::MakeUndefined();}
 | mapliteral     {$$ = Variables::VariableContentClass::MakeUndefined();}
 ;
@@ -254,17 +282,27 @@ numericliteral:
 ;
 
 arrayliteral:
-   "[" arrayentries "]"
+   "[" arrayentries "]" {$$ = Variables::VariableContentClass(Variables::ArrayClass($2));}
 ;
 
 arrayentries:
-   arrayentry
-|  arrayentries "," arrayentry
+   literalsequence {$$ = Variables::ArrayClass::ArrayContentType($1);}
+|  arraysequence   {$$ = Variables::ArrayClass::ArrayContentType($1);}
 ;
 
-arrayentry:
-   literal
-|  "[" arrayentries "]"
+arraysequence:
+   subarrayliteral     {$$ = Variables::ArrayClass::CreateRowOfRows(); $$.AppendElement($1);}
+|  arraysequence "," subarrayliteral {$$ = $1;  $$.AppendElement($3);}
+;
+
+subarrayliteral:
+   "[" arrayentries "]" {$$ = $2;}
+;
+
+literalsequence:
+   arraycontentliteral   {$$ = Variables::ArrayClass::CreateRowOfValues(); $$.AppendElement($1);}
+|  literalsequence "," arraycontentliteral {$$ = $1;  $$.AppendElement($3);}
+;
 
 listliteral:
    "{" listentries "}"
@@ -291,7 +329,7 @@ mapentry:
 key:
    "string"
 |  "integer"
-
+;
 
 %%
 

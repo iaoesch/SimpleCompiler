@@ -15,6 +15,7 @@ class ExpressionClass;
 class StatementClass;
 class VariableClass;
 
+
 class VariableContextClass;
 
 class StackDescriptorClass;
@@ -32,8 +33,11 @@ public:
 
 class ArrayDescriptorClass  {
 public:
+    ArrayDescriptorClass(std::vector<int> Dimensions,
+                         std::unique_ptr<TypeDescriptor> BaseType)
+        : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
     ArrayDescriptorClass(const ArrayDescriptorClass &s);
-    ArrayDescriptorClass &operator = (const ArrayDescriptorClass &s);
+    ArrayDescriptorClass &operator=(const ArrayDescriptorClass &s);
     std::vector<int> Dimensions; // -1 = flexible dimension
     std::unique_ptr<TypeDescriptor> BaseType;
 };
@@ -86,6 +90,7 @@ inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescrip
 class TypeDescriptorClass {
 
 public:
+    friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
     enum class Type {
         Undefined,
         Integer,
@@ -145,8 +150,10 @@ private:
     Type MyType;
     TypeDescriptor Descriptor;
 };
+TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
 
 namespace Variables {
+
 class VariableContentClass;
 
 class StackClass {
@@ -171,19 +178,81 @@ class ArrayClass {
     DataType Data;
 
     // or
-    class Entry;
+public:
+    struct Entry;
 
-    typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::vector<std::unique_ptr<Entry>>> RecursiveDataType;
+    //typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::vector<std::unique_ptr<Entry>>> RecursiveDataType;
 
-    class Entry {
-        RecursiveDataType Data;
+    class Row {
+        std::vector<std::unique_ptr<VariableContentClass>> Data;
+    public:
+        Row() = default;
+        Row(const Row &src) {for (auto &r: src.Data) {Data.push_back(std::make_unique<VariableContentClass>(*r));}}
+        Row(Row &&) = default;
+        Row &operator=(const Row &src) {Data.clear(); for (auto &r: src.Data) {Data.push_back(std::make_unique<VariableContentClass>(*r));} return *this;}
+        Row &operator=(Row &&) = default;
+        void AppendElement(VariableContentClass &e);
     };
-    RecursiveDataType Data2;
+
+    class VectorOfRows {
+        std::vector<std::unique_ptr<Entry>> Data;
+    public:
+        VectorOfRows() = default;
+        VectorOfRows(const VectorOfRows &src) {for (auto &r: src.Data) {Data.push_back(std::make_unique<Variables::ArrayClass::Entry>(*r));}}
+        VectorOfRows(VectorOfRows &&) = default;
+        VectorOfRows &operator=(const VectorOfRows &src) {Data.clear(); for (auto &r: src.Data) {Data.push_back(std::make_unique<Variables::ArrayClass::Entry>(*r));} return *this;}
+
+        VectorOfRows &operator=(VectorOfRows &&) = default;
+        explicit VectorOfRows(std::vector<std::unique_ptr<Entry>> Data)
+            : Data(std::move(Data)) {}
+        void AppendElement(const Row &e);
+        void AppendElement(const VectorOfRows &e);
+        void AppendElement(const std::variant<VectorOfRows, Row> &e);
+    };
+
+    //typedef std::vector<std::unique_ptr<VariableContentClass>> Element;
+    typedef std::variant<VectorOfRows, Row> ArrayContent;
+
+    struct Entry {
+        Entry(const VectorOfRows &vr) : Data(vr) {}
+        Entry(const Row &vr) : Data(vr) {}
+        Entry(const ArrayContent &vr) : Data(vr) {}
+        ArrayContent Data;
+    };
+
+    ArrayContent Data2;
+
+    typedef ArrayContent ArrayContentType;
 
 public:
-    ArrayClass(const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
     ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    ArrayClass(const VectorOfRows &vr) : Data2(vr) {}
+    ArrayClass(const Row &r) : Data2(r) {}
+    ArrayClass(const ArrayContentType &r) : Data2(r) {}
+
+    TypeDescriptorClass GetTypeDescriptor() const;
+
+    static Row CreateRowOfValues() {return Row();}
+    static VectorOfRows CreateRowOfRows() {return VectorOfRows();}
 };
+
+
+inline void ArrayClass::VectorOfRows::AppendElement(const Row &e)
+{
+    Data.push_back(std::make_unique<Entry>(e));
+}
+
+inline void ArrayClass::VectorOfRows::AppendElement(const VectorOfRows &e)
+{
+    Data.push_back(std::make_unique<Entry>(e));
+}
+
+inline void ArrayClass::VectorOfRows::AppendElement(const std::variant<VectorOfRows, Row> &e)
+{
+    Data.push_back(std::make_unique<Entry>(e));
+}
+
 
 class SparseArrayClass {
 
@@ -223,9 +292,9 @@ public:
                          int64_t,
                          double,
                          std::string,
-                         StackClass,
-                         ListClass,
-                         ArrayClass,
+                         Variables::StackClass,
+                         Variables::ListClass,
+                         Variables::ArrayClass,
                          MapClass,
                          std::shared_ptr<FunctionDefinitionClass>> dataType;
 
@@ -241,6 +310,7 @@ public:
     VariableContentClass(int64_t Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(double Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ArrayClass Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
    // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
@@ -264,6 +334,12 @@ private:
 
 
 };
+
+inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContentClass &e)
+{
+    Data.push_back(std::make_unique<VariableContentClass>(e));
+}
+
 
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };

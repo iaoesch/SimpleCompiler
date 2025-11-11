@@ -59,7 +59,15 @@ blank [ \t]
 "<"      return yy::parser::make_LESSTHAN (loc);
 ";"      return yy::parser::make_SEMICOLON (loc);
 ","      return yy::parser::make_KOMMA (loc);
-"->"     return yy::parser::make_REFERTO (loc);
+"->"     return yy::parser::make_ARROWRIGHT (loc);
+"<-"     return yy::parser::make_ARROWLEFT (loc);
+"..."     return yy::parser::make_TRIPPLEDOT (loc);
+"<<"     return yy::parser::make_SHIFTLEFT (loc);
+">>"     return yy::parser::make_SHIFTRIGHT (loc);
+"if"     return yy::parser::make_IF (loc);
+"else"     return yy::parser::make_ELSE (loc);
+"endif"     return yy::parser::make_ENDIF (loc);
+
 "repeat"      return yy::parser::make_REPEAT (loc);
 "until"      return yy::parser::make_UNTIL (loc);
 "function"      return yy::parser::make_FUNCTION (loc);
@@ -67,6 +75,7 @@ blank [ \t]
 "compile"   return yy::parser::make_COMPILE (loc);
 "run"    return yy::parser::make_RUN (loc);
 "dump"   return yy::parser::make_DUMP (loc);
+"debug"   return yy::parser::make_DEBUG (loc);
 "exit"   return yy::parser::make_END (loc);
 "$"      return yy::parser::make_END (loc);
 

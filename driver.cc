@@ -67,6 +67,11 @@ void driver::Dump()
     Variables.Dump(std::cout);
 }
 
+void driver::SetParserDebugLevel(int Level)
+{
+ //  parser.set_debug_level (trace_parsing);
+}
+
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);

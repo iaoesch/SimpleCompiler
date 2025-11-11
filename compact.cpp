@@ -449,9 +449,9 @@ bool BinaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
    return false;
 }
 
-const TypeDescriptorClass &BinaryOperationClass::GetType() const
+const TypeDescriptorClass BinaryOperationClass::GetType() const
 {
-    return TypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
+    return CommonType(LeftOperand->Type(), RightOperand->Type());
 }
 
 bool ConstantClass::IsSame(std::shared_ptr<ExpressionClass>Other)
@@ -466,7 +466,7 @@ void              ConstantClass::DrawNode(std::ostream &s, int MyNodeNumber) con
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Value << "|<f2> \"];" << endl;
 }
 
-const TypeDescriptorClass &ConstantClass::GetType() const
+const TypeDescriptorClass ConstantClass::GetType() const
 {
     return Value.getType();
 };
@@ -487,7 +487,7 @@ void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
 }
 
-const TypeDescriptorClass &VariableValueClass::GetType() const
+const TypeDescriptorClass VariableValueClass::GetType() const
 {
     return Val->Type();
 };
@@ -710,12 +710,12 @@ void FunctionCallClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-const TypeDescriptorClass &FunctionCallClass::GetType() const
+const TypeDescriptorClass FunctionCallClass::GetType() const
 {
     return TypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
 }
 
-const TypeDescriptorClass &UnaryOperationClass::GetType() const
+const TypeDescriptorClass UnaryOperationClass::GetType() const
 {
     return Operand->Type();
 }

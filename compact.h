@@ -29,9 +29,9 @@ class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    virtual bool              IsConstant();// = 0;
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other);// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
-   const TypeDescriptorClass &          Type() {return GetType();}
+   const TypeDescriptorClass           Type() {return GetType();}
    private:
-   virtual const TypeDescriptorClass   &GetType() const = 0;
+   virtual const TypeDescriptorClass   GetType() const = 0;
 
 };
 
@@ -55,7 +55,7 @@ class UnaryOperationClass : public ExpressionClass {
 
    // ExpressionClass interface
    private:
-   virtual const TypeDescriptorClass &GetType() const override;
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class BinaryOperationClass : public ExpressionClass {
@@ -72,7 +72,7 @@ class BinaryOperationClass : public ExpressionClass {
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
 
    private:
-   virtual const TypeDescriptorClass &GetType() const override;
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class ConstantClass : public ValueClass {
@@ -91,7 +91,7 @@ class ConstantClass : public ValueClass {
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
    private:
-   virtual const TypeDescriptorClass &GetType() const override;
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class VariableValueClass : public ValueClass {
@@ -111,7 +111,7 @@ class VariableValueClass : public ValueClass {
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
    private:
-   virtual const TypeDescriptorClass &GetType() const override;
+   virtual const TypeDescriptorClass GetType() const override;
 };
 
 class FunctionClass;
@@ -135,7 +135,7 @@ public:
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 private:
-    virtual const TypeDescriptorClass &GetType() const override;
+    virtual const TypeDescriptorClass GetType() const override;
 };
 
 

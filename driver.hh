@@ -67,5 +67,6 @@ public:
   void compile(std::string id);
   void Print(std::string id);
   void Dump();
+  void SetParserDebugLevel(int Level);
 };
 #endif // ! DRIVER_HH
