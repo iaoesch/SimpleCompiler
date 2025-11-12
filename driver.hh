@@ -3,6 +3,7 @@
 # include <string>
 # include <map>
 #include <list>
+#include "environment.hpp"
 # include "parser.hpp"
 #include"varmanag.hpp"
 
@@ -35,6 +36,8 @@ public:
 // Conducting the whole scanning and parsing of Calc++.
 class driver
 {
+  Environment Env;
+
 public:
   driver ();
 

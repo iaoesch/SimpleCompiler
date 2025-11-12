@@ -15,7 +15,7 @@ void VariableClass::SetContext(VariableContextClass *Context)
 
 Variables::VariableContentClass VariableClass::GetValue() const
 {
-
+    return Content;
 }
 
 void VariableClass::SetValue(Variables::VariableContentClass v)
@@ -93,6 +93,41 @@ TypeDescriptorClass ArrayClass::GetTypeDescriptor() const
    // ArrayDescriptorClass Arraydescriptor;
 
   // TypeDescriptor Descriptor =
+}
+
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+// explicit deduction guide (not needed as of C++20)
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
+{
+    std::visit(overloaded{
+                   [&s](const std::monostate &arg) { s << "empty"; },
+                   [&s](int64_t arg) { s << arg << ' '; },
+                   [&s](double arg) { s << std::fixed << arg << ' '; },
+                   [&s](const StackClass &arg) { s << "<stack>"; },
+                   [&s](const ListClass &arg) { s << "<list>"; },
+                   [&s](const ArrayClass &arg) { s << "<Array>"; },
+                   [&s](const MapClass &arg) { s << "<map>"; },
+                   [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "<expression>\n"; arg->Print(s);  },
+                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>\n"; arg->Print(s);  },
+                   [&s](const std::string& arg) { s << '"' << arg << '"'; }
+               }, v.Data);
+    return s;
+}
+
+VariableContentClass operator +(const VariableContentClass &l, const VariableContentClass &r)
+{
+    VariableContentClass Result = VariableContentClass::MakeUndefined();
+    std::visit(overloaded{
+
+              [&Result](int64_t arg1, int64_t arg2) { Result = VariableContentClass(arg1 + arg2); },
+              [&Result](double arg1, double arg2)   { Result = VariableContentClass(arg1 + arg2); },
+              [&Result](auto &arg1, auto &arg2) { ; }
+               }, l.Data, r.Data);
+    return Result;
 }
 
 }

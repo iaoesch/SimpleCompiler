@@ -1,7 +1,10 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include "environment.hpp"
 #include "variableclass.h"
+
+
 
 
 class VariableClasse {
@@ -21,7 +24,7 @@ typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:
    virtual                  ~ExpressionClass() {}
-   virtual Variables::VariableContentClass            Evaluate() const;// = 0;
+   virtual Variables::VariableContentClass   Evaluate() const;// = 0;
    virtual std::shared_ptr<ExpressionClass>  Derive(VariableReferenceType ToDerive) const;// = 0;
    virtual void              Print(std::ostream &s) const;// = 0;
    virtual std::shared_ptr<ExpressionClass> Clone() const;// = 0;
@@ -335,6 +338,7 @@ public:
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
+
 class StatementClass : public std::enable_shared_from_this<StatementClass>{
 public:
     virtual                  ~StatementClass() {}
@@ -342,6 +346,7 @@ public:
     virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize();// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+    virtual void              Execute(Environment &Env) const;// = 0;
 };
 
 class AssignementClass : public StatementClass {
@@ -398,6 +403,24 @@ public:
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
+};
+
+class PrintStatementClass : public StatementClass {
+
+    std::vector<std::shared_ptr<ExpressionClass>> Expressions;
+
+public:
+    PrintStatementClass(const std::vector<std::shared_ptr<ExpressionClass>> &Expressions_) : Expressions(Expressions_) {}
+
+    virtual                  ~PrintStatementClass() {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    // StatementClass interface
+public:
+    virtual void Execute(Environment &Env) const override;
 };
 
 class ErrorStatement : public StatementClass {

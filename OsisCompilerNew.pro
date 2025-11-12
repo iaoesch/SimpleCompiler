@@ -45,6 +45,7 @@ HEADERS += \
    ParserManual.hpp \
    compact.h \
    driver.hh \
+   environment.hpp \
    variableclass.h \
    varmanag.hpp
 

@@ -286,6 +286,7 @@ public:
 
 class VariableContentClass {
     friend std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
+    friend VariableContentClass operator + (const VariableContentClass &l, const VariableContentClass &r);
 
 public:
     typedef std::variant<std::monostate,
@@ -296,6 +297,7 @@ public:
                          Variables::ListClass,
                          Variables::ArrayClass,
                          MapClass,
+                         std::shared_ptr<ExpressionClass>,
                          std::shared_ptr<FunctionDefinitionClass>> dataType;
 
     VariableContentClass(const VariableContentClass &) = default;
@@ -341,12 +343,6 @@ inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContent
 }
 
 
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
-// explicit deduction guide (not needed as of C++20)
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
 /*
 std::monostate,
                          int64_t,
@@ -358,21 +354,7 @@ std::monostate,
                          MapClass,
                          FunctionDefinitionClass
  */
-inline std::ostream &operator << (std::ostream &s, const VariableContentClass &v)
-{
-    std::visit(overloaded{
-                   [&s](const std::monostate &arg) { s << "empty"; },
-                   [&s](int64_t arg) { s << arg << ' '; },
-                   [&s](double arg) { s << std::fixed << arg << ' '; },
-                   [&s](const StackClass &arg) { s << "<stack>"; },
-                   [&s](const ListClass &arg) { s << "<list>"; },
-                   [&s](const ArrayClass &arg) { s << "<Array>"; },
-                   [&s](const MapClass &arg) { s << "<map>"; },
-                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>\n"; arg->Print(s);  },
-                   [&s](const std::string& arg) { s << '"' << arg << '"'; }
-               }, v.Data);
-    return s;
-}
+std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
 
 inline bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 {
@@ -394,10 +376,7 @@ inline VariableContentClass operator /(const VariableContentClass &r, const Vari
     return r;
 }
 
-inline VariableContentClass operator +(const VariableContentClass &r, const VariableContentClass &l)
-{
-    return r;
-}
+VariableContentClass operator +(const VariableContentClass &r, const VariableContentClass &l);
 
 inline VariableContentClass operator -(const VariableContentClass &r, const VariableContentClass &l)
 {

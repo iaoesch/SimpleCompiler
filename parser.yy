@@ -91,6 +91,8 @@
   MOREORSAME   ">="
   COMPILE "compile"
   RUN     "run"
+  PRINT    "print"
+  INPUT    "input"
   DUMP    "dump"
   DEBUG   "debug"
 ;
@@ -121,7 +123,9 @@
 %type  <Variables::ArrayClass::ArrayContentType> arrayentries
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
-%type  <Variables::ArrayClass::Row>literalsequence
+%type  <Variables::ArrayClass::Row> literalsequence
+%type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
+
 
 
 
@@ -131,8 +135,9 @@
 %printer { yyoutput << "array row [ , , ..."  << "]"; } <Variables::ArrayClass::Row>
 %printer { yyoutput << "array vector of rows [[],[] .. []"  << "]"; } <Variables::ArrayClass::VectorOfRows>
 %printer { yyoutput << "array content"; } <Variables::ArrayClass::ArrayContentType>
-%printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>;
-%printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>;
+%printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>
+%printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>
+%printer { yyoutput << "expression list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<ExpressionClass>>>
 
 %%
 %start unit;
@@ -167,9 +172,17 @@ statements:
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
+| print ";"             {$$ = std::make_shared<PrintStatementClass>($1);}
 | functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);}
 | error ";"             {$$ = std::make_shared<ErrorStatement>();}
 ;
+
+print:
+  "print" "(" explist ")" {$$ = $3;}
+
+explist:
+   exp              {$$ = std::vector<std::shared_ptr<ExpressionClass>>(); $$.push_back($1);}
+|  explist "," exp  {$$ = $1; $$.push_back($3);}
 
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);};

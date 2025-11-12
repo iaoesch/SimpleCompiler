@@ -77,6 +77,8 @@ blank [ \t]
 "dump"   return yy::parser::make_DUMP (loc);
 "debug"   return yy::parser::make_DEBUG (loc);
 "exit"   return yy::parser::make_END (loc);
+"print"   return yy::parser::make_PRINT (loc);
+"input"   return yy::parser::make_INPUT (loc);
 "$"      return yy::parser::make_END (loc);
 
 {int}      {

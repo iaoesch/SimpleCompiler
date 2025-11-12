@@ -517,6 +517,12 @@ void StatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
+void StatementClass::Execute(Environment &Env) const
+{
+    std::cout << "\nVirtual Call StatementClass Execute()";
+
+}
+
 AssignementClass::~AssignementClass()
 {
 
@@ -739,4 +745,37 @@ void ErrorStatement::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
 
 }
+
+
+void PrintStatementClass::Print(std::ostream &s) const
+{
+    s << "print (\n";
+    for (auto &r: Expressions) {r->Print(s);}
+    s << ")" << std::endl;
+}
+
+std::shared_ptr<StatementClass> PrintStatementClass::Clone() const
+{
+    return std::make_shared<PrintStatementClass>(*this);
+
+}
+
+std::shared_ptr<StatementClass> PrintStatementClass::Optimize()
+{
+    return shared_from_this();
+
+}
+
+void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    
+}
+
+void PrintStatementClass::Execute(Environment &Env) const
+{
+    for (auto &e: Expressions) {
+        Env.OutputStream() << e->Evaluate();
+    }
+}
+
 

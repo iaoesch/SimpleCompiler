@@ -43,6 +43,8 @@ void driver::execute(std::shared_ptr<StatementClass> s)
 {
     std::cout << ">>>";
     s->Print(std::cout);
+    std::cout << "\n>exe>";
+    s->Execute(Env);
 }
 
 void driver::compile(std::string id)
