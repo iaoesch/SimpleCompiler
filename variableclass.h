@@ -2,7 +2,6 @@
 #define VARIABLECLASS_H
 
 
-#include <iomanip>
 #include <list>
 #include <map>
 #include <string>
@@ -21,6 +20,7 @@ class VariableContextClass;
 class StackDescriptorClass;
 class ArrayDescriptorClass;
 class DynamicDescriptorClass;
+class TypeDescriptorClass;
 
 using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, DynamicDescriptorClass>;
 
@@ -28,18 +28,17 @@ class StackDescriptorClass  {
 public:
     StackDescriptorClass(const StackDescriptorClass &s);
     StackDescriptorClass &operator=(const StackDescriptorClass &s);
-    std::unique_ptr<TypeDescriptor> BaseType;
+    std::unique_ptr<TypeDescriptorClass> BaseType;
 };
 
 class ArrayDescriptorClass  {
 public:
     ArrayDescriptorClass(std::vector<int> Dimensions,
-                         std::unique_ptr<TypeDescriptor> BaseType)
-        : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
+                         std::unique_ptr<TypeDescriptorClass> BaseType);
     ArrayDescriptorClass(const ArrayDescriptorClass &s);
     ArrayDescriptorClass &operator=(const ArrayDescriptorClass &s);
     std::vector<int> Dimensions; // -1 = flexible dimension
-    std::unique_ptr<TypeDescriptor> BaseType;
+    std::unique_ptr<TypeDescriptorClass> BaseType;
 };
 
 
@@ -47,50 +46,13 @@ class DynamicDescriptorClass {
 public:
     DynamicDescriptorClass(const DynamicDescriptorClass &s);
     DynamicDescriptorClass &operator = (const DynamicDescriptorClass &s);
-    std::unique_ptr<TypeDescriptor> CurrentType;
+    std::unique_ptr<TypeDescriptorClass> CurrentType;
 };
-
-inline DynamicDescriptorClass::DynamicDescriptorClass(const DynamicDescriptorClass &s)
-    : CurrentType(std::make_unique<TypeDescriptor>(*s.CurrentType))
-{
-}
-
-inline DynamicDescriptorClass &DynamicDescriptorClass::operator =(const DynamicDescriptorClass &s)
-{
-    CurrentType = std::make_unique<TypeDescriptor>(*s.CurrentType);
-    return *this;
-}
-
-inline StackDescriptorClass::StackDescriptorClass(const StackDescriptorClass &s) :
-    BaseType(std::make_unique<TypeDescriptor>(*s.BaseType))
-{
-}
-
-inline StackDescriptorClass &StackDescriptorClass::operator=(const StackDescriptorClass &s)
-{
-    BaseType = std::make_unique<TypeDescriptor>(*s.BaseType);
-    return *this;
-}
-
-inline ArrayDescriptorClass::ArrayDescriptorClass(const ArrayDescriptorClass &s)
-    : Dimensions(s.Dimensions), BaseType(std::make_unique<TypeDescriptor>(*s.BaseType))
-{
-
-}
-
-inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescriptorClass &s)
-{
-    Dimensions = s.Dimensions;
-    BaseType = std::make_unique<TypeDescriptor>(*s.BaseType);
-    return *this;
-}
-
 
 
 class TypeDescriptorClass {
 
 public:
-    friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
     enum class Type {
         Undefined,
         Integer,
@@ -102,7 +64,8 @@ public:
         Array,
         Map,
         Function,
-        Dynamic //, fixed
+        Dynamic, //, fixed
+        Illegal  // $Internal flag
     };
 
     TypeDescriptorClass(const TypeDescriptor &Descriptor)
@@ -112,6 +75,10 @@ public:
         : MyType(t) {SetDescriptorFromType(t);}
 
    // TypeDescriptorClass &operator = (const TypeDescriptorClass &src) {MyType = src.MyType; Descriptor = src.Descriptor;}
+
+    friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
+    friend bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t);
+    friend bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2);
 
 private:
     void SetTypeFromDescriptor() {
@@ -143,13 +110,92 @@ private:
 
         case Type::Stack:
         case Type::Array:
-            throw std::runtime_error("Invalid Type");
+        case Type::Illegal:
+            throw ERROR_OBJECT("Invalid Type");
             break;
         }
     }
     Type MyType;
     TypeDescriptor Descriptor;
 };
+
+
+inline DynamicDescriptorClass::DynamicDescriptorClass(const DynamicDescriptorClass &s)
+    : CurrentType(std::make_unique<TypeDescriptorClass>(*s.CurrentType))
+{
+}
+
+inline DynamicDescriptorClass &DynamicDescriptorClass::operator =(const DynamicDescriptorClass &s)
+{
+    CurrentType = std::make_unique<TypeDescriptorClass>(*s.CurrentType);
+    return *this;
+}
+
+inline StackDescriptorClass::StackDescriptorClass(const StackDescriptorClass &s) :
+    BaseType(std::make_unique<TypeDescriptorClass>(*s.BaseType))
+{
+}
+
+inline StackDescriptorClass &StackDescriptorClass::operator=(const StackDescriptorClass &s)
+{
+    BaseType = std::make_unique<TypeDescriptorClass>(*s.BaseType);
+    return *this;
+}
+
+inline ArrayDescriptorClass::ArrayDescriptorClass(const ArrayDescriptorClass &s)
+    : Dimensions(s.Dimensions), BaseType(std::make_unique<TypeDescriptorClass>(*s.BaseType))
+{
+
+}
+
+inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescriptorClass &s)
+{
+    Dimensions = s.Dimensions;
+    BaseType = std::make_unique<TypeDescriptorClass>(*s.BaseType);
+    return *this;
+}
+
+
+bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t)
+{
+    // If we just compare by typeflag stacks and arrays will never match
+    // As we also must compare basetype or dimensions
+    if ((t == TypeDescriptorClass::Type::Stack) ||
+        (t == TypeDescriptorClass::Type::Array) ||
+        (t == TypeDescriptorClass::Type::Illegal)) {
+        return false;
+    }
+    return t == td.MyType;
+}
+
+bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
+{
+    if (t1.MyType != t2.MyType) {
+        return false;
+    }
+    // Here t1.Mytpe and t2.mytype are same, so we must check only one type
+    if (t1.MyType == TypeDescriptorClass::Type::Illegal) {
+        return false;
+    }
+    if (t1.MyType == TypeDescriptorClass::Type::Stack) {
+        return std::get<StackDescriptorClass>(t1.Descriptor).BaseType->MyType == std::get<StackDescriptorClass>(t2.Descriptor).BaseType->MyType;
+    }
+    // Array: Basetype and dimensions must match
+    if (t1.MyType == TypeDescriptorClass::Type::Array) {
+        if (std::get<ArrayDescriptorClass>(t1.Descriptor).BaseType->MyType == std::get<ArrayDescriptorClass>(t2.Descriptor).BaseType->MyType) {
+            if (std::get<ArrayDescriptorClass>(t1.Descriptor).Dimensions == std::get<ArrayDescriptorClass>(t2.Descriptor).Dimensions) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    // At this point we should have sorted out all unmatching pairs
+    return true;
+}
+
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
 
 namespace Variables {
@@ -172,12 +218,14 @@ public:
 };
 
 class ArrayClass {
-    std::vector<uint32_t> Dimensions;
+
+#ifdef USE_FLAT_MEMORY
     typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>> DataType;
     //std::vector<std::unique_ptr<ArrayClass>> Data;
     DataType Data;
+#endif
 
-    // or
+
 public:
     struct Entry;
 
@@ -191,10 +239,14 @@ public:
         Row(Row &&) = default;
         Row &operator=(const Row &src) {Data.clear(); for (auto &r: src.Data) {Data.push_back(std::make_unique<VariableContentClass>(*r));} return *this;}
         Row &operator=(Row &&) = default;
-        void AppendElement(VariableContentClass &e);
+        void AppendElement(const VariableContentClass &e);
+
+        uint32_t Size() const {return Data.size();}
+        bool GetCommonType(TypeDescriptorClass &Type) const;
     };
 
     class VectorOfRows {
+        friend class ArrayClass;
         std::vector<std::unique_ptr<Entry>> Data;
     public:
         VectorOfRows() = default;
@@ -208,6 +260,9 @@ public:
         void AppendElement(const Row &e);
         void AppendElement(const VectorOfRows &e);
         void AppendElement(const std::variant<VectorOfRows, Row> &e);
+
+        uint32_t Size() const {return Data.size();}
+
     };
 
     //typedef std::vector<std::unique_ptr<VariableContentClass>> Element;
@@ -220,21 +275,29 @@ public:
         ArrayContent Data;
     };
 
-    ArrayContent Data2;
-
     typedef ArrayContent ArrayContentType;
+
+    ArrayContent Data;
+    std::vector<uint32_t> Dimensions;
+
 
 public:
     ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
     ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
-    ArrayClass(const VectorOfRows &vr) : Data2(vr) {}
-    ArrayClass(const Row &r) : Data2(r) {}
-    ArrayClass(const ArrayContentType &r) : Data2(r) {}
+    ArrayClass(const VectorOfRows &vr) : Data(vr) {CommonInitialization();}
+    ArrayClass(const Row &r) : Data(r) {CommonInitialization();}
+    ArrayClass(const ArrayContentType &r);
 
     TypeDescriptorClass GetTypeDescriptor() const;
 
     static Row CreateRowOfValues() {return Row();}
     static VectorOfRows CreateRowOfRows() {return VectorOfRows();}
+    void PrintDimensions(std::ostream &s) const;
+
+private:
+    void DetectArrayStructure(const ArrayContent &Data, std::vector<uint32_t> &Dimensions, TypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
+    void FillUpMissingElements(ArrayContent &Data, const std::vector<uint32_t> &Dimensions, const VariableContentClass &FillValue, int Deepth);
+    void CommonInitialization();
 };
 
 
@@ -312,7 +375,7 @@ public:
     VariableContentClass(int64_t Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(double Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
-    VariableContentClass(Variables::ArrayClass Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ArrayClass Value) : Type(Value.GetTypeDescriptor()), Data(Value), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
    // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
@@ -337,7 +400,7 @@ private:
 
 };
 
-inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContentClass &e)
+inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContentClass const &e)
 {
     Data.push_back(std::make_unique<VariableContentClass>(e));
 }
