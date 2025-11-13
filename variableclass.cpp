@@ -1,6 +1,7 @@
 #include "variableclass.h"
 #include "Errclass.hpp"
 #include "compact.h"
+#include "varmanag.hpp"
 
 
 
@@ -26,6 +27,11 @@ void VariableClass::SetValue(Variables::VariableContentClass v)
 void VariableClass::Print(std::ostream &s)
 {
     s << Content;
+}
+
+void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n<" << MyContext->GetName() << ">|<f2> \"];" << std::endl;
 }
 
 const TypeDescriptorClass &VariableClass::GetType() const
@@ -78,15 +84,6 @@ void FunctionDefinitionClass::Print(std::ostream &s) const
 
 }
 
-TypeDescriptorClass const &VariableContentClass::getType() const
-{
-    return Type;
-}
-
-void VariableContentClass::setType(const TypeDescriptorClass &newType)
-{
-    Type = newType;
-}
 
 ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r)
 {
@@ -299,6 +296,8 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         case Type::String:
         case Type::List:
         case Type::Map:
+        case Type::Expression:
+        case Type::Illegal:
         case Type::Function: return t1;
         case Type::Stack:   {
             auto tc = CommonType(*(std::get<StackDescriptorClass>(t1.Descriptor).BaseType), *(std::get<StackDescriptorClass>(t2.Descriptor).BaseType));
@@ -344,3 +343,20 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
 ArrayDescriptorClass::ArrayDescriptorClass(
     std::vector<int> Dimensions, std::unique_ptr<TypeDescriptorClass> BaseType)
     : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
+
+void TypeDescriptorClass::ChangeDynamicType(const TypeDescriptorClass &NewType)
+{
+    if (MyType != Type::Dynamic) {
+        throw ERROR_OBJECT("Cannot change type");
+    }
+    if (NewType.MyType == Type::Dynamic) {
+        Descriptor = NewType.Descriptor;
+    } else {
+        *(std::get<DynamicDescriptorClass>(Descriptor).CurrentType) = NewType;
+    }
+}
+
+const TypeDescriptorClass &TypeDescriptorClass::GetDynamicType() const
+{
+    return *(std::get<DynamicDescriptorClass>(Descriptor).CurrentType);
+}

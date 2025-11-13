@@ -48,6 +48,7 @@ public:
     std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
 
     void Dump(std::ostream &s);
+    const std::string &GetName() {return Name;}
 
 };
 

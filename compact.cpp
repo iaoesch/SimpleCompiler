@@ -494,7 +494,7 @@ const TypeDescriptorClass VariableValueClass::GetType() const
 
 
 
-void StatementClass::Print(std::ostream &s) const
+void StatementClass::Print(std::ostream &s[[maybe_unused]]) const
 {
    std::cout << "\nVirtual Call StatementClass print()";
 }
@@ -502,22 +502,22 @@ void StatementClass::Print(std::ostream &s) const
 std::shared_ptr<StatementClass> StatementClass::Clone() const
 {
     std::cout << "\nVirtual Call StatementClass Clone()";
-
+    return nullptr;
 }
 
 std::shared_ptr<StatementClass> StatementClass::Optimize()
 {
     std::cout << "\nVirtual Call StatementClass Optimize()";
-
+    return nullptr;
 }
 
-void StatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+void StatementClass::DrawNode(std::ostream &s[[maybe_unused]], int MyNodeNumber[[maybe_unused]]) const
 {
     std::cout << "\nVirtual Call StatementClass DrawNode()";
 
 }
 
-void StatementClass::Execute(Environment &Env) const
+void StatementClass::Execute(Environment &Env[[maybe_unused]]) const
 {
     std::cout << "\nVirtual Call StatementClass Execute()";
 
@@ -542,20 +542,33 @@ std::shared_ptr<StatementClass> AssignementClass::Clone() const
 
 std::shared_ptr<StatementClass> AssignementClass::Optimize()
 {
-
+    return shared_from_this();
 }
 
 void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> := |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    AssignedExpression->DrawNode(s, NodeNumber1);
+    Variable->DrawNode(s, NodeNumber2);
+
+}
+
+void AssignementClass::Execute(Environment &Env) const
+{
+    Variable->SetValue(AssignedExpression->Evaluate());
 }
 
 bool ConditionalExpressionClass::Evaluate() const
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass Evaluate()";
+    return false;
 }
 
-void ConditionalExpressionClass::Print(std::ostream &s) const
+void ConditionalExpressionClass::Print(std::ostream &s[[maybe_unused]]) const
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass print()";
 }
@@ -563,26 +576,28 @@ void ConditionalExpressionClass::Print(std::ostream &s) const
 std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Clone() const
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass Clone()";
+    return nullptr;
 }
 
 std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Optimize()
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass Optimize()";
+    return nullptr;
 }
 
 bool ConditionalExpressionClass::IsConstant()
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass IsConstant()";
-
+    return false;
 }
 
-bool ConditionalExpressionClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
+bool ConditionalExpressionClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other[[maybe_unused]])
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass IsSame()";
-
+    return false;
 }
 
-void ConditionalExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+void ConditionalExpressionClass::DrawNode(std::ostream &s[[maybe_unused]], int MyNodeNumber[[maybe_unused]]) const
 {
     std::cout << "\nVirtual Call ConditionalExpressionClass DrawNode()";
 
@@ -619,6 +634,13 @@ std::shared_ptr<ConditionalExpressionClass> AndClass::Optimize()
 
 void AndClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> and |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    LeftOperand->DrawNode(s, NodeNumber1);
+    RightOperand->DrawNode(s, NodeNumber2);
 
 }
 
@@ -654,6 +676,13 @@ std::shared_ptr<ConditionalExpressionClass> LessThanClass::Optimize()
 
 void LessThanClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> < |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    LeftOperand->DrawNode(s, NodeNumber1);
+    RightOperand->DrawNode(s, NodeNumber2);
 
 }
 
@@ -677,8 +706,24 @@ std::shared_ptr<StatementClass> RepeatLoopClass::Optimize()
     return shared_from_this();
 }
 
+void DrawStatementNodeList(const std::list<std::shared_ptr<StatementClass>> &Statements, std::ostream &os, int ParentNodeNumber) {
+
+
+    for (auto const &s: Statements) {
+        int MyNodeNumber = NodeNumber++;
+        os << "\"Node" << ParentNodeNumber << "\":f2 -> \"Node" << MyNodeNumber << "\":f1;" << endl;
+        s->DrawNode(os, MyNodeNumber);
+        ParentNodeNumber = MyNodeNumber;
+    }
+}
+
 void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
+    int NodeNumber1 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> and |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f1 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    Condition->DrawNode(s, NodeNumber1);
+    DrawStatementNodeList(Statements, s, MyNodeNumber);
 
 }
 
@@ -701,7 +746,14 @@ std::shared_ptr<StatementClass> FunctionCallStatementClass::Optimize()
 
 void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> < |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    this->Statements;LeftOperand->DrawNode(s, NodeNumber1);
+    RightOperand->DrawNode(s, NodeNumber2);
+
 }
 
 void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }

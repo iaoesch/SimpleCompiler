@@ -64,6 +64,7 @@ public:
         Array,
         Map,
         Function,
+        Expression,
         Dynamic, //, fixed
         Illegal  // $Internal flag
     };
@@ -79,6 +80,9 @@ public:
     friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
     friend bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t);
     friend bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2);
+
+    void ChangeDynamicType(const TypeDescriptorClass& NewType);
+    const TypeDescriptorClass& GetDynamicType() const;
 
 private:
     void SetTypeFromDescriptor() {
@@ -102,6 +106,7 @@ private:
         case Type::List:
         case Type::Map:
         case Type::Function:
+        case Type::Expression:
         case Type::String:
         case Type::Undefined:
         case Type::Dynamic:
@@ -156,7 +161,7 @@ inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescrip
 }
 
 
-bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t)
+inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t)
 {
     // If we just compare by typeflag stacks and arrays will never match
     // As we also must compare basetype or dimensions
@@ -168,7 +173,7 @@ bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t)
     return t == td.MyType;
 }
 
-bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
+inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
 {
     if (t1.MyType != t2.MyType) {
         return false;
@@ -368,28 +373,49 @@ public:
     VariableContentClass &operator=(const VariableContentClass &) = default;
     VariableContentClass &operator=(VariableContentClass &&) = default;
     VariableContentClass()
-        : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), Data(std::monostate()), AssignedExpression(nullptr) {}
+        : Data(std::monostate()), Type(TypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), AssignedExpression(nullptr) {}
     VariableContentClass(const TypeDescriptorClass &Type_)
-        : Type(Type_), Data(std::monostate()), AssignedExpression(nullptr) {}
+        : Data(std::monostate()), Type(Type_), AssignedExpression(nullptr) {}
 
-    VariableContentClass(int64_t Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), Data(Value), AssignedExpression(nullptr) {}
-    VariableContentClass(double Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), Data(Value), AssignedExpression(nullptr) {}
-    VariableContentClass(std::string Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), Data(Value), AssignedExpression(nullptr) {}
-    VariableContentClass(Variables::ArrayClass Value) : Type(Value.GetTypeDescriptor()), Data(Value), AssignedExpression(nullptr) {}
-    VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
+    VariableContentClass(int64_t Value) : Data(Value), Type(TypeDescriptorClass(TypeDescriptorClass::Type::Float)), AssignedExpression(nullptr) {}
+    VariableContentClass(double Value) : Data(Value), Type(TypeDescriptorClass(TypeDescriptorClass::Type::Integer)), AssignedExpression(nullptr) {}
+    VariableContentClass(std::string Value) : Data(Value), Type(TypeDescriptorClass(TypeDescriptorClass::Type::String)), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Data(Value), Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
    // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
     static VariableContentClass MakeUndefined() {return VariableContentClass(TypeDescriptorClass(TypeDescriptorClass::Type::Undefined));}
 
     const TypeDescriptorClass &getType() const;
     void setType(const TypeDescriptorClass &newType);
+
     template <class T>
         const T &GetValue() {
         return std::get<T>(Data);
     }
+
     template <class T>
     void SetValue(const T &v) {
         Data = v;
+    }
+
+    void AssignValue(const VariableContentClass &v) {
+        if (getType() == TypeDescriptorClass::Type::Dynamic) {
+            if (v.getType() == TypeDescriptorClass::Type::Dynamic) {
+                Data = v.Data;
+                Type.ChangeDynamicType(v.getType().GetDynamicType());
+            } else {
+                Data = v.Data;
+                Type.ChangeDynamicType(v.getType());
+            }
+        } else if (v.getType() == getType()) {
+           Data = v.Data;
+        } else if ( (v.getType() == TypeDescriptorClass::Type::Integer)
+             && (getType()  == TypeDescriptorClass::Type::Float)) {
+            Data = double(std::get<int64_t>(v.Data));
+        } else {
+            throw ERROR_OBJECT("Incompatible type for assignement");
+        }
     }
 
 private:
@@ -399,6 +425,16 @@ private:
 
 
 };
+
+inline TypeDescriptorClass const &VariableContentClass::getType() const
+{
+    return Type;
+}
+
+inline void VariableContentClass::setType(const TypeDescriptorClass &newType)
+{
+    Type = newType;
+}
 
 inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContentClass const &e)
 {
@@ -486,6 +522,8 @@ public:
     virtual Variables::VariableContentClass      GetValue() const;
     virtual void        SetValue(Variables::VariableContentClass v);
     virtual void        Print(std::ostream &s);
+    virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const;
+
 
     const TypeDescriptorClass &Type() {return GetType();}
 private:

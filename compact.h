@@ -358,11 +358,11 @@ public:
         AssignedExpression(_AssignedExpression), Variable(_Variable) {}
 
     virtual                  ~AssignementClass() override;
-    virtual void              Print(std::ostream &s) const;// = 0;
-    virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
-    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
-
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+    virtual void              Execute(Environment &Env) const override;// = 0;
 };
 
 class ReferementClass  : public AssignementClass {
@@ -370,18 +370,18 @@ class ReferementClass  : public AssignementClass {
 };
 
 class RepeatLoopClass : public StatementClass {
-    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::list<std::shared_ptr<StatementClass>> Statements;                                                                                                                                             yyy   yq<231Statements;
     std::shared_ptr<ConditionalExpressionClass> Condition;
 
 public:
     RepeatLoopClass(std::list<std::shared_ptr<StatementClass>> _Statements, std::shared_ptr<ConditionalExpressionClass> _Condition) :
         Statements(_Statements), Condition(_Condition) {}
 
-    virtual                  ~RepeatLoopClass() {}
-    virtual void              Print(std::ostream &s) const;// = 0;
-    virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
-    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
+    virtual                  ~RepeatLoopClass() override {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 };
 
@@ -397,7 +397,7 @@ public:
     FunctionCallStatementClass(std::shared_ptr<FunctionCallClass> f) :
         Function(f) {}
 
-    virtual                  ~FunctionCallStatementClass() {}
+    virtual                  ~FunctionCallStatementClass()  override{}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
@@ -412,7 +412,7 @@ class PrintStatementClass : public StatementClass {
 public:
     PrintStatementClass(const std::vector<std::shared_ptr<ExpressionClass>> &Expressions_) : Expressions(Expressions_) {}
 
-    virtual                  ~PrintStatementClass() {}
+    virtual                  ~PrintStatementClass()  override {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
@@ -430,7 +430,7 @@ public:
     //       Name(Name_), Statements(_Statements), Parameters(_Parameters) {}
     ErrorStatement() {}
 
-    virtual                  ~ErrorStatement() {}
+    virtual                  ~ErrorStatement() override {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
