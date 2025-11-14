@@ -557,8 +557,8 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> := |<f2> \"];" << endl;
     s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
     s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
-    AssignedExpression->DrawNode(s, NodeNumber1);
-    Variable->DrawNode(s, NodeNumber2);
+    AssignedExpression->DrawNode(s, NodeNumber2);
+    Variable->DrawNode(s, NodeNumber1);
 
 }
 
@@ -683,7 +683,7 @@ void LessThanClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     int NodeNumber1 = NodeNumber++;
     int NodeNumber2 = NodeNumber++;
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> < |<f2> \"];" << endl;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> \\< |<f2> \"];" << endl;
     s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
     s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
     LeftOperand->DrawNode(s, NodeNumber1);
@@ -725,7 +725,7 @@ void DrawStatementNodeList(const std::list<std::shared_ptr<StatementClass>> &Sta
 void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     int NodeNumber1 = NodeNumber++;
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> and |<f2> \"];" << endl;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> repeat |<f2> \"];" << endl;
     s << "\"Node" << MyNodeNumber << "\":f1 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
     Condition->DrawNode(s, NodeNumber1);
     DrawStatementNodeList(Statements, s, MyNodeNumber);

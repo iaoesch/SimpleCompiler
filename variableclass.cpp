@@ -31,7 +31,7 @@ void VariableClass::Print(std::ostream &s)
 
 void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n<" << MyContext->GetName() << ">|<f2> \"];" << std::endl;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n\\<" << MyContext->GetName() << "\\>|<f2> \"];" << std::endl;
 }
 
 const TypeDescriptorClass &VariableClass::GetType() const
