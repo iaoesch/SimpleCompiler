@@ -341,13 +341,18 @@ public:
 class FunctionDefinitionClass {
     std::list<std::shared_ptr<VariableClass>> Parameters;
     std::list<std::shared_ptr<StatementClass>> Statements;
+    std::string Name;
+
 public:
-    FunctionDefinitionClass(const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements);
-    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass(std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >());}
+    FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements);
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >());}
 public:
   //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
   //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
     void              Print(std::ostream &s) const;
+    const std::string &GetName() {return Name;}
+    void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
+    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
 };
 

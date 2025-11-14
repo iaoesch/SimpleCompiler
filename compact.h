@@ -4,6 +4,9 @@
 #include "environment.hpp"
 #include "variableclass.h"
 
+extern int GetNextNodeNumber();
+extern void DrawStatementNodeList(const std::list<std::shared_ptr<StatementClass>> &Statements, std::ostream &os, int ParentNodeNumber);
+
 
 
 
@@ -137,6 +140,7 @@ public:
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
+    const std::string &GetName() {return TheFunction->GetName();}
 private:
     virtual const TypeDescriptorClass GetType() const override;
 };
@@ -370,7 +374,7 @@ class ReferementClass  : public AssignementClass {
 };
 
 class RepeatLoopClass : public StatementClass {
-    std::list<std::shared_ptr<StatementClass>> Statements;                                                                                                                                             yyy   yq<231Statements;
+    std::list<std::shared_ptr<StatementClass>> Statements;
     std::shared_ptr<ConditionalExpressionClass> Condition;
 
 public:
@@ -386,9 +390,9 @@ public:
 };
 
 class FunctionCallStatementClass : public StatementClass {
-    std::list<std::shared_ptr<StatementClass>> Statements;
-    std::list<std::shared_ptr<VariableClass>> Parameters;
-    const std::string Name;
+    //std::list<std::shared_ptr<StatementClass>> Statements;
+    //std::list<std::shared_ptr<VariableClass>> Parameters;
+    //const std::string Name;
     std::shared_ptr<FunctionCallClass> Function;
 
 public:

@@ -94,6 +94,7 @@
   PRINT    "print"
   INPUT    "input"
   DUMP    "dump"
+  TREE    "tree"
   DEBUG   "debug"
 ;
 
@@ -158,6 +159,7 @@ command:
 |  "run"  {drv.Run();}
 |  "run" "identifier" {drv.Run($2);}
 |  "identifier" {drv.Print($1);}
+|  "tree" "string" {drv.Tree($2);}
 ;
 
 statements:
@@ -239,7 +241,7 @@ functiondefinition:
                              drv.Variables.CreateNewContext($2+"Params"); }
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
+  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;
 
@@ -273,7 +275,7 @@ exp:
 | exp "*" exp   { $$ = std::make_shared<MultiplyClass>($1, $3); }
 | exp "/" exp   { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
 | "(" exp ")"   { std::swap ($$, $2); }
-| "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReference($1)); }
+| "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
 | literal       { $$ = std::make_shared<ConstantClass>($1); }
 ;
 

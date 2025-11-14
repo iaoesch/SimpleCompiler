@@ -59,14 +59,15 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 
 
 namespace Variables {
-FunctionDefinitionClass::FunctionDefinitionClass(const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements) : Parameters(Parameters),
-    Statements(Statements)
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements)
+    : Parameters(Parameters), Statements(Statements), Name(Name_)
 {}
 
 void FunctionDefinitionClass::Print(std::ostream &s) const
 {
     {
         bool first = true;
+        s << Name;
         s << "(";
         for(auto &r: Parameters) {
             if (first) {
@@ -81,6 +82,24 @@ void FunctionDefinitionClass::Print(std::ostream &s) const
             r->Print(s);
         }
     }
+
+}
+
+void FunctionDefinitionClass::DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const
+{
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> function\\n"
+      << Name << "(";
+        for (auto const &p: Parameters) {
+         s << p->GetName() << ", ";
+    }
+    s  << ")|<f2> \"];" << std::endl;
+}
+
+void FunctionDefinitionClass::DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const
+{
+    DrawDeclarationNode(s, MyNodeNumber);
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call |<f2> \"];" << std::endl;
+    DrawStatementNodeList(Statements, s, MyNodeNumber);
 
 }
 

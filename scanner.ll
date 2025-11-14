@@ -75,6 +75,7 @@ blank [ \t]
 "compile"   return yy::parser::make_COMPILE (loc);
 "run"    return yy::parser::make_RUN (loc);
 "dump"   return yy::parser::make_DUMP (loc);
+"tree"   return yy::parser::make_TREE (loc);
 "debug"   return yy::parser::make_DEBUG (loc);
 "exit"   return yy::parser::make_END (loc);
 "print"   return yy::parser::make_PRINT (loc);

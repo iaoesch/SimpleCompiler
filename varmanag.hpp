@@ -66,6 +66,7 @@ class VariableManager
    std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
+   std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const TypeDescriptorClass &RequiredType);
 
 
    void Dump(std::ostream &s);

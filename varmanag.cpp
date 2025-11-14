@@ -527,7 +527,22 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string
         throw ERROR_OBJECT("No valid context");
         return nullptr;
     }
-    return ContextStack.back()->LookupVariable(Name);
+    std::shared_ptr<VariableClass> VarRef = ContextStack.back()->LookupVariable(Name);
+    return VarRef;
+}
+
+std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotFound(std::string Name, const TypeDescriptorClass &RequiredType)
+{
+    if (ContextStack.empty()) {
+        throw ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
+    if (VarRef == nullptr) {
+        VarRef = std::make_shared<VariableClass>(Name, RequiredType);
+        ContextStack.back()->RegisterVariable(Name, VarRef);
+    }
+    return VarRef;
 }
 
 void VariableManager::Dump(std::ostream &s)

@@ -1,6 +1,7 @@
 #include "driver.hh"
 #include "parser.hpp"
 #include "compact.h"
+#include <fstream>
 
 driver::driver ()
     : Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
@@ -41,10 +42,12 @@ void driver::Run(std::string id)
 
 void driver::execute(std::shared_ptr<StatementClass> s)
 {
+    LastStatement = s;
     std::cout << ">>>";
     s->Print(std::cout);
     std::cout << "\n>exe>";
     s->Execute(Env);
+
 }
 
 void driver::compile(std::string id)
@@ -74,6 +77,23 @@ void driver::SetParserDebugLevel(int Level)
  //  parser.set_debug_level (trace_parsing);
 }
 
+void driver::Tree(std::string FilePath)
+{
+    if (LastStatement != nullptr) {
+        std::ofstream Drawing("DrawDot.dot");
+        Drawing << "digraph g {" << std::endl;
+        Drawing << "node [shape = record,height=.1];" << std::endl;
+        LastStatement->DrawNode(Drawing, 0);
+        Drawing << "}" << std::endl;
+        Drawing.close();
+
+        system("/opt/homebrew/bin/dot -Tpng DrawDot.dot -o tree2.png");
+        system("open tree2.png");
+
+    }
+
+}
+
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
@@ -95,7 +115,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(s
     Var = Variables.CreateVariable(Name, TypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
     Var->SetValue(Variables::VariableContentClass(CurrentFunction));
-    auto &i = typeid(CurrentFunction);
+    //auto &i = typeid(CurrentFunction);
     return CurrentFunction;
 }
 

@@ -5,6 +5,11 @@
 
 static int NodeNumber = 1;
 
+int GetNextNodeNumber()
+{
+    return NodeNumber++;
+}
+
 using std::endl;
 
 Variables::VariableContentClass            ExpressionClass::Evaluate() const {std::cout << "\nVirtual Call expression Evaluate()"; return 0.0;};
@@ -729,7 +734,7 @@ void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void FunctionCallStatementClass::Print(std::ostream &s) const
 {
-    s << "function " << Name << "(";
+    s << "function " << Function->GetName() << "(";
     Function->Print(s);
     s << "endfunction" << std::endl;
 }
@@ -747,12 +752,9 @@ std::shared_ptr<StatementClass> FunctionCallStatementClass::Optimize()
 void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     int NodeNumber1 = NodeNumber++;
-    int NodeNumber2 = NodeNumber++;
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> < |<f2> \"];" << endl;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call |<f2> \"];" << endl;
     s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
-    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
-    this->Statements;LeftOperand->DrawNode(s, NodeNumber1);
-    RightOperand->DrawNode(s, NodeNumber2);
+    Function->DrawNode(s, NodeNumber1);
 
 }
 
@@ -765,6 +767,11 @@ bool FunctionCallClass::IsSame(std::shared_ptr<ExpressionClass> Other)
 
 void FunctionCallClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
+    int NodeNumber1 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    TheFunction->DrawDeclarationNode(s, NodeNumber1);
+    DrawStatementNodeList(Assignements, s, MyNodeNumber);
 
 }
 
