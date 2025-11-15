@@ -10,6 +10,7 @@ SOURCES += \
    calc++.cc \
    compact.cpp \
    driver.cc \
+   typedescriptorclass.cpp \
    variableclass.cpp \
    varmanag.cpp
 
@@ -46,6 +47,7 @@ HEADERS += \
    compact.h \
    driver.hh \
    environment.hpp \
+   typedescriptorclass.hpp \
    variableclass.h \
    varmanag.hpp
 

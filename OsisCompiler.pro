@@ -7,6 +7,7 @@ SOURCES += \
         expression.cpp \
         main.cpp \
         main_copy.cpp \
+        typedescriptorclass.cpp \
         variableclass.cpp
 
 #FLEXSOURCES += my_lex_sourcefile.l
@@ -37,6 +38,7 @@ QMAKE_EXTRA_COMPILERS += bison
 
 HEADERS += \
    expression.h \
+   typedescriptorclass.hpp \
    variableclass.h
 
 DISTFILES += \
