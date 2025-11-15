@@ -169,6 +169,7 @@ public:
 class VariableContentClass {
     friend std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
     friend VariableContentClass operator + (const VariableContentClass &l, const VariableContentClass &r);
+    friend bool operator <(const VariableContentClass &r, const VariableContentClass &l);
 
 public:
     typedef std::variant<std::monostate,
@@ -274,10 +275,7 @@ inline bool operator ==(const VariableContentClass &r, const VariableContentClas
     return false;
 }
 
-inline bool operator <(const VariableContentClass &r, const VariableContentClass &l)
-{
-    return false;
-}
+bool operator <(const VariableContentClass &r, const VariableContentClass &l);
 
 inline VariableContentClass operator *(const VariableContentClass &r, const VariableContentClass &l)
 {

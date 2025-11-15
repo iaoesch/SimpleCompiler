@@ -290,6 +290,18 @@ bool ArrayClass::Row::GetCommonType(TypeDescriptorClass &Type) const
     return true;
 }
 
+bool operator <(const VariableContentClass &r, const VariableContentClass &l)
+{
+    bool Result = false;
+    std::visit(overloaded{
+
+        [&Result](int64_t arg1, int64_t arg2) { Result = arg1 < arg2; },
+            [&Result](double arg1, double arg2)   { Result = arg1 < arg2; },
+            [&Result](auto &arg1, auto &arg2) { } // All other cases: do nothing
+    }, l.Data, r.Data);
+    return Result;
+}
+
 }
 
 

@@ -387,6 +387,10 @@ public:
     virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
+
+    // StatementClass interface
+public:
+    virtual void Execute(Environment &Env) const override;
 };
 
 class FunctionCallStatementClass : public StatementClass {

@@ -802,7 +802,7 @@ std::shared_ptr<StatementClass> ErrorStatement::Optimize()
 
 void ErrorStatement::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> error |<f2> \"];" << endl;
 }
 
 
@@ -827,7 +827,12 @@ std::shared_ptr<StatementClass> PrintStatementClass::Optimize()
 
 void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> print |<f2> \"];" << endl;
+    for (auto const &e: Expressions ) {
+        int NodeNumber1 = NodeNumber++;
+        s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+        e->DrawNode(s, NodeNumber1);
+    }
 }
 
 void PrintStatementClass::Execute(Environment &Env) const
@@ -838,3 +843,13 @@ void PrintStatementClass::Execute(Environment &Env) const
 }
 
 
+
+
+void RepeatLoopClass::Execute(Environment &Env) const
+{
+    do {
+        for (auto const &s: Statements) {
+            s->Execute(Env);
+        }
+    } while (Condition->Evaluate() == false);
+}

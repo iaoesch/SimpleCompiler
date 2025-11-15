@@ -281,32 +281,30 @@ condexp:
 
 exp
 : term          { std::swap ($$, $1); }
-| exp '+' term { $$ = std::make_shared<AdditionClass>($1, $3); }
-| exp '-' term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3)); }
+| exp "+" term { $$ = std::make_shared<AdditionClass>($1, $3); }
+| exp "-" term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3)); }
 ;
 
 term
 : factor           { std::swap ($$, $1); }
-| term '*' factor  { $$ = std::make_shared<MultiplyClass>($1, $3); }
-| term '/' factor  { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
-//| term '%' factor // if you have the % operator
+| term "*" factor  { $$ = std::make_shared<MultiplyClass>($1, $3); }
+| term "/" factor  { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
 ;
 
 factor
 : unary  { std::swap ($$, $1); }
-//| unary '^' factor // if you have an exponentiation operator. Note right-associativity
 ;
 
 unary
 : primary    { std::swap ($$, $1); }
-| '+' unary  { std::swap ($$, $2); }
-| '-' unary  { std::make_shared<NegationClass>($2);}
+| "+" unary  { std::swap ($$, $2); }
+| "-" unary  { std::make_shared<NegationClass>($2);}
 ;
 
 primary
 : "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
 | literal       { $$ = std::make_shared<ConstantClass>($1); }
-| '(' exp ')'  { std::swap ($$, $2); }
+| "(" exp ")"  { std::swap ($$, $2); }
 ;
 
 
