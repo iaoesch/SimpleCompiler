@@ -27,11 +27,11 @@ typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:
    virtual                  ~ExpressionClass() {}
-   virtual Variables::VariableContentClass   Evaluate() const;// = 0;
+   virtual Variables::VariableContentClass   Evaluate(Environment &Env) const;// = 0;
    virtual std::shared_ptr<ExpressionClass>  Derive(VariableReferenceType ToDerive) const;// = 0;
    virtual void              Print(std::ostream &s) const;// = 0;
    virtual std::shared_ptr<ExpressionClass> Clone() const;// = 0;
-   virtual std::shared_ptr<ExpressionClass> Optimize();// = 0;
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env);// = 0;
    virtual bool              IsConstant();// = 0;
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other);// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
@@ -87,11 +87,11 @@ class ConstantClass : public ValueClass {
    public:
                              ConstantClass(Variables::VariableContentClass v) : Value(v) {}
    virtual                  ~ConstantClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override { return Value; }
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override { return Value; }
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { return std::make_shared<ConstantClass>(0.0); }
    virtual void              Print(std::ostream &s) const override { s << Value; }
    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<ConstantClass>(*this); }
-   virtual std::shared_ptr<ExpressionClass> Optimize() override { return shared_from_this(); }
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { return shared_from_this(); }
    virtual bool              IsConstant() override {return true;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
@@ -107,11 +107,11 @@ class VariableValueClass : public ValueClass {
                              VariableValueClass(VariableReferenceType v) : Val(v) {}
                              VariableValueClass(const VariableValueClass &v) : Val(v.Val) {}
    virtual                  ~VariableValueClass() override {}
-   virtual Variables::VariableContentClass  Evaluate() const override{ return Val->GetValue(); }
+   virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override{ return Val->GetValue(); }
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == Val) {return std::make_shared<ConstantClass>(1.0);} else {return std::make_shared<ConstantClass>(0.0);}}
    virtual void              Print(std::ostream &s) const override { s << Val->GetName(); }
    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<VariableValueClass>(*this); }
-   virtual std::shared_ptr<ExpressionClass> Optimize() override { return shared_from_this(); }
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { return shared_from_this(); }
    virtual bool              IsConstant() override {return false;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
@@ -131,11 +131,11 @@ public:
     FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionClass> f, std::list<std::shared_ptr<StatementClass>> a) : TheFunction(f), Assignements(a) {}
     FunctionCallClass(const FunctionCallClass &f) = default;
     virtual                  ~FunctionCallClass() override {}
-    virtual Variables::VariableContentClass            Evaluate() const override{ return 0.0;}//Val->GetValue(); }
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//Val->GetValue(); }
     virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == ToDerive) {return std::make_shared<ConstantClass>(1.0);} else {return std::make_shared<ConstantClass>(0.0);}}
     virtual void              Print(std::ostream &s) const override;
     virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<FunctionCallClass>(*this); }
-    virtual std::shared_ptr<ExpressionClass> Optimize() override { return shared_from_this(); }
+    virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { return shared_from_this(); }
     virtual bool              IsConstant() override {return false;}
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
@@ -152,11 +152,11 @@ class InverseClass : public UnaryOperationClass {
                              InverseClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              InverseClass(const InverseClass &v) : UnaryOperationClass(v) {}
    virtual                  ~InverseClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return (1 / Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return (1 / Operand->Evaluate(Env)); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;// {return new NegationClass(new MultiplyClass(new InverseClass( new SquareClass(Operand->Clone())), Operand->Derive())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "1.0 / ("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new InverseClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 };
@@ -167,11 +167,11 @@ class SquareClass : public UnaryOperationClass {
                              SquareClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              SquareClass(const SquareClass &v) : UnaryOperationClass(v) {}
    virtual                  ~SquareClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{double tmp = Operand->Evaluate(); return tmp*tmp; };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{double tmp = Operand->Evaluate(Env); return tmp*tmp; };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new MultiplyClass(new ConstantClass(2.0), Operand->Clone()), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; Operand->Print(s); s << ")^2.0";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new SquareClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -181,11 +181,11 @@ class NegationClass : public UnaryOperationClass {
                              NegationClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              NegationClass(const NegationClass &v) : UnaryOperationClass(v) {}
    virtual                  ~NegationClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return - Operand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return - Operand->Evaluate(Env); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new NegateClass(Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "-("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new NegationClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -195,11 +195,11 @@ class LogarithmClass : public UnaryOperationClass {
                              LogarithmClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              LogarithmClass(const LogarithmClass &v) : UnaryOperationClass(v) {}
    virtual                  ~LogarithmClass() override{}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return (log(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return (log(Operand->Evaluate(Env)); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new InverseClass(Operand->Clone()), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "ln("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new LogarithmClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -209,11 +209,11 @@ class ExponentialClass : public UnaryOperationClass {
                              ExponentialClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              ExponentialClass(const ExponentialClass &v) : UnaryOperationClass(v) {}
    virtual                  ~ExponentialClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return (exp(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return (exp(Operand->Evaluate(Env)); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new ExponentialClass(*this)), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "exp("; Operand->Print(s); s << ")";  };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new ExponentialClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -223,11 +223,11 @@ class SquareRootClass : public UnaryOperationClass {
     SquareRootClass(std::shared_ptr<ExpressionClass>e) : UnaryOperationClass(e) {}
                              SquareRootClass(const SquareRootClass &v) : UnaryOperationClass(v) {}
    virtual                  ~SquareRootClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return (sqrt(Operand->Evaluate()); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return (sqrt(Operand->Evaluate(Env)); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new MultiplyClass(new InverseClass(new MultiplyClass(new ConstantClass(2.0), new SquareRootClass(*this))), Operand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "sqrt("; Operand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new SquareRootClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -238,11 +238,11 @@ class PowerClass : public BinaryOperationClass {
                              PowerClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              PowerClass(const PowerClass &v) : BinaryOperationClass(v) {}
    virtual                  ~PowerClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) * RigthOperand->Evaluate(Env); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new AdditionClass(new MultiplyClass(LeftOperand->Clone(), RigthOperand->Derive()), new MultiplyClass(LeftOperand->Derive(), RigthOperand->Clone())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new MultiplyClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -252,11 +252,11 @@ class MultiplyClass : public BinaryOperationClass {
                              MultiplyClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              MultiplyClass(const MultiplyClass &v) : BinaryOperationClass(v) {}
    virtual                  ~MultiplyClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() * RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) * RigthOperand->Evaluate(Env); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override;//{return new AdditionClass(new MultiplyClass(LeftOperand->Clone(), RigthOperand->Derive()), new MultiplyClass(LeftOperand->Derive(), RigthOperand->Clone())); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new MultiplyClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -267,21 +267,21 @@ class AdditionClass : public BinaryOperationClass {
                              AdditionClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryOperationClass(e1, e2) {}
                              AdditionClass(const AdditionClass &v) : BinaryOperationClass(v) {}
    virtual                  ~AdditionClass() override {}
-   virtual Variables::VariableContentClass            Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+   virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override ;//{return new AdditionClass(LeftOperand->Derive()), RigthOperand->Derive()); };
    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
-   virtual std::shared_ptr<ExpressionClass> Optimize() override;// { return NULL; };
+   virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
 class ConditionalExpressionClass : public std::enable_shared_from_this<ConditionalExpressionClass>{
 public:
     virtual                  ~ConditionalExpressionClass() {}
-    virtual bool              Evaluate() const;// = 0;
+    virtual bool              Evaluate(Environment &Env) const;// = 0;
     virtual void              Print(std::ostream &s) const;// = 0;
     virtual std::shared_ptr<ConditionalExpressionClass> Clone() const;// = 0;
-    virtual std::shared_ptr<ConditionalExpressionClass> Optimize();// = 0;
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env);// = 0;
     virtual bool              IsConstant();// = 0;
     virtual bool              IsSame(std::shared_ptr<ConditionalExpressionClass>Other);// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
@@ -308,10 +308,10 @@ public:
     AndClass(std::shared_ptr<ConditionalExpressionClass>e1, std::shared_ptr<ConditionalExpressionClass>e2) : BinaryConditionalOperationClass(e1, e2) {}
     AndClass(const AndClass &v) : BinaryConditionalOperationClass(v) {}
     virtual                  ~AndClass() override {}
-    virtual bool              Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+    virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
     virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
     virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
-    virtual std::shared_ptr<ConditionalExpressionClass> Optimize() override;// { return NULL; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -335,10 +335,10 @@ public:
     LessThanClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2) : BinaryRelationalOperationClass(e1, e2) {}
     LessThanClass(const LessThanClass &v) : BinaryRelationalOperationClass(v) {}
     virtual                  ~LessThanClass() override {}
-    virtual bool              Evaluate() const override;//{return LeftOperand->Evaluate() + RigthOperand->Evaluate(); };
+    virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
     virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
     virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
-    virtual std::shared_ptr<ConditionalExpressionClass> Optimize() override;// { return NULL; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
@@ -348,7 +348,7 @@ public:
     virtual                  ~StatementClass() {}
     virtual void              Print(std::ostream &s) const;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize();// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env);// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const;
     virtual void              Execute(Environment &Env) const;// = 0;
 };
@@ -364,7 +364,7 @@ public:
     virtual                  ~AssignementClass() override;
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
     virtual void              Execute(Environment &Env) const override;// = 0;
 };
@@ -384,7 +384,7 @@ public:
     virtual                  ~RepeatLoopClass() override {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 
@@ -408,7 +408,7 @@ public:
     virtual                  ~FunctionCallStatementClass()  override{}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 };
@@ -423,7 +423,7 @@ public:
     virtual                  ~PrintStatementClass()  override {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
     // StatementClass interface
@@ -441,7 +441,7 @@ public:
     virtual                  ~ErrorStatement() override {}
     virtual void              Print(std::ostream &s) const override;// = 0;
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
-    virtual std::shared_ptr<StatementClass> Optimize() override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 };

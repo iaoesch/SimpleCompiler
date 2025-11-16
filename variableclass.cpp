@@ -302,6 +302,29 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l)
     return Result;
 }
 
+bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
+{
+    bool Result = false;
+    std::visit(overloaded{
+
+        [&Result](int64_t arg1, int64_t arg2) { Result = arg1 == arg2; },
+        [&Result](double arg1, double arg2)   { Result = arg1 == arg2; },
+        [&Result](std::string arg1, std::string arg2)   { Result = arg1 == arg2; },
+        //[&Result](auto arg1, decltype(arg1) arg2)   { Result = arg1 == arg2; },
+        //[&Result]<class T>(T arg1, T arg2)   { Result = arg1 == arg2; },
+
+            [&Result](auto &arg1, auto &arg2) { } // All other cases: do nothing
+    }, l.Data, r.Data);
+    return Result;
+}
+
+void FunctionDefinitionClass::Execute(Environment &Env) const
+{
+    for (auto const &s: Statements) {
+        s->Execute(Env);
+    }
+}
+
 }
 
 

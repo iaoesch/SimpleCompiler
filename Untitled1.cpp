@@ -274,19 +274,19 @@ int main2(int argc, char *argv[])
       std::cout << std::endl;
 
       /* Optimize and print the expression multiple times */
-      Expression = Expression->Optimize();
+      Expression = Expression->Optimize(Env);
       Expression->Print(std::cout);
       std::cout << std::endl;
 
-      Expression = Expression->Optimize();
+      Expression = Expression->Optimize(Env);
       Expression->Print(std::cout);
       std::cout << std::endl;
 
-      Expression = Expression->Optimize();
+      Expression = Expression->Optimize(Env);
       Expression->Print(std::cout);
       std::cout << std::endl;
 
-      Expression = Expression->Optimize();
+      Expression = Expression->Optimize(Env);
       Expression->Print(std::cout);
       std::cout << std::endl;
 
@@ -296,15 +296,15 @@ int main2(int argc, char *argv[])
       std::cout << std::endl;
 
       /* Optimize and print the derivate multiple times */
-      Derivated = Derivated->Optimize();
+      Derivated = Derivated->Optimize(Env);
       Derivated->Print(std::cout);
       std::cout << std::endl;
 
-      Derivated = Derivated->Optimize();
+      Derivated = Derivated->Optimize(Env);
       Derivated->Print(std::cout);
       std::cout << std::endl;
 
-      Derivated = Derivated->Optimize();
+      Derivated = Derivated->Optimize(Env);
       Derivated->Print(std::cout);
       std::cout << std::endl;
 
@@ -314,8 +314,8 @@ int main2(int argc, char *argv[])
       for (int i = -3; i < 4; i++) {
          /* Set x to the actual Value and evaluate the expressions */
          VarX->SetValue(i);
-         std::cout << i << "    " << Expression->Evaluate() << "    ";
-         std::cout << Derivated->Evaluate() << std::endl;
+         std::cout << i << "    " << Expression->Evaluate(Env) << "    ";
+         std::cout << Derivated->Evaluate(Env) << std::endl;
       }
 
       /* Let the user interactively evaluate the expressions */
@@ -324,8 +324,8 @@ int main2(int argc, char *argv[])
          std::cout << "Enter Value to evaluate formula for (99 to end):";
          std::cin >> x;
          VarX->SetValue(x);
-         std::cout << "\nf(" << x << ") = " << Expression->Evaluate() << std::endl;
-         std::cout << "\nf'(" << x << ") = " << Derivated->Evaluate() << std::endl;
+         std::cout << "\nf(" << x << ") = " << Expression->Evaluate(Env) << std::endl;
+         std::cout << "\nf'(" << x << ") = " << Derivated->Evaluate(Env) << std::endl;
       } while (x != 99);
 
       std::ofstream Drawing("DrawDot.dot");
@@ -367,7 +367,7 @@ int main2(int argc, char *argv[])
   ep3 = ep1->Derive(Var);
   ep3->Print(cout);
 
-  ep3 = ep3->Optimize();
+  ep3 = ep3->Optimize(Env);
   cout << endl;
 
   ep3->Print(cout);
@@ -376,7 +376,7 @@ int main2(int argc, char *argv[])
   ep1 = ep3->Derive(Var);
   ep1->Print(cout);
 
-  ep1 = ep1->Optimize();
+  ep1 = ep1->Optimize(Env);
   cout << endl;
 
   ep1->Print(cout); */

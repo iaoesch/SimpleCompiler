@@ -304,7 +304,8 @@ unary
 primary
 : "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
 | literal       { $$ = std::make_shared<ConstantClass>($1); }
-| "(" exp ")"  { std::swap ($$, $2); }
+| "(" exp ")"   { std::swap ($$, $2); }
+| functioncall  { $$ = $1;}
 ;
 
 

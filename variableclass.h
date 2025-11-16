@@ -9,6 +9,7 @@
 #include <variant>
 #include <iostream>
 #include "Errclass.hpp"
+#include "environment.hpp"
 #include "typedescriptorclass.hpp"
 
 
@@ -163,6 +164,9 @@ public:
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
+    void Execute(Environment &Env) const;// = 0;
+
+
 };
 
 
@@ -170,6 +174,11 @@ class VariableContentClass {
     friend std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
     friend VariableContentClass operator + (const VariableContentClass &l, const VariableContentClass &r);
     friend bool operator <(const VariableContentClass &r, const VariableContentClass &l);
+    friend bool operator >(const VariableContentClass &r, const VariableContentClass &l) {return l < r;}
+    friend bool operator >=(const VariableContentClass &r, const VariableContentClass &l) {return !(r < l);}
+    friend bool operator <=(const VariableContentClass &r, const VariableContentClass &l) {return !(l < r);}
+    friend bool operator ==(const VariableContentClass &r, const VariableContentClass &l);
+    friend bool operator !=(const VariableContentClass &r, const VariableContentClass &l) {return !(l==r);}
 
 public:
     typedef std::variant<std::monostate,
@@ -269,11 +278,6 @@ std::monostate,
                          FunctionDefinitionClass
  */
 std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
-
-inline bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
-{
-    return false;
-}
 
 bool operator <(const VariableContentClass &r, const VariableContentClass &l);
 
