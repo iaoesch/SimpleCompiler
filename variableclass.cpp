@@ -318,7 +318,7 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
     return Result;
 }
 
-void FunctionDefinitionClass::Execute(Environment &Env) const
+Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
 {
     for (auto const &s: Statements) {
         s->Execute(Env);

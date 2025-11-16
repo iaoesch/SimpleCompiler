@@ -763,8 +763,7 @@ Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) co
     for (auto const &s: Assignements) {
         s->Execute(Env);
     }
-    TheFunction->Execute(Env);
-    return 0.0;
+    return TheFunction->Execute(Env);
 }
 
 void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }

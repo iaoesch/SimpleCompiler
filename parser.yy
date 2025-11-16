@@ -78,6 +78,18 @@
   UNTIL   "until"
   FUNCTION "function"
   ENDFUNCTION "endfunction"
+  RETURNING "returning"
+
+  HOLDING "holding"
+  INTEGER "integer"
+  FLOAT "float"
+  BOOLEAN "boolean"
+  ARRAY "array"
+  OF "of"
+  LIST "list"
+  STACK "stack"
+  MAP "map"
+
   AND     "and"
   OR      "or"
   NOT     "not"
@@ -99,9 +111,9 @@
 ;
 
 %token <std::string> IDENTIFIER "identifier"
-%token <int64_t> INTEGER "integer"
-%token <std::string> STRING "string"
-%token <double> FLOAT "float"
+%token <int64_t> INTEGER_LIT "integerliteral"
+%token <std::string> STRING_LIT "stringliteral"
+%token <double> FLOAT_LIT "floatliteral"
 
 
 %type  <std::shared_ptr<ExpressionClass>> exp term factor unary primary
@@ -155,11 +167,11 @@ input:
 
 command:
    "dump" {drv.Dump();}
-|  "debug" "integer" {set_debug_level($2);}
+|  "debug" "integerliteral" {set_debug_level($2);}
 |  "run"  {drv.Run();}
 |  "run" "identifier" {drv.Run($2);}
 |  "identifier" {drv.Print($1);}
-|  "tree" "string" {drv.Tree($2);}
+|  "tree" "stringliteral" {drv.Tree($2);}
 ;
 
 statements:
@@ -218,8 +230,33 @@ referement:
   "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); };
 
 definition:
-  functiondefinition {};
+  functiondefinition {}
+|  variabledefinition {}
+;
 
+variabledefinition:
+  "identifier" "as" typedefinition
+| "identifier" "as" typedefinition "=" exp
+;
+
+keytype:
+  "integer"
+| "float"
+| "boolean"
+| "string"
+;
+
+typedefinition:
+  keytype
+| "array" "[" Dimensions "]" "of" typedefinition
+| "list"
+| "stack" "of" typedefinition
+| "map" "<" keytype ">"
+;
+
+Dimensions:
+  exp
+  Dimensions "," exp
 
 functioncall:
   "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($<FunctionDefinitionClassSharedPtr>2, $4);};
@@ -239,11 +276,16 @@ functiondefinition:
                              /*tmp.ptr = */drv.Currentfunction.Create($2, @2);
                              /*$<FktDefContainer>$ = tmp;*/
                              drv.Variables.CreateNewContext($2+"Params"); }
+  returntype.opt
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $5, $8), @8); $$ = drv.Currentfunction.Get(@8); drv.Variables.LeaveContext(2);}
+  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $6, $9), @9); $$ = drv.Currentfunction.Get(@9); drv.Variables.LeaveContext(2);}
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;
+
+returntype.opt:
+ %empty
+ | "returning" typedefinition
 
 argumentlist:
   "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
@@ -317,14 +359,14 @@ literal:
 
 arraycontentliteral:
   numericliteral {$$ = $1;}
-| "string"       {$$ = Variables::VariableContentClass($1); }
+| "stringliteral"       {$$ = Variables::VariableContentClass($1); }
 | listliteral    {$$ = Variables::VariableContentClass::MakeUndefined();}
 | mapliteral     {$$ = Variables::VariableContentClass::MakeUndefined();}
 ;
 
 numericliteral:
-  "integer"   { $$ = Variables::VariableContentClass($1); }
-| "float"     { $$ = Variables::VariableContentClass($1); }
+  "integerliteral"   { $$ = Variables::VariableContentClass($1); }
+| "floatliteral"     { $$ = Variables::VariableContentClass($1); }
 ;
 
 arrayliteral:
@@ -373,8 +415,8 @@ mapentry:
 ;
 
 key:
-   "string"
-|  "integer"
+   "stringliteral"
+|  "integerliteral"
 ;
 
 %%

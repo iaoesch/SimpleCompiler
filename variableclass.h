@@ -164,7 +164,7 @@ public:
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
-    void Execute(Environment &Env) const;// = 0;
+    VariableContentClass Execute(Environment &Env) const;// = 0;
 
 
 };

@@ -71,7 +71,19 @@ blank [ \t]
 "repeat"      return yy::parser::make_REPEAT (loc);
 "until"      return yy::parser::make_UNTIL (loc);
 "function"      return yy::parser::make_FUNCTION (loc);
+"returning"      return yy::parser::make_RETURNING (loc);
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);
+
+"holding"      return yy::parser::make_HOLDING (loc);
+"integer"      return yy::parser::make_INTEGER (loc);
+"float"      return yy::parser::make_FLOAT (loc);
+"boolean"      return yy::parser::make_BOOLEAN (loc);
+"array"      return yy::parser::make_ARRAY (loc);
+"of"      return yy::parser::make_OF (loc);
+"list"      return yy::parser::make_LIST (loc);
+"stack"      return yy::parser::make_STACK (loc);
+"map"      return yy::parser::make_MAP (loc);
+
 "compile"   return yy::parser::make_COMPILE (loc);
 "run"    return yy::parser::make_RUN (loc);
 "dump"   return yy::parser::make_DUMP (loc);
@@ -88,7 +100,7 @@ blank [ \t]
   if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
     throw yy::parser::syntax_error (loc, "integer is out of range: "
                                     + std::string(yytext));
-  return yy::parser::make_INTEGER (n, loc);
+  return yy::parser::make_INTEGER_LIT (n, loc);
 }
 
 {float}    {
@@ -112,7 +124,7 @@ blank [ \t]
              }
 
 
-             return yy::parser::make_FLOAT (f, loc);
+             return yy::parser::make_FLOAT_LIT (f, loc);
       }
 
 {id}       return yy::parser::make_IDENTIFIER (yytext, loc);
@@ -122,7 +134,7 @@ blank [ \t]
                (loc, "invalid character: " + std::string(yytext));
             }
 
-{string3}   return yy::parser::make_STRING (std::string(yytext), loc);
+{string3}   return yy::parser::make_STRING_LIT (std::string(yytext), loc);
 
 <<EOF>>    return yy::parser::make_END (loc);
 
