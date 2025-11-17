@@ -83,6 +83,7 @@ blank [ \t]
 "list"      return yy::parser::make_LIST (loc);
 "stack"      return yy::parser::make_STACK (loc);
 "map"      return yy::parser::make_MAP (loc);
+"any"      return yy::parser::make_ANY (loc);
 
 "compile"   return yy::parser::make_COMPILE (loc);
 "run"    return yy::parser::make_RUN (loc);

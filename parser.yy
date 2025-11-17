@@ -41,6 +41,8 @@
 # include "driver.hh"
 # include "compact.h"
 # include "variableclass.h"
+#include "typedescriptorclass.hpp"
+
 }
 // typen: integer, float, string, stack, liste, array, map, function, dynamic, fixed
 
@@ -89,7 +91,7 @@
   LIST "list"
   STACK "stack"
   MAP "map"
-
+  ANY "any"
   AND     "and"
   OR      "or"
   NOT     "not"
@@ -137,6 +139,7 @@
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
+%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition keytype
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 
 
@@ -240,23 +243,34 @@ variabledefinition:
 ;
 
 keytype:
-  "integer"
-| "float"
-| "boolean"
-| "string"
+  "integer"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Integer);}
+| "float"    { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Float);}
+| "boolean"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Bool);}
+| "string"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::String);}
 ;
 
+//Stack,
+//Array,
+//Map,
+
 typedefinition:
-  keytype
+  keytype  {std::swap($$, $1);}
 | "array" "[" Dimensions "]" "of" typedefinition
-| "list"
-| "stack" "of" typedefinition
-| "map" "<" keytype ">"
+| "list"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::List);}
+| "any"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
+| "stack" "of" typedefinition  { $$ = std::make_unique<TypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
+| "map" "[" keytype "]"
 ;
 
 Dimensions:
-  exp
-  Dimensions "," exp
+  exp_or_star
+| Dimensions "," exp_or_star
+;
+
+exp_or_star:
+   exp
+|  "*"
+;
 
 functioncall:
   "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($<FunctionDefinitionClassSharedPtr>2, $4);};

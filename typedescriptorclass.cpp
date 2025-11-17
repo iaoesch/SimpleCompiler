@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include "typedescriptorclass.hpp"
 
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
@@ -85,6 +85,31 @@ const TypeDescriptorClass &TypeDescriptorClass::GetDynamicType() const
     return *(std::get<DynamicDescriptorClass>(Descriptor).CurrentType);
 }
 
+
+
+std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
+{
+    s << "type<";
+    switch(t.MyType) {
+
+    case TypeDescriptorClass::Type::Undefined: s << "undef"; break;
+    case TypeDescriptorClass::Type::Integer:   s << "Integer"; break;
+    case TypeDescriptorClass::Type::Float:     s << "Float"; break;
+    case TypeDescriptorClass::Type::Bool:      s << "Bool"; break;
+    case TypeDescriptorClass::Type::String:    s << "String"; break;
+    case TypeDescriptorClass::Type::Stack:     s << "Stack"; break;
+    case TypeDescriptorClass::Type::List:      s << "List"; break;
+    case TypeDescriptorClass::Type::Array:     s << "Array"; break;
+    case TypeDescriptorClass::Type::Map:       s << "Map"; break;
+    case TypeDescriptorClass::Type::Function:  s << "Function"; break;
+    case TypeDescriptorClass::Type::Expression:s << "Expression"; break;
+    case TypeDescriptorClass::Type::Dynamic:   s << "Dynamic"; break;
+    case TypeDescriptorClass::Type::Illegal:   s << "illegal"; break;
+        break;
+    }
+    s << ">";
+    return s;
+}
 
 
 ArrayDescriptorClass::ArrayDescriptorClass(

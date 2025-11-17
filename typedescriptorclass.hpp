@@ -25,6 +25,7 @@ using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayD
 
 class StackDescriptorClass  {
 public:
+    StackDescriptorClass(std::unique_ptr<TypeDescriptorClass> &&BaseType_) : BaseType(std::move(BaseType_)) {}
     StackDescriptorClass(const StackDescriptorClass &s);
     StackDescriptorClass &operator=(const StackDescriptorClass &s);
     std::unique_ptr<TypeDescriptorClass> BaseType;
@@ -81,7 +82,8 @@ public:
     friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
     friend bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t);
     friend bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2);
-    
+    friend std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t);
+
     void ChangeDynamicType(const TypeDescriptorClass& NewType);
     const TypeDescriptorClass& GetDynamicType() const;
     
