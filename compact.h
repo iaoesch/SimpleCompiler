@@ -27,6 +27,7 @@ typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:
    virtual                  ~ExpressionClass() {}
+   Variables::VariableContentClass   Evaluate() const;// = 0;
    virtual Variables::VariableContentClass   Evaluate(Environment &Env) const;// = 0;
    virtual std::shared_ptr<ExpressionClass>  Derive(VariableReferenceType ToDerive) const;// = 0;
    virtual void              Print(std::ostream &s) const;// = 0;

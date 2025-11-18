@@ -25,6 +25,19 @@ driver::parse (const std::string &f)
   return res;
 }
 
+int driver::parse(const char *Code)
+{
+    location.initialize (nullptr);
+    scan_begin (Code);
+    yy::parser parser (*this);
+    parser.set_debug_level (trace_parsing);
+    Variables.CreateNewContext("$$Global_Context$$");
+    int res = 0;
+    res = parser.parse ();
+    scan_end ();
+    return res;
+}
+
 void driver::halt()
 {
     std::cout << "Error happened" << std::endl;
@@ -48,6 +61,11 @@ void driver::execute(std::shared_ptr<StatementClass> s)
     std::cout << "\n>exe>";
     s->Execute(Env);
 
+}
+
+void driver::AddStatement(std::shared_ptr<StatementClass> s)
+{
+    result.push_back(s);
 }
 
 void driver::compile(std::string id)

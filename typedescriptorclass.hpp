@@ -17,10 +17,11 @@ class VariableContextClass;
 
 class StackDescriptorClass;
 class ArrayDescriptorClass;
+class MapDescriptorClass;
 class DynamicDescriptorClass;
 class TypeDescriptorClass;
 
-using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, DynamicDescriptorClass>;
+using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass, DynamicDescriptorClass>;
 
 
 class StackDescriptorClass  {
@@ -33,13 +34,26 @@ public:
 
 class ArrayDescriptorClass  {
 public:
-    ArrayDescriptorClass(std::vector<int> Dimensions,
+    ArrayDescriptorClass(std::vector<int64_t> Dimensions,
                          std::unique_ptr<TypeDescriptorClass> BaseType);
     ArrayDescriptorClass(const ArrayDescriptorClass &s);
     ArrayDescriptorClass &operator=(const ArrayDescriptorClass &s);
-    std::vector<int> Dimensions; // -1 = flexible dimension
+    std::vector<int64_t> Dimensions; // -1 = flexible dimension
     std::unique_ptr<TypeDescriptorClass> BaseType;
 };
+
+class MapDescriptorClass  {
+public:
+    enum class KeyTypes {Integer = 1, String = 2, Bool = 4};
+
+    MapDescriptorClass(KeyTypes PossibleKeys_) : PossibleKeys(PossibleKeys_) {}
+    MapDescriptorClass(const MapDescriptorClass &s) = default;
+    MapDescriptorClass &operator=(const MapDescriptorClass &s) = default;
+    KeyTypes PossibleKeys;
+};
+
+inline MapDescriptorClass::KeyTypes operator | (MapDescriptorClass::KeyTypes k1, MapDescriptorClass::KeyTypes k2) {return MapDescriptorClass::KeyTypes(int(k1) | int(k2));}
+inline MapDescriptorClass::KeyTypes operator & (MapDescriptorClass::KeyTypes k1, MapDescriptorClass::KeyTypes k2) {return MapDescriptorClass::KeyTypes(int(k1) & int(k2));}
 
 
 class DynamicDescriptorClass {
@@ -93,6 +107,8 @@ private:
             MyType = Type::Stack;
         } else if (std::holds_alternative<ArrayDescriptorClass>(Descriptor)) {
             MyType = Type::Array;
+        } else if (std::holds_alternative<MapDescriptorClass>(Descriptor)) {
+            MyType = Type::Map;
         } else if (std::holds_alternative<DynamicDescriptorClass>(Descriptor)) {
             MyType = Type::Dynamic;
         } else {
@@ -107,7 +123,6 @@ private:
         case Type::Float:
         case Type::Bool:
         case Type::List:
-        case Type::Map:
         case Type::Function:
         case Type::Expression:
         case Type::String:
@@ -118,6 +133,7 @@ private:
             
         case Type::Stack:
         case Type::Array:
+        case Type::Map:
         case Type::Illegal:
             throw ERROR_OBJECT("Invalid Type");
             break;

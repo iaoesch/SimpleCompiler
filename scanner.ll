@@ -163,10 +163,29 @@ driver::scan_begin ()
     }
 }
 
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+  //  extern int yyparse();
+  //  extern YY_BUFFER_STATE yy_scan_string(char * str);
+  //  extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+static YY_BUFFER_STATE buffer = NULL;
+
+void
+driver::scan_begin (const char *Input)
+{
+    yy_flex_debug = trace_scanning;
+    DoNotCloseyyin = true;
+
+    YY_BUFFER_STATE buffer = yy_scan_string(Input);
+}
+
 void
 driver::scan_end ()
 {
     if (DoNotCloseyyin == false) {
-  fclose (yyin);
+       fclose (yyin);
     }
+    if (buffer != NULL) {
+       yy_delete_buffer(buffer);
+    }
+
 }

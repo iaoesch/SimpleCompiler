@@ -16,6 +16,7 @@
   class StatementClass;
   class ConditionalExpressionClass;
   class VariableClass;
+  class VariableValueClass;
   namespace Variables {
      class FunctionDefinitionClass;
      class VariableContentClass;
@@ -118,13 +119,14 @@
 %token <double> FLOAT_LIT "floatliteral"
 
 
-%type  <std::shared_ptr<ExpressionClass>> exp term factor unary primary
+%type  <std::shared_ptr<ExpressionClass>> exp term factor unary primary exp_or_star
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
 %type  <std::shared_ptr<StatementClass>> loopstatement
 %type  <std::shared_ptr<Variables::FunctionDefinitionClass>> functiondefinition
+%type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
 %type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
@@ -139,8 +141,11 @@
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
-%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition keytype
+%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
+%type  <std::vector<int64_t>> Dimensions
+%type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
+
 
 
 
@@ -154,6 +159,8 @@
 %printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>
 %printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>
 %printer { yyoutput << "expression list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<ExpressionClass>>>
+%printer { yyoutput << "dimension vector[" << $$.size() << "]"; } <std::vector<int64_t>>
+%printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypes>
 
 %%
 %start unit;
@@ -163,7 +170,7 @@ unit:
 ;
 
 input:
-   statement {drv.execute($1);}
+   statement {drv.execute($1); drv.AddStatement($1);}
 |  definition
 |  command
 ;
@@ -238,38 +245,42 @@ definition:
 ;
 
 variabledefinition:
-  "identifier" "as" typedefinition
+  "identifier" "as" typedefinition  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, *$3)); }
 | "identifier" "as" typedefinition "=" exp
 ;
 
 keytype:
-  "integer"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Integer);}
-| "float"    { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Float);}
-| "boolean"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Bool);}
-| "string"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::String);}
+  "integer"  { $$ = MapDescriptorClass::KeyTypes::Integer;}
+| "boolean"  { $$ = MapDescriptorClass::KeyTypes::Bool;}
+| "string"   { $$ = MapDescriptorClass::KeyTypes::String;}
 ;
 
-//Stack,
-//Array,
-//Map,
+mapkeytype:
+   keytype                 { $$ = $1;}
+|  mapkeytype "," keytype  { $$ = $1 | $3;}
+;
 
 typedefinition:
-  keytype  {std::swap($$, $1);}
-| "array" "[" Dimensions "]" "of" typedefinition
+  "integer"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Integer);}
+| "boolean"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Bool);}
+| "string"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::String);}
+| "float"    { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Float);}
+| "array" "[" Dimensions "]" "of" typedefinition  { $$ = std::make_unique<TypeDescriptorClass>(ArrayDescriptorClass($3, std::move($6)));}
 | "list"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::List);}
 | "any"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
 | "stack" "of" typedefinition  { $$ = std::make_unique<TypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
-| "map" "[" keytype "]"
+| "map" "[" keytype "]" { $$ = std::make_unique<TypeDescriptorClass>(MapDescriptorClass($3));}
+
 ;
 
 Dimensions:
-  exp_or_star
-| Dimensions "," exp_or_star
+  exp_or_star     {$$ = std::vector<int64_t>(); $$.push_back($1->Evaluate().GetValue<int64_t>());}
+| Dimensions "," exp_or_star {$$ = $1; $$.push_back($3->Evaluate().GetValue<int64_t>());}
 ;
 
 exp_or_star:
-   exp
-|  "*"
+   exp   {$$ = $1;}
+|  "*"   {$$ = std::make_shared<ConstantClass>(Variables::VariableContentClass(-1LL));}
 ;
 
 functioncall:

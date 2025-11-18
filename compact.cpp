@@ -12,6 +12,14 @@ int GetNextNodeNumber()
 
 using std::endl;
 
+static Environment DummyEnvironment;
+
+
+Variables::VariableContentClass ExpressionClass::Evaluate() const
+{
+    return Evaluate(DummyEnvironment);
+}
+
 Variables::VariableContentClass            ExpressionClass::Evaluate(Environment &Env) const {std::cout << "\nVirtual Call expression Evaluate(Env)"; return 0.0;};
 std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const {std::cout << "\nVirtual Call expression Derive()"; return NULL;};
 void              ExpressionClass::Print(std::ostream &s) const {std::cout << "\nVirtual Call expression print()"; };

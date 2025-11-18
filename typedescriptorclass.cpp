@@ -113,7 +113,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
 
 
 ArrayDescriptorClass::ArrayDescriptorClass(
-    std::vector<int> Dimensions, std::unique_ptr<TypeDescriptorClass> BaseType)
+    std::vector<int64_t> Dimensions, std::unique_ptr<TypeDescriptorClass> BaseType)
     : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
 
 
