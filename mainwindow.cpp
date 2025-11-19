@@ -5,7 +5,9 @@
 #include <QToolButton>
 #include <QPainter>
 #include <QTextEdit>
+#include <QSvgWidget>
 #include <sstream>
+#include <fstream>
 
 #include "driver.hh"
 #include "highlighter.h"
@@ -20,22 +22,25 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupEditor();
 
-    QHBoxLayout *VLayout = new QHBoxLayout;
+    QVBoxLayout *VLayout = new QVBoxLayout;
     widget->setLayout(VLayout);
     setCentralWidget(widget);
 
-    QVBoxLayout *HLayout1 = new QVBoxLayout;
-    QVBoxLayout *HLayout2 = new QVBoxLayout;
+    QHBoxLayout *HLayout1 = new QHBoxLayout;
+    QHBoxLayout *HLayout2 = new QHBoxLayout;
     QLabel *TopLabel = new QLabel("L1");
-    //VLayout->addWidget(TopLabel);
+    VLayout->addWidget(TopLabel);
     VLayout->addLayout(HLayout1);
     VLayout->addLayout(HLayout2);
+    SvgDisplay = new QSvgWidget();
     QLabel *BottomLabel = new QLabel();
     VLayout->addWidget(BottomLabel);
+    VLayout->addWidget(SvgDisplay);
+
 
     HLayout1->addWidget(editor);
     Output = new QLabel("some results");
-    HLayout2->addWidget(Output);
+    HLayout1->addWidget(Output);
 
     connect(editor, &QTextEdit::textChanged, this, &MainWindow::TextChanged);
     ChangingInProgress = 0;
@@ -136,8 +141,32 @@ std::string MainWindow::ParseBlock (std::string Codeblock)
             s->Print(Output);
         }
         drv.Variables.Dump(Output);
+        TreeToSVG(drv.result, "tree.dot", "tree.svg");
         return Output.str();
 }
+
+void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath)
+{
+
+    //if (Graph.empty()) {
+    std::ofstream Drawing(DotFilePath);
+    Drawing << "digraph g {" << std::endl;
+    Drawing << "node [shape = record,height=.1];" << std::endl;
+    for (auto &s: Graph) {
+        if (s!=nullptr)  {
+            s->DrawNode(Drawing, 0);
+        }
+    }
+    Drawing << "}" << std::endl;
+    Drawing.close();
+
+    system(("/opt/homebrew/bin/dot -Tsvg " + DotFilePath + " -o " + SVGFilePath).c_str());
+    //system("open tree2.png");
+
+    SvgDisplay->load(QString::fromStdString(SVGFilePath));
+
+}
+
 
 void MainWindow::MarkRange(int StartLine, int StartColumn, int EndLine, int EndColumn)
 {

@@ -11,8 +11,9 @@
 QT_BEGIN_NAMESPACE
 class QTextEdit;
 class QLabel;
+class QSvgWidget;
 QT_END_NAMESPACE
-
+class StatementClass;
 
 class MainWindow : public QMainWindow
 {
@@ -39,10 +40,12 @@ private:
     QTextEdit *editor;
     Highlighter *highlighter;
     QLabel *Output;
+    QSvgWidget *SvgDisplay;
     int ChangingInProgress;
 
     std::string ParseBlock(std::string Codeblock);
     void MarkRange(int StartLine, int StartColumn, int EndLine, int EndColumn);
+    void TreeToSVG(std::list<std::shared_ptr<StatementClass> > Graph, std::string DotFilePath, std::string SVGFilePath);
 };
 #endif // MAINWINDOW_H
 
