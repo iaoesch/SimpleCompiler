@@ -36,10 +36,10 @@ public:
 // Conducting the whole scanning and parsing of Calc++.
 class driver
 {
-  Environment Env;
+  Environment &Env;
 
 public:
-  driver ();
+  driver (Environment &Env);
 
   // std::map<std::string, int> variables;
   VariableManager Variables;

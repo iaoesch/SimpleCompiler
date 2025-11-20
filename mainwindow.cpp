@@ -8,6 +8,7 @@
 #include <QSvgWidget>
 #include <sstream>
 #include <fstream>
+#include <QApplication>
 
 #include "driver.hh"
 #include "highlighter.h"
@@ -16,7 +17,7 @@
 
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), Env(*this)
 {
     QWidget *widget = new QWidget();
 
@@ -42,8 +43,16 @@ MainWindow::MainWindow(QWidget *parent)
     Output = new QLabel("some results");
     HLayout1->addWidget(Output);
 
+    Stop = new QPushButton("Stopped");
+    Stop->setDisabled(true);
+    Stoprequest = false;
+    connect(Stop, &QPushButton::clicked, this, &MainWindow::StopButtonClicked);
+    HLayout2->addWidget(Stop);
+
     connect(editor, &QTextEdit::textChanged, this, &MainWindow::TextChanged);
     ChangingInProgress = 0;
+
+
 #if 0
     Cross = new QPixmap(30,30);
     QPainter p(Cross);
@@ -93,6 +102,11 @@ void MainWindow::TextChanged()
     }
 }
 
+void MainWindow::StopButtonClicked()
+{
+    Stoprequest = true;
+}
+
 void MainWindow::setupEditor()
 {
     QFont font;
@@ -112,11 +126,35 @@ void MainWindow::setupEditor()
 }
 
 
+void QtEnvironment::ExecutionStarted()
+{
+    Parent.ExecutionStarted();
+}
+
+void QtEnvironment::ExecutionStopped()
+{
+    Parent.ExecutionStopped();
+}
+
+std::ostream &QtEnvironment::OutputStream()
+{
+    return std::cout;
+}
+
+std::istream &QtEnvironment::InputStream()
+{
+    return std::cin;
+}
+
+bool QtEnvironment::CheckForStop()
+{
+    return Parent.CheckForStop();
+}
 
 std::string MainWindow::ParseBlock (std::string Codeblock)
 {
     int res = 0;
-    driver drv;
+    driver drv(Env);
     drv.result.clear();
     try {
         if (drv.parse(Codeblock.c_str())) {
@@ -167,6 +205,28 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
 
 }
 
+bool MainWindow::CheckForStop()
+{
+    QApplication::processEvents();
+    return Stoprequest;
+
+}
+
+void MainWindow::ExecutionStarted()
+{
+    Stoprequest = false;
+    Stop->setText("Stop");
+    Stop->setDisabled(false);
+}
+
+void MainWindow::ExecutionStopped()
+{
+    Stoprequest = false;
+    Stop->setText("Stoped");
+    Stop->setDisabled(true);
+
+}
+
 
 void MainWindow::MarkRange(int StartLine, int StartColumn, int EndLine, int EndColumn)
 {
@@ -185,9 +245,13 @@ void MainWindow::MarkRange(int StartLine, int StartColumn, int EndLine, int EndC
     Format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
     Format.setUnderlineColor(Qt::red);
     Format.setFontUnderline(true);
+
     if (Cursor.hasSelection()) {
+        auto CurrentFormat = editor->currentCharFormat();
         Cursor.mergeCharFormat(Format);
+        editor->setCurrentCharFormat(CurrentFormat);
     }
+
 }
 
 

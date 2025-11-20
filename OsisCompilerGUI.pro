@@ -21,6 +21,7 @@ SOURCES += \
    calc++.cc \
    compact.cpp \
    driver.cc \
+   environment.cpp \
    highlighter.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \

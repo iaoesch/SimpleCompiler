@@ -3,8 +3,8 @@
 #include "compact.h"
 #include <fstream>
 
-driver::driver ()
-    : Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
+driver::driver (Environment &Env_)
+    : Env(Env_), Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
 {
 //  variables["one"] = 1;
 //  variables["two"] = 2;
@@ -59,7 +59,15 @@ void driver::execute(std::shared_ptr<StatementClass> s)
     std::cout << ">>>";
     s->Print(std::cout);
     std::cout << "\n>exe>";
-    s->Execute(Env);
+    Env.ExecutionStarted();
+    try {
+       s->Execute(Env);
+    }
+    catch (...) {
+       Env.ExecutionStopped();
+       throw;
+    }
+    Env.ExecutionStopped();
 
 }
 

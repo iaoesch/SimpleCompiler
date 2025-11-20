@@ -3,11 +3,26 @@
 
 
 #include <iostream>
+class StopRequested {
+
+};
 
 class Environment {
 public:
-    std::ostream &OutputStream() {return std::cout;}
-    std::istream &InputStream() {return std::cin;}     
+    virtual ~Environment();
+    virtual std::ostream &OutputStream();
+    virtual std::istream &InputStream();
+    virtual void ExecutionStarted();
+    virtual void ExecutionStopped();
+    void         ThrowIfStoppRequested() {if (CheckForStop()){throw StopRequested();}}
+
+private:
+    virtual bool CheckForStop();
+    void murks();
 };
+
+
+
+
 
 #endif // ENVIRONMENT_HPP

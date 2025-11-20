@@ -866,6 +866,7 @@ void RepeatLoopClass::Execute(Environment &Env) const
     do {
         for (auto const &s: Statements) {
             s->Execute(Env);
+            Env.ThrowIfStoppRequested();
         }
     } while (Condition->Evaluate(Env) == false);
 }
