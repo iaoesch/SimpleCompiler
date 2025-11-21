@@ -195,9 +195,16 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
     std::ofstream Drawing(DotFilePath);
     Drawing << "digraph g {" << std::endl;
     Drawing << "node [shape = record,height=.1];" << std::endl;
+    int CurrentNodeNumber = GetNextNodeNumber();
+    Drawing << "Node" << CurrentNodeNumber << "[label = \"<f0> |<f1> Start |<f2> \"];" << std::endl;
+
     for (auto &s: Graph) {
         if (s!=nullptr)  {
-            s->DrawNode(Drawing, GetNextNodeNumber());
+            int  NextNodeNumber = GetNextNodeNumber();
+            Drawing << "\"Node" << CurrentNodeNumber << "\":f0 -> \"Node" << NextNodeNumber << "\":f1;" << std::endl;
+
+            s->DrawNode(Drawing, NextNodeNumber);
+            CurrentNodeNumber = NextNodeNumber;
         }
     }
     Drawing << "}" << std::endl;
@@ -251,7 +258,7 @@ void MainWindow::UnMarkDocument()
     }
 }
 
-void MainWindow::MarkRange(const yy::location &Location, const std::string &Message)
+void MainWindow::MarkRange(yy::location Location, const std::string &Message)
 {
     QTextDocument *doc = editor->document();
     QTextCursor Cursor(doc);
@@ -261,9 +268,19 @@ void MainWindow::MarkRange(const yy::location &Location, const std::string &Mess
        if (Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor,
                                Location.begin.line-1) == false) {return;}
     }
+    if (Cursor.block().length() >= Location.begin.column) {
+        if (Location.begin.column > 2) {
+            Location.begin.column-=2;
+        } else {
+            Location.begin.column = 0;
+        }
+    }
     if (Location.begin.column > 1) {
     if (Cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
                         Location.begin.column-1) == false) {return;}
+    }
+    if (Cursor.atBlockEnd()) {
+        Cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor);
     }
     Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor,
                         Location.end.line - Location.begin.line);

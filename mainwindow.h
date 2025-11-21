@@ -68,7 +68,7 @@ private:
     QSvgWidget *SvgDisplay;
     int ChangingInProgress;
 
-    void MarkRange(const yy::location &Location, const std::string &Messge);
+    void MarkRange(yy::location Location, const std::string &Messge);
     void TreeToSVG(std::list<std::shared_ptr<StatementClass> > Graph, std::string DotFilePath, std::string SVGFilePath);
 
     friend class QtEnvironment;
