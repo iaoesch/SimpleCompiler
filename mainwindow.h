@@ -1,11 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include <QPushButton>
 #include <QToolButton>
+#include <QMainWindow>
 #include <QLabel>
 
+#include "driver.hh"
 #include "environment.hpp"
 #include "highlighter.h"
 
@@ -67,8 +68,7 @@ private:
     QSvgWidget *SvgDisplay;
     int ChangingInProgress;
 
-    std::string ParseBlock(std::string Codeblock);
-    void MarkRange(int StartLine, int StartColumn, int EndLine, int EndColumn);
+    void MarkRange(const yy::location &Location, const std::string &Messge);
     void TreeToSVG(std::list<std::shared_ptr<StatementClass> > Graph, std::string DotFilePath, std::string SVGFilePath);
 
     friend class QtEnvironment;
@@ -76,6 +76,8 @@ private:
      void ExecutionStarted() ;
      void ExecutionStopped() ;
 
+     std::tuple<std::string, driver::ErrorListType> ParseBlock(std::string Codeblock);
+     void UnMarkDocument();
 };
 #endif // MAINWINDOW_H
 

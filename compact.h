@@ -5,6 +5,7 @@
 #include "variableclass.h"
 
 extern int GetNextNodeNumber();
+extern void RestartNodeNumber();
 extern void DrawStatementNodeList(const std::list<std::shared_ptr<StatementClass>> &Statements, std::ostream &os, int ParentNodeNumber);
 
 

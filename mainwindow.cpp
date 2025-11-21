@@ -93,12 +93,16 @@ void MainWindow::TextChanged()
     if (ChangingInProgress == 0) {
         ChangingInProgress++;
 
-    QTextEdit* buttonSender = qobject_cast<QTextEdit*>(sender()); // retrieve the button you have clicked
-    QString Code = buttonSender->toPlainText();
-    std::string Result = ParseBlock(Code.toStdString());
-    Output->setText(QString::fromStdString(Result));
-    MarkRange(2,4,2,14);
-    ChangingInProgress--;
+        QTextEdit* buttonSender = qobject_cast<QTextEdit*>(sender()); // retrieve the button you have clicked
+        QString Code = buttonSender->toPlainText();
+        auto[Result, Errors] = ParseBlock(Code.toStdString());
+        Output->setText(QString::fromStdString(Result));
+        UnMarkDocument();
+        for (auto const &e: Errors) {
+            std::cout << "Marking: " << e.Location << std::endl;
+           MarkRange(e.Location, e.Message);
+        }
+        ChangingInProgress--;
     }
 }
 
@@ -120,9 +124,9 @@ void MainWindow::setupEditor()
 
     highlighter = new Highlighter(editor->document());
 
-//    QFile file("mainwindow.h");
-//    if (file.open(QFile::ReadOnly | QFile::Text))
-//        editor->setPlainText(file.readAll());
+    //    QFile file("mainwindow.h");
+    //    if (file.open(QFile::ReadOnly | QFile::Text))
+    //        editor->setPlainText(file.readAll());
 }
 
 
@@ -151,7 +155,7 @@ bool QtEnvironment::CheckForStop()
     return Parent.CheckForStop();
 }
 
-std::string MainWindow::ParseBlock (std::string Codeblock)
+std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::string Codeblock)
 {
     int res = 0;
     driver drv(Env);
@@ -180,19 +184,20 @@ std::string MainWindow::ParseBlock (std::string Codeblock)
         }
         drv.Variables.Dump(Output);
         TreeToSVG(drv.result, "tree.dot", "tree.svg");
-        return Output.str();
+        return {Output.str(), drv.GetErrors()};
 }
 
 void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath)
 {
 
     //if (Graph.empty()) {
+    RestartNodeNumber();
     std::ofstream Drawing(DotFilePath);
     Drawing << "digraph g {" << std::endl;
     Drawing << "node [shape = record,height=.1];" << std::endl;
     for (auto &s: Graph) {
         if (s!=nullptr)  {
-            s->DrawNode(Drawing, 0);
+            s->DrawNode(Drawing, GetNextNodeNumber());
         }
     }
     Drawing << "}" << std::endl;
@@ -227,23 +232,47 @@ void MainWindow::ExecutionStopped()
 
 }
 
-
-void MainWindow::MarkRange(int StartLine, int StartColumn, int EndLine, int EndColumn)
+void MainWindow::UnMarkDocument()
 {
     QTextDocument *doc = editor->document();
     QTextCursor Cursor(doc);
-  //  Cursor.movePosition(QTextCursor::Start);
-    Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor,
-                        StartLine);
-    Cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
-                        StartColumn);
+
+    // Remove all underlines (Might be done more effizient
+    // by just remove last set format)
+    Cursor.movePosition(QTextCursor::Start);
+    Cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    QTextCharFormat Format1;
+    Format1.setUnderlineStyle(QTextCharFormat::NoUnderline);
+    Format1.setFontUnderline(false);
+    if (Cursor.hasSelection()) {
+        auto CurrentFormat = editor->currentCharFormat();
+        Cursor.mergeCharFormat(Format1);
+        editor->setCurrentCharFormat(CurrentFormat);
+    }
+}
+
+void MainWindow::MarkRange(const yy::location &Location, const std::string &Message)
+{
+    QTextDocument *doc = editor->document();
+    QTextCursor Cursor(doc);
+
+
+    if (Location.begin.line > 1) {
+       if (Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor,
+                               Location.begin.line-1) == false) {return;}
+    }
+    if (Location.begin.column > 1) {
+    if (Cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
+                        Location.begin.column-1) == false) {return;}
+    }
     Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor,
-                        EndLine - StartLine);
+                        Location.end.line - Location.begin.line);
     Cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
-                        EndColumn - StartColumn);
+                        Location.end.column - Location.begin.column);
     QTextCharFormat Format;
     Format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
     Format.setUnderlineColor(Qt::red);
+    Format.setToolTip(QString::fromStdString(Message));
     Format.setFontUnderline(true);
 
     if (Cursor.hasSelection()) {

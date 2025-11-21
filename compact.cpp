@@ -10,6 +10,11 @@ int GetNextNodeNumber()
     return NodeNumber++;
 }
 
+void RestartNodeNumber()
+{
+    NodeNumber = 1;
+}
+
 using std::endl;
 
 static Environment DummyEnvironment;

@@ -27,7 +27,9 @@ driver::parse (const std::string &f)
 
 int driver::parse(const char *Code)
 {
-    location.initialize (nullptr);
+    Errors.clear();
+    std::string DummyFileName;
+    location.initialize (&DummyFileName);
     scan_begin (Code);
     yy::parser parser (*this);
     parser.set_debug_level (trace_parsing);
@@ -118,6 +120,11 @@ void driver::Tree(std::string FilePath)
 
     }
 
+}
+
+void driver::ReportError(const yy::location &l, const std::string &m)
+{
+    Errors.push_back({l, m});
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)

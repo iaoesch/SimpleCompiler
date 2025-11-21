@@ -50,6 +50,14 @@ public:
 
    std::shared_ptr<StatementClass> LastStatement;
 
+  struct ErrorInformation{
+      yy::location Location;
+      std::string  Message;
+  };
+
+  typedef std::list<ErrorInformation> ErrorListType;
+  ErrorListType Errors;
+
   // Run the parser on file F.  Return 0 on success.
   int parse (const std::string& f);
   int parse (const char *Code);
@@ -78,5 +86,7 @@ public:
   void Dump();
   void SetParserDebugLevel(int Level);
   void Tree(std::string FilePath = "");
+  void ReportError(const yy::location& l, const std::string& m);
+  ErrorListType GetErrors() {return Errors;}
 };
 #endif // ! DRIVER_HH

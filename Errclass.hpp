@@ -38,7 +38,7 @@
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-#define AT __FILE__ ":" TOSTRING(__LINE__)
+//#define AT __FILE__ ":" TOSTRING(__LINE__)
 
 #define ERROR_OBJECT(Message) ErrorBaseClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
 #define SIGNAL_UNIMPLEMENTED() throw (ERROR_OBJECT("Unimplemented Funcion"))
