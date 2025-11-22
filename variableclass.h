@@ -334,6 +334,7 @@ public:
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}
+    std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
 
 
 };

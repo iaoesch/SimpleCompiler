@@ -74,6 +74,7 @@ DISTFILES += \
    Makefile \
    README \
    calc++.test \
+   examplecodeblocks.txt \
    local.mk
 
 # Default rules for deployment.

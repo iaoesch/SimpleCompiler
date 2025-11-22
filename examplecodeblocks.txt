@@ -1,0 +1,10 @@
+a:=1;
+function Test(b)
+c:=a+b+1;
+endfunction
+
+a:=1;
+function Test(b)
+c:=a+b+1;
+endfunction
+Test(b:=a);

@@ -125,7 +125,7 @@
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
 %type  <std::shared_ptr<StatementClass>> loopstatement
-%type  <std::shared_ptr<Variables::FunctionDefinitionClass>> functiondefinition
+%type  <FunctionDefinitionClassSharedPtr> functiondefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
@@ -284,7 +284,7 @@ exp_or_star:
 ;
 
 functioncall:
-  "identifier" {drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($<FunctionDefinitionClassSharedPtr>2, $4);};
+  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($2, $4);};
 
 parameterlist:
   %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}

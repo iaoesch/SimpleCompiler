@@ -26,7 +26,7 @@ void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 
 void GlobalVariableClass::Print(std::ostream &s)
 {
-    s << Content;
+    s <<  "<" << GetName() << ": " << Content << ">";
 }
 
 Variables::VariableContentClass LocalVariableClass::GetValue() const
@@ -41,7 +41,7 @@ void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 
 void LocalVariableClass::Print(std::ostream &s)
 {
-    s << Parent->GetVariableContentForOffset(Reference);
+    s << "<" << GetName() << ": Local>";
 }
 
 
@@ -123,6 +123,16 @@ void FunctionDefinitionClass::DrawDefinitionNode(std::ostream &s, int MyNodeNumb
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call |<f2> \"];" << std::endl;
     DrawStatementNodeList(Statements, s, MyNodeNumber);
 
+}
+
+std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::string Name)
+{
+    auto Var = std::find_if(Parameters.begin(), Parameters.end(), [Name](auto const &v){return v->GetName() == Name;});
+    if (Var == Parameters.end()) {
+        return nullptr;
+    } else {
+        return *Var;
+    }
 }
 
 

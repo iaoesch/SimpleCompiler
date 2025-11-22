@@ -170,5 +170,9 @@ std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string R
 
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass> Assigned)
 {
-
+    std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByName(Assignee);
+    if (Var == nullptr) {
+        throw ERROR_OBJECT ("Parameter not found");
+    }
+    return std::make_shared<AssignementClass>(Assigned, Var);
 }
