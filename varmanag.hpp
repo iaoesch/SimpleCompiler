@@ -57,12 +57,18 @@ class VariableManager
 {
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
     std::vector<std::shared_ptr<VariableContextClass>> Contexts;
+    bool Local;
+    uint32_t LocalOffset;
 
    // Data
    public:
 
+    VariableManager() : Local(false), LocalOffset(0) {}
+
    void CreateNewContext(std::string Name);
    void LeaveContext(int Levels = 1);
+   void StartLocal();
+   void EndLocal();
    std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);

@@ -495,14 +495,32 @@ void VariableManager::LeaveContext(int Levels)
     }
 }
 
+void VariableManager::StartLocal()
+{
+    Local = true;
+    LocalOffset = 0;
+}
+
+void VariableManager::EndLocal()
+{
+    Local = false;
+    LocalOffset = 0;
+}
+
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
 {
     if (ContextStack.empty()) {
         throw ERROR_OBJECT("No valid context");
         return nullptr;
     }
-    auto Var = std::make_shared<VariableClass>(Name, Type);
+    std::shared_ptr<VariableClass> Var;
+    if (Local) {
+        Var = std::make_shared<LocalVariableClass>(Name, LocalOffset++);
+    } else {
+        Var = std::make_shared<GlobalVariableClass>(Name, Type);
+    }
     return ContextStack.back()->RegisterVariable(Name, Var, false);
+
 }
 
 
@@ -539,7 +557,11 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     }
     std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
     if (VarRef == nullptr) {
-        VarRef = std::make_shared<VariableClass>(Name, RequiredType);
+        if (Local) {
+           VarRef = std::make_shared<LocalVariableClass>(Name, LocalOffset++);
+        } else {
+           VarRef = std::make_shared<GlobalVariableClass>(Name, RequiredType);
+        }
         ContextStack.back()->RegisterVariable(Name, VarRef);
     }
     return VarRef;

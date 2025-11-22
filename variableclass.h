@@ -324,28 +324,65 @@ inline VariableContentClass pow(const VariableContentClass &l, const VariableCon
 }
 
 }
+
 class VariableClass
 {
     VariableContextClass *MyContext;
     const std::string Name;
-    Variables::VariableContentClass Content;
 
 public:
-    VariableClass(const std::string &Name_, const TypeDescriptorClass &Type_) : MyContext(nullptr), Name(Name_), Content(Type_) {}
+    VariableClass(const std::string &Name_) : MyContext(nullptr), Name(Name_) {}
     virtual ~VariableClass() {}
     void SetContext(VariableContextClass *Context);
     const std::string GetName()  const {return Name;}
-    virtual Variables::VariableContentClass      GetValue() const;
-    virtual void        SetValue(Variables::VariableContentClass v);
-    virtual void        Print(std::ostream &s);
+    virtual Variables::VariableContentClass      GetValue() const = 0;
+    virtual void        SetValue(Variables::VariableContentClass v) = 0;
+    virtual void        Print(std::ostream &s) = 0;
     virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const;
 
 
     const TypeDescriptorClass &Type() {return GetType();}
 private:
-    virtual const TypeDescriptorClass &GetType() const;
+    virtual const TypeDescriptorClass &GetType() const = 0;
 };
 
+class GlobalVariableClass : public VariableClass
+{
+    Variables::VariableContentClass Content;
+
+public:
+    GlobalVariableClass(const std::string &Name_, const TypeDescriptorClass &Type_) : VariableClass(Name_), Content(Type_) {}
+    virtual ~GlobalVariableClass() override {}
+    virtual Variables::VariableContentClass GetValue() const override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+  //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+
+    const TypeDescriptorClass &Type() {return GetType();}
+private:
+    virtual const TypeDescriptorClass &GetType() const override;
+};
+
+class LocalVariableClass : public VariableClass
+{
+    uint32_t Reference;
+
+public:
+    LocalVariableClass(const std::string &Name_, uint32_t Reference_) : VariableClass(Name_), Reference(Reference_) {}
+    virtual ~LocalVariableClass() override {}
+    virtual Variables::VariableContentClass GetValue() const override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+  //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+
+    const TypeDescriptorClass &Type() {return GetType();}
+private:
+    virtual const TypeDescriptorClass &GetType() const override;
+};
+
+#if 0
 class DoubleVariableClass : public VariableClass {
 
     double Value;
@@ -356,5 +393,5 @@ public:
     virtual Variables::VariableContentClass GetValue() const override;
     virtual void SetValue(Variables::VariableContentClass v) override;
 };
-
+#endif
 #endif // VARIABLECLASS_H

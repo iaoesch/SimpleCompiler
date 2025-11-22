@@ -14,17 +14,17 @@ void VariableClass::SetContext(VariableContextClass *Context)
     MyContext = Context;
 }
 
-Variables::VariableContentClass VariableClass::GetValue() const
+Variables::VariableContentClass GlobalVariableClass::GetValue() const
 {
     return Content;
 }
 
-void VariableClass::SetValue(Variables::VariableContentClass v)
+void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
     Content = v;
 }
 
-void VariableClass::Print(std::ostream &s)
+void GlobalVariableClass::Print(std::ostream &s)
 {
     s << Content;
 }
@@ -34,12 +34,12 @@ void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n\\<" << MyContext->GetName() << "\\>|<f2> \"];" << std::endl;
 }
 
-const TypeDescriptorClass &VariableClass::GetType() const
+const TypeDescriptorClass &GlobalVariableClass::GetType() const
 {
     return Content.getType();
 }
 
-
+#if 0
 Variables::VariableContentClass DoubleVariableClass::GetValue() const
 {
     Variables::VariableContentClass C = TypeDescriptorClass(TypeDescriptorClass::Type::Float);
@@ -56,7 +56,7 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 {
 
 }
-
+#endif
 
 namespace Variables {
 FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements)

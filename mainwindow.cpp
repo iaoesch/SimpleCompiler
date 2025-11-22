@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <QApplication>
+#include <QSplitter>
 
 #include "driver.hh"
 #include "highlighter.h"
@@ -19,24 +20,32 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), Env(*this)
 {
-    QWidget *widget = new QWidget();
-
+    //QWidget *widget = new QWidget();
+    QSplitter *Splitter = new QSplitter;
+    Splitter->setOrientation(Qt::Vertical);
     setupEditor();
 
-    QVBoxLayout *VLayout = new QVBoxLayout;
-    widget->setLayout(VLayout);
-    setCentralWidget(widget);
+    //QVBoxLayout *VLayout = new QVBoxLayout;
+    //widget->setLayout(VLayout);
+    //setCentralWidget(widget);
+    setCentralWidget(Splitter);
 
     QHBoxLayout *HLayout1 = new QHBoxLayout;
     QHBoxLayout *HLayout2 = new QHBoxLayout;
     QLabel *TopLabel = new QLabel("L1");
-    VLayout->addWidget(TopLabel);
-    VLayout->addLayout(HLayout1);
-    VLayout->addLayout(HLayout2);
+    Splitter->addWidget(TopLabel);
+    QWidget *widget = new QWidget();
+    widget->setLayout(HLayout1);
+    Splitter->addWidget(widget);
+    widget = new QWidget();
+    widget->setLayout(HLayout2);
+    Splitter->addWidget(widget);
+//    VLayout->addLayout(HLayout1);
+//    VLayout->addLayout(HLayout2);
     SvgDisplay = new QSvgWidget();
     QLabel *BottomLabel = new QLabel();
-    VLayout->addWidget(BottomLabel);
-    VLayout->addWidget(SvgDisplay);
+    Splitter->addWidget(BottomLabel);
+    Splitter->addWidget(SvgDisplay);
 
 
     HLayout1->addWidget(editor);
