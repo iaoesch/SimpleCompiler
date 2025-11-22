@@ -298,13 +298,20 @@ parameter:
 functiondefinition:
   "function" "identifier" {
                              /*FktDefContainer tmp;*/
-                             /*tmp.ptr = */drv.Currentfunction.Create($2, @2);
+                             auto ptr = drv.Currentfunction.Create($2, @2);
                              /*$<FktDefContainer>$ = tmp;*/
+                             drv.Variables.StartLocal(ptr);
                              drv.Variables.CreateNewContext($2+"Params"); }
   returntype.opt
   "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
   statements
-  "endfunction" {/**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/ /*$$ = $<FktDefContainer>3.ptr;*/drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $6, $9), @9); $$ = drv.Currentfunction.Get(@9); drv.Variables.LeaveContext(2);}
+  "endfunction" {
+                      /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
+                      /*$$ = $<FktDefContainer>3.ptr;*/
+                      auto StorageTemplate = drv.Variables.EndLocal();
+                      drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $6, $9, std::move(StorageTemplate)), @9);
+                      $$ = drv.Currentfunction.Get(@9); drv.Variables.LeaveContext(2);
+                }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;
 

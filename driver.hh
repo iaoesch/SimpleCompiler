@@ -25,7 +25,7 @@ public:
         : Variables(Variables) , CurrentFunction(nullptr) {}
     std::shared_ptr<Variables::FunctionDefinitionClass> Set(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Create(std::string Name, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> Define(const Variables::FunctionDefinitionClass &f, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
 
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered);

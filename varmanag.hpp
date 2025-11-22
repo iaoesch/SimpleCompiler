@@ -28,9 +28,16 @@
 /* Class Type declaration      */
 
 /* Class data declaration      */
+#include "variableclass.h"
 #include <map>
 #include <string>
-#include "variableclass.h"
+//#include "variableclass.h"
+class VariableClass;
+class TypeDescriptorClass;
+namespace Variables {
+    class FunctionDefinitionClass;
+    class VariableContentClass;
+}
 
 
 class VariableContextClass {
@@ -58,7 +65,13 @@ class VariableManager
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
     std::vector<std::shared_ptr<VariableContextClass>> Contexts;
     bool Local;
+    std::shared_ptr<Variables::FunctionDefinitionClass> LocalsParent;
     uint32_t LocalOffset;
+public:
+    typedef std::vector<Variables::VariableContentClass> LocalStorageType;
+private:
+    std::vector<LocalStorageType> LocalStorageTemplates;
+
 
    // Data
    public:
@@ -67,8 +80,8 @@ class VariableManager
 
    void CreateNewContext(std::string Name);
    void LeaveContext(int Levels = 1);
-   void StartLocal();
-   void EndLocal();
+   void StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent);
+   LocalStorageType EndLocal();
    std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);

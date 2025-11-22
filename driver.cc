@@ -152,9 +152,9 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(s
     return CurrentFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(const Variables::FunctionDefinitionClass &f, const yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
 {
-    *CurrentFunction = f;
+    *CurrentFunction = std::move(f);
     return CurrentFunction;
 }
 

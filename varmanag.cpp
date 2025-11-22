@@ -24,6 +24,7 @@
 #include "varmanag.hpp"
 #include "compact.h"
 #include "Errclass.hpp"
+#include <cassert>
 
 /* Class constant declaration  */
 
@@ -495,16 +496,30 @@ void VariableManager::LeaveContext(int Levels)
     }
 }
 
-void VariableManager::StartLocal()
+void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent)
 {
     Local = true;
     LocalOffset = 0;
+    LocalStorageTemplates.push_back(LocalStorageType());
+    LocalsParent = Parent;
 }
 
-void VariableManager::EndLocal()
+VariableManager::LocalStorageType VariableManager::EndLocal()
 {
-    Local = false;
-    LocalOffset = 0;
+    LocalStorageType Storage;
+    if (LocalStorageTemplates.empty()) {
+        throw ERROR_OBJECT("Internal, local stack empty");
+    }
+    std::swap(Storage, LocalStorageTemplates.back());
+    LocalStorageTemplates.pop_back();
+    if (LocalStorageTemplates.empty()) {
+        Local = false;
+        LocalOffset = 0;
+    } else {
+        Local = true;
+        LocalOffset = static_cast<decltype(LocalOffset)>(LocalStorageTemplates.back().size());
+    }
+    return Storage;
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
@@ -515,7 +530,9 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name,
     }
     std::shared_ptr<VariableClass> Var;
     if (Local) {
-        Var = std::make_shared<LocalVariableClass>(Name, LocalOffset++);
+        Var = std::make_shared<LocalVariableClass>(Name, LocalOffset++, LocalsParent);
+        LocalStorageTemplates.back().push_back(Variables::VariableContentClass(Type));
+        assert(LocalOffset == LocalStorageTemplates.back().size());
     } else {
         Var = std::make_shared<GlobalVariableClass>(Name, Type);
     }
@@ -558,7 +575,9 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
     if (VarRef == nullptr) {
         if (Local) {
-           VarRef = std::make_shared<LocalVariableClass>(Name, LocalOffset++);
+           VarRef = std::make_shared<LocalVariableClass>(Name, LocalOffset++, LocalsParent);
+            LocalStorageTemplates.back().push_back(Variables::VariableContentClass(RequiredType));
+            assert(LocalOffset == LocalStorageTemplates.back().size());
         } else {
            VarRef = std::make_shared<GlobalVariableClass>(Name, RequiredType);
         }

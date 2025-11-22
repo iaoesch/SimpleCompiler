@@ -29,6 +29,22 @@ void GlobalVariableClass::Print(std::ostream &s)
     s << Content;
 }
 
+Variables::VariableContentClass LocalVariableClass::GetValue() const
+{
+    return Parent->GetVariableContentForOffset(Reference);
+}
+
+void LocalVariableClass::SetValue(Variables::VariableContentClass v)
+{
+    Parent->GetVariableContentForOffset(Reference) = v;
+}
+
+void LocalVariableClass::Print(std::ostream &s)
+{
+    s << Parent->GetVariableContentForOffset(Reference);
+}
+
+
 void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n\\<" << MyContext->GetName() << "\\>|<f2> \"];" << std::endl;
@@ -37,6 +53,11 @@ void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 const TypeDescriptorClass &GlobalVariableClass::GetType() const
 {
     return Content.getType();
+}
+
+const TypeDescriptorClass &LocalVariableClass::GetType() const
+{
+    return Parent->GetTemplateContentForOffset(Reference).getType();
 }
 
 #if 0
@@ -59,8 +80,9 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 #endif
 
 namespace Variables {
-FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements)
-    : Parameters(Parameters), Statements(Statements), Name(Name_)
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_)
+    : Parameters(Parameters), Statements(Statements), Name(Name_),
+    StorageTemplate(std::move(StorageTemplate_))
 {}
 
 void FunctionDefinitionClass::Print(std::ostream &s) const
@@ -320,6 +342,7 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 
 Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
 {
+    ActiveStorage = StorageTemplate;
     for (auto const &s: Statements) {
         s->Execute(Env);
     }

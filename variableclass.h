@@ -11,6 +11,8 @@
 #include "Errclass.hpp"
 #include "environment.hpp"
 #include "typedescriptorclass.hpp"
+//#include "varmanag.hpp"
+
 
 
 namespace Variables {
@@ -148,26 +150,7 @@ public:
     MapClass &operator = (const MapClass &s){SIGNAL_UNIMPLEMENTED();}
 };
 
-class FunctionDefinitionClass {
-    std::list<std::shared_ptr<VariableClass>> Parameters;
-    std::list<std::shared_ptr<StatementClass>> Statements;
-    std::string Name;
-
-public:
-    FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements);
-    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >());}
-public:
-  //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
-  //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
-    void              Print(std::ostream &s) const;
-    const std::string &GetName() {return Name;}
-    void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
-    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
-
-    VariableContentClass Execute(Environment &Env) const;// = 0;
-
-
-};
+class FunctionDefinitionClass;
 
 
 class VariableContentClass {
@@ -323,6 +306,41 @@ inline VariableContentClass pow(const VariableContentClass &l, const VariableCon
     return l;
 }
 
+class FunctionDefinitionClass {
+public:
+    typedef std::vector<Variables::VariableContentClass> LocalStorageType;
+private:
+    std::list<std::shared_ptr<VariableClass>> Parameters;
+    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::string Name;
+    LocalStorageType StorageTemplate;
+    mutable LocalStorageType ActiveStorage;
+
+public:
+    FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate);
+    FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
+    FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
+    FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
+
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType());}
+public:
+    //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
+    //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    void              Print(std::ostream &s) const;
+    const std::string &GetName() {return Name;}
+    void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
+    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
+
+    VariableContentClass Execute(Environment &Env) const;// = 0;
+    const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
+    VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}
+
+
+};
+
+
+
+
 }
 
 class VariableClass
@@ -367,9 +385,10 @@ private:
 class LocalVariableClass : public VariableClass
 {
     uint32_t Reference;
+    std::shared_ptr<Variables::FunctionDefinitionClass> Parent;
 
 public:
-    LocalVariableClass(const std::string &Name_, uint32_t Reference_) : VariableClass(Name_), Reference(Reference_) {}
+    LocalVariableClass(const std::string &Name_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionClass> Parent_) : VariableClass(Name_), Reference(Reference_), Parent(Parent_) {}
     virtual ~LocalVariableClass() override {}
     virtual Variables::VariableContentClass GetValue() const override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
