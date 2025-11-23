@@ -522,7 +522,7 @@ VariableManager::LocalStorageType VariableManager::EndLocal()
     return Storage;
 }
 
-std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
+std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     if (ContextStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("No valid context");
@@ -530,7 +530,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name,
     }
     std::shared_ptr<VariableClass> Var;
     if (Local) {
-        Var = std::make_shared<LocalVariableClass>(Name, LocalOffset++, LocalsParent);
+        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalsParent);
         LocalStorageTemplates.back().push_back(Variables::VariableContentClass(Type));
         assert(LocalOffset == LocalStorageTemplates.back().size());
     } else {
@@ -541,7 +541,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name,
 }
 
 
-std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
+std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     if (ContextStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("No valid context");
@@ -566,7 +566,7 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string
     return VarRef;
 }
 
-std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotFound(std::string Name, const TypeDescriptorClass &RequiredType)
+std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType)
 {
     if (ContextStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("No valid context");
@@ -575,7 +575,7 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
     if (VarRef == nullptr) {
         if (Local) {
-           VarRef = std::make_shared<LocalVariableClass>(Name, LocalOffset++, LocalsParent);
+           VarRef = std::make_shared<LocalVariableClass>(Name, RequiredType, LocalOffset++, LocalsParent);
             LocalStorageTemplates.back().push_back(Variables::VariableContentClass(RequiredType));
             assert(LocalOffset == LocalStorageTemplates.back().size());
         } else {

@@ -33,7 +33,7 @@
 #include <string>
 //#include "variableclass.h"
 class VariableClass;
-class TypeDescriptorClass;
+class VariableTypeDescriptorClass;
 namespace Variables {
     class FunctionDefinitionClass;
     class VariableContentClass;
@@ -82,10 +82,10 @@ private:
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent);
    LocalStorageType EndLocal();
-   std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
-   std::shared_ptr<VariableClass> CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
-   std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const TypeDescriptorClass &RequiredType);
+   std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
 
 
    void Dump(std::ostream &s);

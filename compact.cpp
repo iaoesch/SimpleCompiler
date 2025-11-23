@@ -801,7 +801,7 @@ void FunctionCallClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 const TypeDescriptorClass FunctionCallClass::GetType() const
 {
-    return TypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
+    return TheFunction->GetReturnType();
 }
 
 const TypeDescriptorClass UnaryOperationClass::GetType() const

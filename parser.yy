@@ -141,7 +141,7 @@
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
-%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition, returntype.opt
+%type  <std::unique_ptr<VariableTypeDescriptorClass>> typedefinition, returntype.opt
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
 %type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
@@ -217,7 +217,7 @@ assignment:
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
 assignable:
-  "identifier"  { $$ = drv.Variables.GetOrCreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
+  "identifier"  { $$ = drv.Variables.GetOrCreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
 | assignable "[" rangedindexes "]"
 | assignable "{" rangedindex "}"
 ;
@@ -261,15 +261,15 @@ mapkeytype:
 ;
 
 typedefinition:
-  "integer"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Integer);}
-| "boolean"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Bool);}
-| "string"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::String);}
-| "float"    { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Float);}
-| "array" "[" Dimensions "]" "of" typedefinition  { $$ = std::make_unique<TypeDescriptorClass>(ArrayDescriptorClass($3, std::move($6)));}
-| "list"  { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::List);}
-| "any"   { $$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
-| "stack" "of" typedefinition  { $$ = std::make_unique<TypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
-| "map" "[" keytype "]" { $$ = std::make_unique<TypeDescriptorClass>(MapDescriptorClass($3));}
+  "integer"  { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Integer);}
+| "boolean"  { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Bool);}
+| "string"   { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::String);}
+| "float"    { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Float);}
+| "array" "[" Dimensions "]" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(ArrayDescriptorClass($3, std::move($6)));}
+| "list"  { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::List);}
+| "any"   { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
+| "stack" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
+| "map" "[" keytype "]" { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3));}
 
 ;
 
@@ -320,12 +320,12 @@ functiondefinition:
 ;
 
 returntype.opt:
- %empty                       {$$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Undefined);}
+ %empty                       {$$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Undefined);}
  | "returning" typedefinition {$$ = std::move($2);}
 
 argumentlist:
-  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
-| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $1.push_back(var); $$ = $1; };
+  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
+| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $1.push_back(var); $$ = $1; };
 
 %left or;
 %left and;
@@ -380,7 +380,7 @@ unary
 ;
 
 primary
-: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, TypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
+: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
 | literal       { $$ = std::make_shared<ConstantClass>($1); }
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}

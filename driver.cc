@@ -145,7 +145,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(s
     if (Var != nullptr) {
         throw(yy::parser::syntax_error(l, "function alllready defined"));
     }
-    Var = Variables.CreateVariable(Name, TypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
+    Var = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
     Var->SetValue(Variables::VariableContentClass(CurrentFunction));
     //auto &i = typeid(CurrentFunction);

@@ -19,27 +19,27 @@ class StackDescriptorClass;
 class ArrayDescriptorClass;
 class MapDescriptorClass;
 class DynamicDescriptorClass;
-class TypeDescriptorClass;
+class VariableTypeDescriptorClass;
 
-using TypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass, DynamicDescriptorClass>;
+using ValueTypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass>;
 
 
 class StackDescriptorClass  {
 public:
-    StackDescriptorClass(std::unique_ptr<TypeDescriptorClass> &&BaseType_) : BaseType(std::move(BaseType_)) {}
+    StackDescriptorClass(std::unique_ptr<VariableTypeDescriptorClass> &&BaseType_) : BaseType(std::move(BaseType_)) {}
     StackDescriptorClass(const StackDescriptorClass &s);
     StackDescriptorClass &operator=(const StackDescriptorClass &s);
-    std::unique_ptr<TypeDescriptorClass> BaseType;
+    std::unique_ptr<VariableTypeDescriptorClass> BaseType;
 };
 
 class ArrayDescriptorClass  {
 public:
     ArrayDescriptorClass(std::vector<int64_t> Dimensions,
-                         std::unique_ptr<TypeDescriptorClass> BaseType);
+                         std::unique_ptr<VariableTypeDescriptorClass> BaseType);
     ArrayDescriptorClass(const ArrayDescriptorClass &s);
     ArrayDescriptorClass &operator=(const ArrayDescriptorClass &s);
     std::vector<int64_t> Dimensions; // -1 = flexible dimension
-    std::unique_ptr<TypeDescriptorClass> BaseType;
+    std::unique_ptr<VariableTypeDescriptorClass> BaseType;
 };
 
 class MapDescriptorClass  {
@@ -60,7 +60,7 @@ class DynamicDescriptorClass {
 public:
     DynamicDescriptorClass(const DynamicDescriptorClass &s);
     DynamicDescriptorClass &operator = (const DynamicDescriptorClass &s);
-    std::unique_ptr<TypeDescriptorClass> CurrentType;
+    std::unique_ptr<VariableTypeDescriptorClass> CurrentType;
 };
 
 
@@ -81,42 +81,43 @@ public:
         Map,
         Function,
         Expression,
-        Dynamic, //, fixed
+        Dynamic,
         Illegal  // $Internal flag
     };
     
-    TypeDescriptorClass(const TypeDescriptor &Descriptor)
-        : Descriptor(Descriptor) {SetTypeFromDescriptor();}
+protected:
+    TypeDescriptorClass(const ValueTypeDescriptor &Descriptor)
+        : MyType(TypeFromDescriptor(Descriptor)), Descriptor(Descriptor) {}
     
     TypeDescriptorClass(Type t)
-        : MyType(t) {SetDescriptorFromType(t);}
-    
-    // TypeDescriptorClass &operator = (const TypeDescriptorClass &src) {MyType = src.MyType; Descriptor = src.Descriptor;}
+        : MyType(t), Descriptor(DescriptorFromType(t)) {}
+
+private:
+
+    // ValueTypeDescriptorClass &operator = (const ValueTypeDescriptorClass &src) {MyType = src.MyType; Descriptor = src.Descriptor;}
     
     friend TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2);
     friend bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type t);
     friend bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2);
     friend std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t);
 
-    void ChangeDynamicType(const TypeDescriptorClass& NewType);
-    const TypeDescriptorClass& GetDynamicType() const;
+  //  void ChangeDynamicType(const ValueTypeDescriptorClass& NewType);
+  //  const ValueTypeDescriptorClass& GetDynamicType() const;
     
-private:
-    void SetTypeFromDescriptor() {
+protected:
+    Type TypeFromDescriptor(const ValueTypeDescriptor &Descriptor) {
         if (std::holds_alternative<StackDescriptorClass>(Descriptor)) {
-            MyType = Type::Stack;
+            return Type::Stack;
         } else if (std::holds_alternative<ArrayDescriptorClass>(Descriptor)) {
-            MyType = Type::Array;
+            return Type::Array;
         } else if (std::holds_alternative<MapDescriptorClass>(Descriptor)) {
-            MyType = Type::Map;
-        } else if (std::holds_alternative<DynamicDescriptorClass>(Descriptor)) {
-            MyType = Type::Dynamic;
+            return Type::Map;
         } else {
             throw std::runtime_error("Inconsistent type state");
         }
     }
     
-    void SetDescriptorFromType(Type t) {
+    ValueTypeDescriptor DescriptorFromType(Type t) {
         switch(t) {
             
         case Type::Integer:
@@ -128,7 +129,7 @@ private:
         case Type::String:
         case Type::Undefined:
         case Type::Dynamic:
-            Descriptor = std::monostate();
+            return std::monostate();
             break;
             
         case Type::Stack:
@@ -139,36 +140,88 @@ private:
             break;
         }
     }
+    friend class ValueTypeDescriptorClass;
     Type MyType;
-    TypeDescriptor Descriptor;
+    ValueTypeDescriptor Descriptor;
 };
 
+class VariableTypeDescriptorClass : public TypeDescriptorClass {
+public:
+    VariableTypeDescriptorClass(const ValueTypeDescriptor &Descriptor_)
+        : TypeDescriptorClass(Descriptor_) {ThrowOnInvalidType(Descriptor_);}
 
+    VariableTypeDescriptorClass(Type t)
+        : TypeDescriptorClass(t) {ThrowOnInvalidType(t);}
+
+private:
+    void ThrowOnInvalidType(const ValueTypeDescriptor &Descriptor_)
+    { /* No invalid type in descriptor for now*/}
+
+    void ThrowOnInvalidType(Type t)
+    {   if ((t == Type::Undefined) || (t == Type::Dynamic)) {
+            throw INTERNAL_ERROR_OBJECT("Invalid Type");
+        }
+    }
+
+};
+
+class ValueTypeDescriptorClass : public TypeDescriptorClass {
+public:
+    ValueTypeDescriptorClass(const ValueTypeDescriptor &Descriptor_)
+        : TypeDescriptorClass(Descriptor_) {ThrowOnInvalidType(Descriptor_);}
+
+    ValueTypeDescriptorClass(Type t)
+        : TypeDescriptorClass(t) {ThrowOnInvalidType(t);}
+
+    ValueTypeDescriptorClass(VariableTypeDescriptorClass const &VariableType)
+        : TypeDescriptorClass(VariableType) {ThrowOnInvalidType(VariableType);}
+
+private:
+    void ThrowOnInvalidType(const ValueTypeDescriptor &Descriptor_)
+    { /* No invalid type in descriptor for now*/}
+
+    void ThrowOnInvalidType(Type t)
+    {   if ((t == Type::Undefined) || (t == Type::Dynamic)) {
+        throw INTERNAL_ERROR_OBJECT("Invalid Type");
+        }
+    }
+
+    void ThrowOnInvalidType(const TypeDescriptorClass &VariableType)
+    {
+        ThrowOnInvalidType(VariableType.MyType);
+        ThrowOnInvalidType(VariableType.Descriptor);
+    }
+
+
+};
+
+#if 0
 
 inline DynamicDescriptorClass::DynamicDescriptorClass(const DynamicDescriptorClass &s)
-    : CurrentType(std::make_unique<TypeDescriptorClass>(*s.CurrentType))
+    : CurrentType(std::make_unique<ValueTypeDescriptorClass>(*s.CurrentType))
 {
 }
 
 inline DynamicDescriptorClass &DynamicDescriptorClass::operator =(const DynamicDescriptorClass &s)
 {
-    CurrentType = std::make_unique<TypeDescriptorClass>(*s.CurrentType);
+    CurrentType = std::make_unique<ValueTypeDescriptorClass>(*s.CurrentType);
     return *this;
 }
+#endif
 
 inline StackDescriptorClass::StackDescriptorClass(const StackDescriptorClass &s) :
-    BaseType(std::make_unique<TypeDescriptorClass>(*s.BaseType))
+    BaseType(std::make_unique<VariableTypeDescriptorClass>(*s.BaseType))
 {
 }
 
 inline StackDescriptorClass &StackDescriptorClass::operator=(const StackDescriptorClass &s)
 {
-    BaseType = std::make_unique<TypeDescriptorClass>(*s.BaseType);
+    BaseType = std::make_unique<VariableTypeDescriptorClass>(*s.BaseType);
     return *this;
 }
 
 inline ArrayDescriptorClass::ArrayDescriptorClass(const ArrayDescriptorClass &s)
-    : Dimensions(s.Dimensions), BaseType(std::make_unique<TypeDescriptorClass>(*s.BaseType))
+    : Dimensions(s.Dimensions), BaseType(std::make_unique<VariableTypeDescriptorClass>(*s.BaseType))
 {
 
 }
@@ -176,7 +229,7 @@ inline ArrayDescriptorClass::ArrayDescriptorClass(const ArrayDescriptorClass &s)
 inline ArrayDescriptorClass &ArrayDescriptorClass::operator =(const ArrayDescriptorClass &s)
 {
     Dimensions = s.Dimensions;
-    BaseType = std::make_unique<TypeDescriptorClass>(*s.BaseType);
+    BaseType = std::make_unique<VariableTypeDescriptorClass>(*s.BaseType);
     return *this;
 }
 
@@ -193,6 +246,7 @@ inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type
 {
     // If we just compare by typeflag stacks and arrays will never match
     // As we also must compare basetype or dimensions
+    // Not implemented yet
     if ((t == TypeDescriptorClass::Type::Stack) ||
         (t == TypeDescriptorClass::Type::Array) ||
         (t == TypeDescriptorClass::Type::Illegal)) {
@@ -200,6 +254,7 @@ inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type
     }
     return t == td.MyType;
 }
+
 
 inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
 {

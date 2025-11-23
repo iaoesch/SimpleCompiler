@@ -3,7 +3,7 @@
 
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
 {
-    using Type = TypeDescriptorClass::Type;
+    using Type = ValueTypeDescriptorClass::Type;
     
     // List dominates everything
     if (t1.MyType == Type::List) {
@@ -49,13 +49,14 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
                 return rt;
             } else {
                 // dimensions differ
-                return TypeDescriptorClass(Type::Undefined);
+                return ValueTypeDescriptorClass(Type::Undefined);
             }
         }
         break;
             
             
-        case Type::Dynamic:  return CommonType(*(std::get<DynamicDescriptorClass>(t1.Descriptor).CurrentType), *(std::get<DynamicDescriptorClass>(t2.Descriptor).CurrentType));
+        case Type::Dynamic:  return ValueTypeDescriptorClass(Type::Undefined);
+            //CommonType(*(std::get<DynamicDescriptorClass>(t1.Descriptor).CurrentType), *(std::get<DynamicDescriptorClass>(t2.Descriptor).CurrentType));
             
         }
     }
@@ -65,10 +66,10 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
     if ((t2.MyType == Type::Integer) && (t1.MyType == Type::Float)) {
         return t1;
     }
-    return TypeDescriptorClass(Type::Undefined);
+    return ValueTypeDescriptorClass(Type::Undefined);
 }
-
-void TypeDescriptorClass::ChangeDynamicType(const TypeDescriptorClass &NewType)
+#if 0
+void ValueTypeDescriptorClass::ChangeDynamicType(const ValueTypeDescriptorClass &NewType)
 {
     if (MyType != Type::Dynamic) {
         throw INTERNAL_ERROR_OBJECT("Cannot change type");
@@ -80,31 +81,31 @@ void TypeDescriptorClass::ChangeDynamicType(const TypeDescriptorClass &NewType)
     }
 }
 
-const TypeDescriptorClass &TypeDescriptorClass::GetDynamicType() const
+const ValueTypeDescriptorClass &ValueTypeDescriptorClass::GetDynamicType() const
 {
     return *(std::get<DynamicDescriptorClass>(Descriptor).CurrentType);
 }
 
-
+#endif
 
 std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
 {
     s << "type<";
     switch(t.MyType) {
 
-    case TypeDescriptorClass::Type::Undefined: s << "undef"; break;
-    case TypeDescriptorClass::Type::Integer:   s << "Integer"; break;
-    case TypeDescriptorClass::Type::Float:     s << "Float"; break;
-    case TypeDescriptorClass::Type::Bool:      s << "Bool"; break;
-    case TypeDescriptorClass::Type::String:    s << "String"; break;
-    case TypeDescriptorClass::Type::Stack:     s << "Stack"; break;
-    case TypeDescriptorClass::Type::List:      s << "List"; break;
-    case TypeDescriptorClass::Type::Array:     s << "Array"; break;
-    case TypeDescriptorClass::Type::Map:       s << "Map"; break;
-    case TypeDescriptorClass::Type::Function:  s << "Function"; break;
-    case TypeDescriptorClass::Type::Expression:s << "Expression"; break;
-    case TypeDescriptorClass::Type::Dynamic:   s << "Dynamic"; break;
-    case TypeDescriptorClass::Type::Illegal:   s << "illegal"; break;
+    case ValueTypeDescriptorClass::Type::Undefined: s << "undef"; break;
+    case ValueTypeDescriptorClass::Type::Integer:   s << "Integer"; break;
+    case ValueTypeDescriptorClass::Type::Float:     s << "Float"; break;
+    case ValueTypeDescriptorClass::Type::Bool:      s << "Bool"; break;
+    case ValueTypeDescriptorClass::Type::String:    s << "String"; break;
+    case ValueTypeDescriptorClass::Type::Stack:     s << "Stack"; break;
+    case ValueTypeDescriptorClass::Type::List:      s << "List"; break;
+    case ValueTypeDescriptorClass::Type::Array:     s << "Array"; break;
+    case ValueTypeDescriptorClass::Type::Map:       s << "Map"; break;
+    case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
+    case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;
+    case ValueTypeDescriptorClass::Type::Dynamic:   s << "Dynamic"; break;
+    case ValueTypeDescriptorClass::Type::Illegal:   s << "illegal"; break;
         break;
     }
     s << ">";
@@ -113,7 +114,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
 
 
 ArrayDescriptorClass::ArrayDescriptorClass(
-    std::vector<int64_t> Dimensions, std::unique_ptr<TypeDescriptorClass> BaseType)
+    std::vector<int64_t> Dimensions, std::unique_ptr<VariableTypeDescriptorClass> BaseType)
     : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
 
 
