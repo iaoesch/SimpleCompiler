@@ -488,7 +488,7 @@ void VariableManager::LeaveContext(int Levels)
 {
     while (Levels > 0) {
         if (ContextStack.empty()) {
-            throw ERROR_OBJECT("popping empty contextstack");
+            throw INTERNAL_ERROR_OBJECT("popping empty contextstack");
         }
 
         ContextStack.pop_back();
@@ -508,7 +508,7 @@ VariableManager::LocalStorageType VariableManager::EndLocal()
 {
     LocalStorageType Storage;
     if (LocalStorageTemplates.empty()) {
-        throw ERROR_OBJECT("Internal, local stack empty");
+        throw INTERNAL_ERROR_OBJECT("Internal, local stack empty");
     }
     std::swap(Storage, LocalStorageTemplates.back());
     LocalStorageTemplates.pop_back();
@@ -525,7 +525,7 @@ VariableManager::LocalStorageType VariableManager::EndLocal()
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
 {
     if (ContextStack.empty()) {
-        throw ERROR_OBJECT("No valid context");
+        throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
     std::shared_ptr<VariableClass> Var;
@@ -544,7 +544,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name,
 std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, const TypeDescriptorClass &Type, double Value)
 {
     if (ContextStack.empty()) {
-        throw ERROR_OBJECT("No valid context");
+        throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
     auto Var = ContextStack.back()->LookupVariable(Name);
@@ -559,7 +559,7 @@ std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string 
 std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string Name)
 {
     if (ContextStack.empty()) {
-        throw ERROR_OBJECT("No valid context");
+        throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
     std::shared_ptr<VariableClass> VarRef = ContextStack.back()->LookupVariable(Name);
@@ -569,7 +569,7 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string
 std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotFound(std::string Name, const TypeDescriptorClass &RequiredType)
 {
     if (ContextStack.empty()) {
-        throw ERROR_OBJECT("No valid context");
+        throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
     std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);

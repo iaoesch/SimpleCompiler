@@ -134,7 +134,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std:
         throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
     CurrentFunction = Var->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
-    if (Var == nullptr) {ERROR_OBJECT("Not a function object");}
+    if (Var == nullptr) {INTERNAL_ERROR_OBJECT("Not a function object");}
     FunctionDefinitionClassSharedPtr p = CurrentFunction;
     return CurrentFunction;
 }
@@ -172,7 +172,7 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::stri
 {
     std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByName(Assignee);
     if (Var == nullptr) {
-        throw ERROR_OBJECT ("Parameter not found");
+        throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
     return std::make_shared<AssignementClass>(Assigned, Var);
 }

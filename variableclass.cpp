@@ -9,7 +9,7 @@
 void VariableClass::SetContext(VariableContextClass *Context)
 {
     if (MyContext != nullptr) {
-        throw ERROR_OBJECT("Changing context of variable is not allowed");
+        throw INTERNAL_ERROR_OBJECT("Changing context of variable is not allowed");
     }
     MyContext = Context;
 }
@@ -192,7 +192,7 @@ void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint
         }
         Rows.GetCommonType(ContentType);
     } else {
-        throw ERROR_OBJECT("Arrayclass content invalid");
+        throw INTERNAL_ERROR_OBJECT("Arrayclass content invalid");
     }
 }
 
@@ -201,9 +201,9 @@ void ArrayClass::FillUpMissingElements(ArrayContent &Data, std::vector<uint32_t>
     if (std::holds_alternative<VectorOfRows>(Data)) {
         VectorOfRows &Rows = std::get<VectorOfRows>(Data);
         if (Deepth >= Dimensions.size()) {
-            throw ERROR_OBJECT("Arrayclass inconsistent Dimension");
+            throw INTERNAL_ERROR_OBJECT("Arrayclass inconsistent Dimension");
         } else if (Dimensions[Deepth] < Rows.Size()) {
-            throw ERROR_OBJECT("Arrayclass inconsistent Size");
+            throw INTERNAL_ERROR_OBJECT("Arrayclass inconsistent Size");
         } else while (Dimensions[Deepth] > Rows.Size()) {
            if (Dimensions.size() == Deepth-1) {
                Rows.AppendElement(ArrayClass::CreateRowOfValues());
@@ -217,12 +217,12 @@ void ArrayClass::FillUpMissingElements(ArrayContent &Data, std::vector<uint32_t>
     } else if(std::holds_alternative<Row>(Data)) {
         Row &Rows = std::get<Row>(Data);
         if (Deepth >= Dimensions.size()) {
-            throw ERROR_OBJECT("Arrayclass inconsistent Dimension");
+            throw INTERNAL_ERROR_OBJECT("Arrayclass inconsistent Dimension");
         } else while (Dimensions[Deepth] > Rows.Size()) {
             Rows.AppendElement(FillValue);
         }
     } else {
-        throw ERROR_OBJECT("Arrayclass content invalid");
+        throw INTERNAL_ERROR_OBJECT("Arrayclass content invalid");
     }
 }
 
@@ -352,10 +352,17 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 
 Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
 {
-    ActiveStorage = StorageTemplate;
+    std::cout << "FunctionDefinitionClass::Execute '" << Name << "', Statements.size() = " << Statements.size() << std::endl;
+
     for (auto const &s: Statements) {
+        std::cout << "executing << ";
+        s->Print(std::cout);
+        std::cout << ">>" << std::endl;
         s->Execute(Env);
+        std::cout << "executing done" << std::endl;
     }
+    std::cout << "FunctionDefinitionClass::Execute done" << std::endl;
+    return Variables::VariableContentClass::MakeUndefined();
 }
 
 }

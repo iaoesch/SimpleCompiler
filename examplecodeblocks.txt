@@ -8,3 +8,8 @@ function Test(b)
 c:=a+b+1;
 endfunction
 Test(b:=a);
+
+
+lldb:
+breakpoint set -E c++
+thread backtrace

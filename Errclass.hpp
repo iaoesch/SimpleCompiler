@@ -26,6 +26,7 @@
 
 /* Class constant declaration  */
 #include <exception>
+#include <string>
 #define DEBUG_INFO_ENABLED
 
 // Folowing macro is thought as aide for debugging, it adds
@@ -40,8 +41,8 @@
 #define TOSTRING(x) STRINGIFY(x)
 //#define AT __FILE__ ":" TOSTRING(__LINE__)
 
-#define ERROR_OBJECT(Message) ErrorBaseClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
-#define SIGNAL_UNIMPLEMENTED() throw (ERROR_OBJECT("Unimplemented Funcion"))
+#define INTERNAL_ERROR_OBJECT(Message) InternalErrorClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
+#define SIGNAL_UNIMPLEMENTED() throw (INTERNAL_ERROR_OBJECT("Unimplemented Funcion"))
 
 /* Class Type declaration      */
 
@@ -52,19 +53,75 @@ class ErrorBaseClass : public std::exception
 {
    // Data
    public:
-         const char *Message;
 
    private:
    
    // Methods
    public:
-           ErrorBaseClass(const char *aWhat) : Message(aWhat) {}
+           ErrorBaseClass() {}
            virtual ~ErrorBaseClass(void) override {}
 
 
            // exception interface
        public:
-           virtual const char *what() const noexcept override {return Message;}
+           virtual const char *what() const noexcept override {return "BaseException";}
+};
+
+class InternalErrorClass : public ErrorBaseClass
+{
+    // Data
+public:
+    const char *Message;
+
+private:
+
+    // Methods
+public:
+    InternalErrorClass(const char *aWhat) : Message(aWhat) {}
+    virtual ~InternalErrorClass(void) override {}
+
+
+    // exception interface
+public:
+    virtual const char *what() const noexcept override {return Message;}
+};
+
+class SyntaxErrorClass : public ErrorBaseClass
+{
+    // Data
+public:
+    std::string Message;
+
+private:
+
+    // Methods
+public:
+    SyntaxErrorClass(std::string &aWhat) : Message(aWhat) {}
+    virtual ~SyntaxErrorClass(void) override {}
+
+
+    // exception interface
+public:
+    virtual const char *what() const noexcept override {return Message.c_str();}
+};
+
+class RuntimeErrorClass : public ErrorBaseClass
+{
+    // Data
+public:
+    std::string Message;
+
+private:
+
+    // Methods
+public:
+    RuntimeErrorClass(std::string &aWhat) : Message(aWhat) {}
+    virtual ~RuntimeErrorClass(void) override {}
+
+
+    // exception interface
+public:
+    virtual const char *what() const noexcept override {return Message.c_str();}
 };
 
 /*****************************************************************************/

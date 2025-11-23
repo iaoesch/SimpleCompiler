@@ -221,7 +221,7 @@ public:
              && (getType()  == TypeDescriptorClass::Type::Float)) {
             Data = double(std::get<int64_t>(v.Data));
         } else {
-            throw ERROR_OBJECT("Incompatible type for assignement");
+            throw INTERNAL_ERROR_OBJECT("Incompatible type for assignement");
         }
     }
 
@@ -331,6 +331,8 @@ public:
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
+    void CreateFrame() {ActiveStorage = StorageTemplate;}
+    void ReleaseFrame() {ActiveStorage.clear();}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}

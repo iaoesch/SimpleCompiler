@@ -71,7 +71,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
 void TypeDescriptorClass::ChangeDynamicType(const TypeDescriptorClass &NewType)
 {
     if (MyType != Type::Dynamic) {
-        throw ERROR_OBJECT("Cannot change type");
+        throw INTERNAL_ERROR_OBJECT("Cannot change type");
     }
     if (NewType.MyType == Type::Dynamic) {
         Descriptor = NewType.Descriptor;

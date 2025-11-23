@@ -127,7 +127,7 @@ class FunctionClass;
 class FunctionCallClass : public ValueClass {
     std::shared_ptr<Variables::FunctionDefinitionClass> TheFunction;
     std::list<std::shared_ptr<StatementClass>> Assignements;
-    std::vector<Variables::VariableContentClass> StorageTemplate;
+   // std::vector<Variables::VariableContentClass> StorageTemplate;
 
 public:
     FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionClass> f, std::list<std::shared_ptr<StatementClass>> a) : TheFunction(f), Assignements(a) {}
@@ -143,7 +143,7 @@ public:
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
     const std::string &GetName() {return TheFunction->GetName();}
-    Variables::VariableContentClass &GetContentForOffset(uint32_t Offset);
+  //  Variables::VariableContentClass &GetContentForOffset(uint32_t Offset);
 
 private:
     virtual const TypeDescriptorClass GetType() const override;
@@ -421,9 +421,7 @@ public:
     virtual void Execute(Environment &Env) const override;
 };
 
-inline void FunctionCallStatementClass::Execute(Environment &Env) const
-{
-}
+
 
 class PrintStatementClass : public StatementClass {
 

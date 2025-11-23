@@ -135,7 +135,7 @@ private:
         case Type::Array:
         case Type::Map:
         case Type::Illegal:
-            throw ERROR_OBJECT("Invalid Type");
+            throw INTERNAL_ERROR_OBJECT("Invalid Type");
             break;
         }
     }

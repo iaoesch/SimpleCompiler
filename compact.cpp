@@ -773,10 +773,13 @@ void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) const
 {
+    TheFunction->CreateFrame();
     for (auto const &s: Assignements) {
         s->Execute(Env);
     }
-    return TheFunction->Execute(Env);
+    auto Result = TheFunction->Execute(Env);
+    TheFunction->ReleaseFrame();
+    return Result;
 }
 
 void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }
@@ -874,4 +877,9 @@ void RepeatLoopClass::Execute(Environment &Env) const
             Env.ThrowIfStoppRequested();
         }
     } while (Condition->Evaluate(Env) == false);
+}
+
+void FunctionCallStatementClass::Execute(Environment &Env) const
+{
+    Function->Evaluate(Env);
 }
