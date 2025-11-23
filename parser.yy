@@ -141,7 +141,7 @@
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
-%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition
+%type  <std::unique_ptr<TypeDescriptorClass>> typedefinition, returntype.opt
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
 %type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
@@ -303,7 +303,11 @@ functiondefinition:
                              drv.Variables.StartLocal(ptr);
                              drv.Variables.CreateNewContext($2+"Params"); }
   returntype.opt
-  "(" argumentlist ")"    {drv.Variables.CreateNewContext($2); }
+  "(" argumentlist ")"    {
+                              drv.Variables.CreateNewContext($2);
+                              drv.Variables.CreateVariable($2, *$4, 0.0);
+
+                          }
   statements
   "endfunction" {
                       /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
@@ -316,8 +320,8 @@ functiondefinition:
 ;
 
 returntype.opt:
- %empty
- | "returning" typedefinition
+ %empty                       {$$ = std::make_unique<TypeDescriptorClass>(TypeDescriptorClass::Type::Undefined);}
+ | "returning" typedefinition {$$ = std::move($2);}
 
 argumentlist:
   "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, TypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}

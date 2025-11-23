@@ -25,6 +25,7 @@ SOURCES += \
    highlighter.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
+   variablecontentclass.cpp \
    varmanag.cpp\
     maingui.cpp \
     mainwindow.cpp
@@ -66,6 +67,7 @@ HEADERS += \
    highlighter.h \
    typedescriptorclass.hpp \
    variableclass.h \
+   variablecontentclass.h \
    varmanag.hpp \
     mainwindow.h
 

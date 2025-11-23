@@ -82,7 +82,8 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 namespace Variables {
 FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_)
     : Parameters(Parameters), Statements(Statements), Name(Name_),
-    StorageTemplate(std::move(StorageTemplate_))
+    StorageTemplate(std::move(StorageTemplate_)),
+    ReturnVariable(nullptr)
 {}
 
 void FunctionDefinitionClass::Print(std::ostream &s) const
@@ -362,7 +363,11 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         std::cout << "executing done" << std::endl;
     }
     std::cout << "FunctionDefinitionClass::Execute done" << std::endl;
-    return Variables::VariableContentClass::MakeUndefined();
+    if (ReturnVariable != nullptr) {
+       return ReturnVariable->GetValue();
+    } else {
+        return VariableContentClass::MakeUndefined();
+    }
 }
 
 }

@@ -160,7 +160,13 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(V
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
 {
+    CurrentFunction->SetReturnValue(ReturnVariable);
     return CurrentFunction;
+}
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable)
+{
+    ReturnVariable = NewReturnVariable;
 }
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered)

@@ -19,6 +19,7 @@ class AssignementClass;
 class FunctionNodeHelper {
     VariableManager &Variables;
     std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+    std::shared_ptr<VariableClass> ReturnVariable;
 
 public:
     explicit FunctionNodeHelper(VariableManager &Variables)
@@ -27,6 +28,7 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> Create(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable);
 
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned);

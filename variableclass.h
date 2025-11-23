@@ -200,11 +200,12 @@ public:
         const T &GetValue() {
         return std::get<T>(Data);
     }
-
+private:
     template <class T>
     void SetValue(const T &v) {
         Data = v;
     }
+public:
 
     void AssignValue(const VariableContentClass &v) {
         if (getType() == TypeDescriptorClass::Type::Dynamic) {
@@ -315,6 +316,7 @@ private:
     std::string Name;
     LocalStorageType StorageTemplate;
     mutable LocalStorageType ActiveStorage;
+    std::shared_ptr<VariableClass> ReturnVariable;
 
 public:
     FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate);
@@ -333,6 +335,7 @@ public:
 
     void CreateFrame() {ActiveStorage = StorageTemplate;}
     void ReleaseFrame() {ActiveStorage.clear();}
+    void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ReturnVariable = ReturnVariable_;}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}
@@ -380,7 +383,6 @@ public:
   //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 
-    const TypeDescriptorClass &Type() {return GetType();}
 private:
     virtual const TypeDescriptorClass &GetType() const override;
 };
@@ -399,7 +401,6 @@ public:
   //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
 
-    const TypeDescriptorClass &Type() {return GetType();}
 private:
     virtual const TypeDescriptorClass &GetType() const override;
 };
