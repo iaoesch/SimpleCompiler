@@ -213,7 +213,7 @@ loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);};
 
 assignment:
-  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); };
+  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); std::cout << "asg:"; $3->Print(std::cout); $$->Print(std::cout); std::cout << "eval:" << $3->Evaluate();};
 
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
@@ -242,7 +242,7 @@ referement:
 
 definition:
   functiondefinition {}
-|  variabledefinition {}
+|  variabledefinition ";" {}
 ;
 
 variabledefinition:
@@ -371,18 +371,18 @@ term
 ;
 
 factor
-: unary  { std::swap ($$, $1); }
+: unary  { std::swap ($$, $1); $$->Print(std::cout);}
 ;
 
 unary
-: primary    { std::swap ($$, $1); }
+: primary    { std::swap ($$, $1); $$->Print(std::cout); }
 | "+" unary  { std::swap ($$, $2); }
 | "-" unary  { std::make_shared<NegationClass>($2, @1);}
 ;
 
 primary
 : "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
-| literal       { $$ = std::make_shared<ConstantClass>($1, @1); }
+| literal       { $$ = std::make_shared<ConstantClass>($1, @1); std::cout << "parser: constant " << $1 << "\n";}
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
 ;

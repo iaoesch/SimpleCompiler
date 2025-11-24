@@ -184,9 +184,11 @@ public:
         : Data(std::monostate()), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), AssignedExpression(nullptr) {}
     VariableContentClass(const ValueTypeDescriptorClass &Type_)
         : Data(std::monostate()), Type(Type_), AssignedExpression(nullptr) {}
+    VariableContentClass(const VariableTypeDescriptorClass &Type_)
+        : Data(std::monostate()), Type(Type_.ToValueType()), AssignedExpression(nullptr) {}
 
-    VariableContentClass(int64_t Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Float)), AssignedExpression(nullptr) {}
-    VariableContentClass(double Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer)), AssignedExpression(nullptr) {}
+    VariableContentClass(int64_t Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer)), AssignedExpression(nullptr) {}
+    VariableContentClass(double Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Float)), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::String)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}

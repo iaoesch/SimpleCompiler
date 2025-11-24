@@ -23,9 +23,11 @@ Variables::VariableContentClass GlobalVariableClass::GetValue() const
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
+    std::cout << "GlbSet:" << v;
     if (IsAssignable(v)) {
         Content = v;
     } else {
+        std::cout << "GlbSetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str());
@@ -35,7 +37,7 @@ void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 
 void GlobalVariableClass::Print(std::ostream &s)
 {
-    s <<  "<" << GetName() << ": " << Content << ">";
+    s <<  "<" << GetName() << ":" << Type()  << ": " << Content << ">";
 }
 
 Variables::VariableContentClass LocalVariableClass::GetValue() const
@@ -57,7 +59,7 @@ void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 
 void LocalVariableClass::Print(std::ostream &s)
 {
-    s << "<" << GetName() << ": Local>";
+    s << "<" << GetName() << ":" << Type() << ": Local>";
 }
 
 

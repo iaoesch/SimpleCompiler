@@ -579,6 +579,7 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 void AssignementClass::Execute(Environment &Env) const
 {
     try {
+        std::cout << "AsgExe:" << AssignedExpression->Evaluate(Env);
        Variable->SetValue(AssignedExpression->Evaluate(Env));
     }
     catch (RuntimeErrorClass &e) {

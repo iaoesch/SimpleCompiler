@@ -196,8 +196,8 @@ std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
 {
     std::visit(overloaded{
                    [&s](const std::monostate &arg) { s << "empty"; },
-                   [&s](int64_t arg) { s << arg << ' '; },
-                   [&s](double arg) { s << std::fixed << arg << ' '; },
+                   [&s](int64_t arg) { s << "<int:" << arg << ">"; },
+                   [&s](double arg) { s << "<float:"  << std::fixed << arg << ">"; },
                    [&s](const StackClass &arg) { s << "<stack>"; },
                    [&s](const ListClass &arg) { s << "<list>"; },
                    [&s](const ArrayClass &arg) { s << "<Array "; arg.PrintDimensions(s); s << ">";  },
