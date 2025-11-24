@@ -74,6 +74,8 @@ blank [ \t]
 "returning"      return yy::parser::make_RETURNING (loc);
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);
 
+"as"      return yy::parser::make_AS (loc);
+
 "holding"      return yy::parser::make_HOLDING (loc);
 "integer"      return yy::parser::make_INTEGER (loc);
 "float"      return yy::parser::make_FLOAT (loc);

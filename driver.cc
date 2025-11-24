@@ -169,16 +169,16 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetRetur
     ReturnVariable = NewReturnVariable;
 }
 
-std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered)
+std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
 {
 
 }
 
-std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass> Assigned)
+std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass> Assigned, LocationType const &Loc)
 {
     std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByName(Assignee);
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
-    return std::make_shared<AssignementClass>(Assigned, Var);
+    return std::make_shared<AssignementClass>(Assigned, Var, Loc);
 }

@@ -15,6 +15,11 @@ YY_DECL;
 
 class ReferementClass;
 class AssignementClass;
+namespace yy {
+class location;
+}
+typedef yy::location  LocationType;
+
 
 class FunctionNodeHelper {
     VariableManager &Variables;
@@ -30,8 +35,8 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable);
 
-    std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered);
-    std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned);
+    std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
+    std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
 
 };
 

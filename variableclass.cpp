@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "variableclass.h"
 #include "Errclass.hpp"
 #include "compact.h"
@@ -21,7 +23,14 @@ Variables::VariableContentClass GlobalVariableClass::GetValue() const
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    Content = v;
+    if (IsAssignable(v)) {
+        Content = v;
+    } else {
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+
 }
 
 void GlobalVariableClass::Print(std::ostream &s)
@@ -36,7 +45,14 @@ Variables::VariableContentClass LocalVariableClass::GetValue() const
 
 void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    Parent->GetVariableContentForOffset(Reference) = v;
+    if (IsAssignable(v)) {
+        Parent->GetVariableContentForOffset(Reference) = v;
+    } else {
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+
 }
 
 void LocalVariableClass::Print(std::ostream &s)
@@ -49,6 +65,8 @@ void VariableClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Name << "\\n\\<" << MyContext->GetName() << "\\>|<f2> \"];" << std::endl;
 }
+
+
 
 const ValueTypeDescriptorClass &GlobalVariableClass::GetContainedType() const
 {

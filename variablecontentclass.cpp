@@ -82,8 +82,10 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::
     }
 }
 
-const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const {if (ReturnVariable == nullptr) {
-        return ValueTypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
+const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
+{
+    if (ReturnVariable == nullptr) {
+        return VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
     } else {
         return ReturnVariable->Type();
     }

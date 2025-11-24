@@ -3,7 +3,7 @@
 
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
 {
-    using Type = ValueTypeDescriptorClass::Type;
+    using Type = TypeDescriptorClass::Type;
     
     // List dominates everything
     if (t1.MyType == Type::List) {
@@ -49,13 +49,13 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
                 return rt;
             } else {
                 // dimensions differ
-                return ValueTypeDescriptorClass(Type::Undefined);
+                return TypeDescriptorClass(Type::Undefined);
             }
         }
         break;
             
             
-        case Type::Dynamic:  return ValueTypeDescriptorClass(Type::Undefined);
+        case Type::Dynamic:  return TypeDescriptorClass(Type::Undefined);
             //CommonType(*(std::get<DynamicDescriptorClass>(t1.Descriptor).CurrentType), *(std::get<DynamicDescriptorClass>(t2.Descriptor).CurrentType));
             
         }
@@ -66,7 +66,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
     if ((t2.MyType == Type::Integer) && (t1.MyType == Type::Float)) {
         return t1;
     }
-    return ValueTypeDescriptorClass(Type::Undefined);
+    return TypeDescriptorClass(Type::Undefined);
 }
 #if 0
 void ValueTypeDescriptorClass::ChangeDynamicType(const ValueTypeDescriptorClass &NewType)

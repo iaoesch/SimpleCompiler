@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
+#include <sstream>
 #include "compact.h"
 
 static int NodeNumber = 1;
@@ -38,7 +39,7 @@ void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) c
 
 
 Variables::VariableContentClass            InverseClass::Evaluate(Environment &Env) const {return (1LL / Operand->Evaluate(Env)); };
-std::shared_ptr<ExpressionClass> InverseClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(std::make_shared<MultiplyClass>(std::make_shared<InverseClass>( std::make_shared<SquareClass>(Operand->Clone())), Operand->Derive(TD))); };
+std::shared_ptr<ExpressionClass> InverseClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(std::make_shared<MultiplyClass>(std::make_shared<InverseClass>( std::make_shared<SquareClass>(Operand->Clone(), GetLocation()), GetLocation()), Operand->Derive(TD), GetLocation()), GetLocation()); };
 void              InverseClass::Print(std::ostream &s) const { s << "1.0 / ("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> InverseClass::Clone() const {return std::make_shared<InverseClass>(*this); };
 std::shared_ptr<ExpressionClass> InverseClass::Optimize(Environment &Env)
@@ -58,7 +59,7 @@ void              InverseClass::DrawNode(std::ostream &s, int MyNodeNumber) cons
 
 
 Variables::VariableContentClass            SquareClass::Evaluate(Environment &Env) const {Variables::VariableContentClass tmp = Operand->Evaluate(Env); return tmp*tmp; };
-std::shared_ptr<ExpressionClass> SquareClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0), Operand->Clone()), Operand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> SquareClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0, GetLocation()), Operand->Clone(), GetLocation()), Operand->Derive(TD), GetLocation()); };
 void              SquareClass::Print(std::ostream &s) const { s << "("; Operand->Print(s); s << ")^2.0";  };
 std::shared_ptr<ExpressionClass> SquareClass::Clone() const {return std::make_shared<SquareClass>(*this); };
 std::shared_ptr<ExpressionClass> SquareClass::Optimize(Environment &Env)
@@ -76,7 +77,7 @@ void              SquareClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 
 Variables::VariableContentClass            NegationClass::Evaluate(Environment &Env) const {return - Operand->Evaluate(Env); };
-std::shared_ptr<ExpressionClass> NegationClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(Operand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> NegationClass::Derive(VariableReferenceType TD) const {return std::make_shared<NegationClass>(Operand->Derive(TD), GetLocation()); };
 void              NegationClass::Print(std::ostream &s) const { s << "-("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> NegationClass::Clone() const {return std::make_shared<NegationClass>(*this); };
 std::shared_ptr<ExpressionClass> NegationClass::Optimize(Environment &Env)
@@ -94,7 +95,7 @@ void              NegationClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 
 Variables::VariableContentClass            LogarithmClass::Evaluate(Environment &Env) const {return log(Operand->Evaluate(Env)); };
-std::shared_ptr<ExpressionClass> LogarithmClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(Operand->Clone()), Operand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> LogarithmClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(Operand->Clone(), GetLocation()), Operand->Derive(TD), GetLocation()); };
 void              LogarithmClass::Print(std::ostream &s) const { s << "ln("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> LogarithmClass::Clone() const {return std::make_shared<LogarithmClass>(*this); };
 std::shared_ptr<ExpressionClass> LogarithmClass::Optimize(Environment &Env)
@@ -112,7 +113,7 @@ void              LogarithmClass::DrawNode(std::ostream &s, int MyNodeNumber) co
 
 
 Variables::VariableContentClass            ExponentialClass::Evaluate(Environment &Env) const {return exp(Operand->Evaluate(Env)); };
-std::shared_ptr<ExpressionClass> ExponentialClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(*this), Operand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> ExponentialClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(*this), Operand->Derive(TD), GetLocation()); };
 void              ExponentialClass::Print(std::ostream &s) const { s << "exp("; Operand->Print(s); s << ")";  };
 std::shared_ptr<ExpressionClass> ExponentialClass::Clone() const {return std::make_shared<ExponentialClass>(*this); };
 std::shared_ptr<ExpressionClass> ExponentialClass::Optimize(Environment &Env)
@@ -121,12 +122,12 @@ std::shared_ptr<ExpressionClass> ExponentialClass::Optimize(Environment &Env)
 
   if (Operand->IsConstant()) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(exp(Operand->Evaluate(Env)));
+     return std::make_shared<ConstantClass>(exp(Operand->Evaluate(Env)), GetLocation());
   }
 
   if (Operand->IsConstant()) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(exp(Operand->Evaluate(Env)));
+     return std::make_shared<ConstantClass>(exp(Operand->Evaluate(Env)), GetLocation());
   }
 
   if (typeid(*Operand) == typeid(LogarithmClass)) {
@@ -137,11 +138,11 @@ std::shared_ptr<ExpressionClass> ExponentialClass::Optimize(Environment &Env)
      std::shared_ptr<MultiplyClass> op = std::dynamic_pointer_cast<MultiplyClass>(Operand);
      if (typeid(*(op->LeftOperand)) == typeid(LogarithmClass)) {
         return std::make_shared<PowerClass>( (std::dynamic_pointer_cast<LogarithmClass>(op->LeftOperand))->Operand->Clone(),
-                                     op->RightOperand->Clone());
+                                     op->RightOperand->Clone(), GetLocation());
      }
      if (typeid(*(op->RightOperand)) == typeid(LogarithmClass)) {
         return std::make_shared<PowerClass>( (std::dynamic_pointer_cast<LogarithmClass>(op->RightOperand))->Operand->Clone(),
-                                     op->LeftOperand->Clone());
+                                     op->LeftOperand->Clone(), GetLocation());
      }
   }
 
@@ -157,7 +158,7 @@ void              ExponentialClass::DrawNode(std::ostream &s, int MyNodeNumber) 
 
 
 Variables::VariableContentClass            SquareRootClass::Evaluate(Environment &Env) const {return sqrt(Operand->Evaluate(Env)); };
-std::shared_ptr<ExpressionClass> SquareRootClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0), std::make_shared<SquareRootClass>(*this))), Operand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> SquareRootClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0, GetLocation()), std::make_shared<SquareRootClass>(*this), GetLocation()), GetLocation()), Operand->Derive(TD), GetLocation()); };
 void              SquareRootClass::Print(std::ostream &s) const { s << "sqrt("; Operand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> SquareRootClass::Clone() const {return std::make_shared<SquareRootClass>(*this); };
 std::shared_ptr<ExpressionClass> SquareRootClass::Optimize(Environment &Env)
@@ -174,15 +175,15 @@ void              SquareRootClass::DrawNode(std::ostream &s, int MyNodeNumber) c
 };
 
 Variables::VariableContentClass            PowerClass::Evaluate(Environment &Env) const {return pow(LeftOperand->Evaluate(Env), RightOperand->Evaluate(Env)); };
-std::shared_ptr<ExpressionClass> PowerClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(std::make_shared<MultiplyClass>(std::make_shared<LogarithmClass>(LeftOperand->Clone()),
+std::shared_ptr<ExpressionClass> PowerClass::Derive(VariableReferenceType TD) const {return std::make_shared<MultiplyClass>(std::make_shared<ExponentialClass>(std::make_shared<MultiplyClass>(std::make_shared<LogarithmClass>(LeftOperand->Clone(), GetLocation()),
                                                                                                                                    RightOperand->Clone()
-                                                                                                                               )),
-                                                                                        std::make_shared<AdditionClass>(std::make_shared<MultiplyClass>(std::make_shared<LogarithmClass>(LeftOperand->Clone()), RightOperand->Derive(TD)),
-                                                                                                          std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(LeftOperand->Clone()),
-                                                                                                                            std::make_shared<MultiplyClass>(LeftOperand->Derive(TD), RightOperand->Clone())
-                                                                                                                           )
-                                                                                                          )
-                                                                                        );}
+                                                                                                                               , GetLocation()), GetLocation()),
+                                                                                        std::make_shared<AdditionClass>(std::make_shared<MultiplyClass>(std::make_shared<LogarithmClass>(LeftOperand->Clone(), GetLocation()), RightOperand->Derive(TD), GetLocation()),
+                                                                                                          std::make_shared<MultiplyClass>(std::make_shared<InverseClass>(LeftOperand->Clone(), GetLocation()),
+                                                                                                                            std::make_shared<MultiplyClass>(LeftOperand->Derive(TD), RightOperand->Clone(), GetLocation())
+                                                                                                                           , GetLocation())
+                                                                                                          , GetLocation())
+                                                                                        , GetLocation());}
 
 void              PowerClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") ^ ("; RightOperand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> PowerClass::Clone() const {return std::make_shared<PowerClass>(*this); };
@@ -225,12 +226,12 @@ std::shared_ptr<ExpressionClass> PowerClass::Optimize(Environment &Env)
 
   if (LeftConst  && (ValLeft == 0.0)) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(0.0);
+     return std::make_shared<ConstantClass>(0.0, GetMergedLocation());
   }
 
   if (RightConst  && (ValRight == 0.0)) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(1.0);
+     return std::make_shared<ConstantClass>(1.0, GetMergedLocation());
   }
 
   if (RightConst  && (ValRight == 1.0)) {
@@ -240,7 +241,7 @@ std::shared_ptr<ExpressionClass> PowerClass::Optimize(Environment &Env)
 
   if (LeftConst && RightConst) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(pow(ValLeft, ValRight));
+     return std::make_shared<ConstantClass>(pow(ValLeft, ValRight), GetMergedLocation());
   }
   return shared_from_this();
 };
@@ -259,7 +260,7 @@ void              PowerClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 
 Variables::VariableContentClass            MultiplyClass::Evaluate(Environment &Env) const {return LeftOperand->Evaluate(Env) * RightOperand->Evaluate(Env); };
-std::shared_ptr<ExpressionClass> MultiplyClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(std::make_shared<MultiplyClass>(LeftOperand->Clone(), RightOperand->Derive(TD)), std::make_shared<MultiplyClass>(LeftOperand->Derive(TD), RightOperand->Clone())); };
+std::shared_ptr<ExpressionClass> MultiplyClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(std::make_shared<MultiplyClass>(LeftOperand->Clone(), RightOperand->Derive(TD), GetLocation()), std::make_shared<MultiplyClass>(LeftOperand->Derive(TD), RightOperand->Clone(), GetLocation()), GetLocation()); };
 void              MultiplyClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") * ("; RightOperand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> MultiplyClass::Clone() const {return std::make_shared<MultiplyClass>(*this); };
 std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
@@ -303,7 +304,7 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
      std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
      if (  rop->LeftOperand->IsConstant()
          &&LeftOperand->IsConstant()) {
-        LeftOperand = std::make_shared<ConstantClass>(LeftOperand->Evaluate(Env) *rop->LeftOperand->Evaluate(Env));
+        LeftOperand = std::make_shared<ConstantClass>(LeftOperand->Evaluate(Env) * rop->LeftOperand->Evaluate(Env), LeftOperand->GetMergedLocation() | rop->LeftOperand->GetMergedLocation() );
         RightOperand = rop->RightOperand;
      }
   }
@@ -316,11 +317,11 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
   if (   (LeftConst  && (ValLeft == 0.0))
        ||(RightConst && (ValRight == 0.0))) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(0.0);
+     return std::make_shared<ConstantClass>(0.0, GetMergedLocation());
   }
   if (LeftConst && RightConst) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(ValLeft * ValRight);
+     return std::make_shared<ConstantClass>(ValLeft * ValRight, GetMergedLocation());
   }
   if (LeftConst  && (ValLeft == 1.0)) {
      std::shared_ptr<ExpressionClass>ep = RightOperand;
@@ -349,7 +350,7 @@ void              MultiplyClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 
 Variables::VariableContentClass            AdditionClass::Evaluate(Environment &Env) const {return LeftOperand->Evaluate(Env) + RightOperand->Evaluate(Env); };
-std::shared_ptr<ExpressionClass> AdditionClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(LeftOperand->Derive(TD), RightOperand->Derive(TD)); };
+std::shared_ptr<ExpressionClass> AdditionClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(LeftOperand->Derive(TD), RightOperand->Derive(TD), GetLocation()); };
 void              AdditionClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") + ("; RightOperand->Print(s); s << ")"; };
 std::shared_ptr<ExpressionClass> AdditionClass::Clone() const {return std::make_shared<AdditionClass>(*this); };
 std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
@@ -364,7 +365,7 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
 
   if (LeftConst && RightConst) {
      //delete this; // Dangerous !!!
-     return std::make_shared<ConstantClass>(ValLeft + ValRight);
+     return std::make_shared<ConstantClass>(ValLeft + ValRight, GetMergedLocation());
   }
   if (LeftConst  && (ValLeft == 0.0)) {
      std::shared_ptr<ExpressionClass>ep = RightOperand;
@@ -379,7 +380,7 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
      return ep;
   }
   if (LeftOperand->IsSame(RightOperand)) {
-     std::shared_ptr<ExpressionClass>ep = std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0), RightOperand);
+     std::shared_ptr<ExpressionClass>ep = std::make_shared<MultiplyClass>(std::make_shared<ConstantClass>(2.0, GetLocation()), RightOperand, GetLocation());
      RightOperand = NULL;
      //delete this; // Dangerous !!!
      return ep;
@@ -389,34 +390,34 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
      if (typeid(*RightOperand) == typeid(MultiplyClass)) {
         std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
         if (lop->RightOperand->IsSame(rop->RightOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->LeftOperand, rop->LeftOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->RightOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->LeftOperand, rop->LeftOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->RightOperand, GetLocation());
            return ep2;
         }
         if (lop->LeftOperand->IsSame(rop->LeftOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->RightOperand, rop->RightOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->LeftOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->RightOperand, rop->RightOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->LeftOperand, GetLocation());
            return ep2;
         }
         if (lop->LeftOperand->IsSame(rop->RightOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->RightOperand, rop->LeftOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->LeftOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->RightOperand, rop->LeftOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->LeftOperand, GetLocation());
            return ep2;
         }
         if (lop->RightOperand->IsSame(rop->LeftOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->LeftOperand, rop->RightOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->RightOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->LeftOperand, rop->RightOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, lop->RightOperand, GetLocation());
            return ep2;
         }
      }
         if (lop->RightOperand->IsSame(RightOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0), lop->LeftOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, RightOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0, GetLocation()), lop->LeftOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, RightOperand, GetLocation());
            return ep2;
         }
         if (lop->LeftOperand->IsSame(RightOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0), lop->RightOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, RightOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0, GetLocation()), lop->RightOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, RightOperand, GetLocation());
            return ep2;
         }
 
@@ -424,13 +425,13 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
      if (typeid(*RightOperand) == typeid(MultiplyClass)) {
         std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
         if (rop->LeftOperand->IsSame(LeftOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0), rop->RightOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, LeftOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0, GetLocation()), rop->RightOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, LeftOperand, GetLocation());
            return ep2;
         }
         if (rop->RightOperand->IsSame(LeftOperand)) {
-           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0), rop->LeftOperand);
-           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, LeftOperand);
+           std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0, GetLocation()), rop->LeftOperand, GetLocation());
+           std::shared_ptr<ExpressionClass>ep2 = std::make_shared<MultiplyClass>(ep1, LeftOperand, GetLocation());
            return ep2;
         }
 
@@ -577,7 +578,15 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void AssignementClass::Execute(Environment &Env) const
 {
-    Variable->SetValue(AssignedExpression->Evaluate(Env));
+    try {
+       Variable->SetValue(AssignedExpression->Evaluate(Env));
+    }
+    catch (RuntimeErrorClass &e) {
+        std::stringstream s;
+        s << "at [" << GetLocation() << "]";
+        e.ExtendMessage(s.str());
+        throw e;
+    }
 }
 
 bool ConditionalExpressionClass::Evaluate(Environment &Env) const

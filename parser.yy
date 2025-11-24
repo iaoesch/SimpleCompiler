@@ -83,6 +83,7 @@
   ENDFUNCTION "endfunction"
   RETURNING "returning"
 
+  AS "as"
   HOLDING "holding"
   INTEGER "integer"
   FLOAT "float"
@@ -196,9 +197,9 @@ statements:
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
-| print ";"             {$$ = std::make_shared<PrintStatementClass>($1);}
-| functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1);}
-| error ";"             {$$ = std::make_shared<ErrorStatement>();}
+| print ";"             {$$ = std::make_shared<PrintStatementClass>($1, @$);}
+| functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1, @$);}
+| error ";"             {$$ = std::make_shared<ErrorStatement>(@$);}
 ;
 
 print:
@@ -209,10 +210,10 @@ explist:
 |  explist "," exp  {$$ = $1; $$.push_back($3);}
 
 loopstatement:
-  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5);};
+  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);};
 
 assignment:
-  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1); };
+  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); };
 
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
@@ -237,7 +238,7 @@ rangedindex:
 
 
 referement:
-  "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0)); };
+  "identifier" "->" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, 0.0), @1+@2); };
 
 definition:
   functiondefinition {}
@@ -245,7 +246,7 @@ definition:
 ;
 
 variabledefinition:
-  "identifier" "as" typedefinition  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, *$3)); }
+  "identifier" "as" typedefinition  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, *$3), @$); }
 | "identifier" "as" typedefinition "=" exp
 ;
 
@@ -280,19 +281,19 @@ Dimensions:
 
 exp_or_star:
    exp   {$$ = $1;}
-|  "*"   {$$ = std::make_shared<ConstantClass>(Variables::VariableContentClass(-1LL));}
+|  "*"   {$$ = std::make_shared<ConstantClass>(Variables::VariableContentClass(-1LL), @1);}
 ;
 
 functioncall:
-  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($2, $4);};
+  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($2, $4, @$);};
 
 parameterlist:
   %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}
 | parameterlist parameter   {$$ = $1; $$.push_back($2);};
 
 parameter:
-   "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3);}
-|  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3);};
+   "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3, @1+@2);}
+|  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3, @1+@2);};
 
 
 functiondefinition:
@@ -333,15 +334,15 @@ argumentlist:
 %left ">" ">=" "==" "!=" "<" "<=";
 
 condexp:
-  condexp and condexp   { $$ = std::make_shared<AndClass>($1, $3); }
-| condexp or condexp   { $$ = std::make_shared<AndClass>($1, $3); }
-| not condexp    { $$ = std::make_shared<AndClass>($2, $2); }
-| exp ">" exp    { $$ = std::make_shared<LessThanClass>($1, $3); }
-| exp ">=" exp   { $$ = std::make_shared<LessThanClass>($1, $3);}
-| exp "==" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
-| exp "!=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
-| exp "<" exp    { $$ = std::make_shared<LessThanClass>($1, $3); }
-| exp "<=" exp   { $$ = std::make_shared<LessThanClass>($1, $3); }
+  condexp and condexp   { $$ = std::make_shared<AndClass>($1, $3, @2); }
+| condexp or condexp   { $$ = std::make_shared<AndClass>($1, $3, @2); }
+| not condexp    { $$ = std::make_shared<AndClass>($2, $2, @1); }
+| exp ">" exp    { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp ">=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2);}
+| exp "==" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp "!=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp "<" exp    { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp "<=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
 | "(" condexp ")"   { std::swap ($$, $2); };
 
 
@@ -359,14 +360,14 @@ condexp:
 
 exp
 : term          { std::swap ($$, $1); }
-| exp "+" term { $$ = std::make_shared<AdditionClass>($1, $3); }
-| exp "-" term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3)); }
+| exp "+" term { $$ = std::make_shared<AdditionClass>($1, $3, @2); }
+| exp "-" term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3, @2), @2); }
 ;
 
 term
 : factor           { std::swap ($$, $1); }
-| term "*" factor  { $$ = std::make_shared<MultiplyClass>($1, $3); }
-| term "/" factor  { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3)); }
+| term "*" factor  { $$ = std::make_shared<MultiplyClass>($1, $3, @2); }
+| term "/" factor  { $$ = std::make_shared<MultiplyClass>($1, std::make_shared<InverseClass>($3, @2), @2); }
 ;
 
 factor
@@ -376,12 +377,12 @@ factor
 unary
 : primary    { std::swap ($$, $1); }
 | "+" unary  { std::swap ($$, $2); }
-| "-" unary  { std::make_shared<NegationClass>($2);}
+| "-" unary  { std::make_shared<NegationClass>($2, @1);}
 ;
 
 primary
-: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined))); }
-| literal       { $$ = std::make_shared<ConstantClass>($1); }
+: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
+| literal       { $$ = std::make_shared<ConstantClass>($1, @1); }
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
 ;

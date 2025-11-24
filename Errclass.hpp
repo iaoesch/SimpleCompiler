@@ -96,7 +96,7 @@ private:
 
     // Methods
 public:
-    SyntaxErrorClass(std::string &aWhat) : Message(aWhat) {}
+    SyntaxErrorClass(std::string const &aWhat) : Message(aWhat) {}
     virtual ~SyntaxErrorClass(void) override {}
 
 
@@ -115,10 +115,10 @@ private:
 
     // Methods
 public:
-    RuntimeErrorClass(std::string &aWhat) : Message(aWhat) {}
+    RuntimeErrorClass(std::string const &aWhat) : Message(aWhat) {}
     virtual ~RuntimeErrorClass(void) override {}
 
-
+    void ExtendMessage(const std::string &NewLine) {Message.append("\n" + NewLine);}
     // exception interface
 public:
     virtual const char *what() const noexcept override {return Message.c_str();}

@@ -13,10 +13,10 @@ class VariableClass
 {
     VariableContextClass *MyContext;
     const std::string Name;
-    ValueTypeDescriptorClass MyType;
+    VariableTypeDescriptorClass MyType;
 
 public:
-    VariableClass(const std::string &Name_, ValueTypeDescriptorClass MyType_) : MyContext(nullptr), Name(Name_), MyType(MyType_) {}
+    VariableClass(const std::string &Name_, VariableTypeDescriptorClass MyType_) : MyContext(nullptr), Name(Name_), MyType(MyType_) {}
     virtual ~VariableClass() {}
     void SetContext(VariableContextClass *Context);
     const std::string GetName()  const {return Name;}
@@ -25,8 +25,14 @@ public:
     virtual void        Print(std::ostream &s) = 0;
     virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const;
 
+    bool IsAssignable(Variables::VariableContentClass const &Content)
+    {
+        return(    (MyType == TypeDescriptorClass::Type::Dynamic)
+                || (MyType == Content.getType())) ;
 
-    const ValueTypeDescriptorClass &Type() const {return MyType;}
+    }
+
+    const VariableTypeDescriptorClass &Type() const {return MyType;}
     const ValueTypeDescriptorClass &ContaindedType() const {return GetContainedType();}
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const = 0;
@@ -37,7 +43,7 @@ class GlobalVariableClass : public VariableClass
     Variables::VariableContentClass Content;
 
 public:
-    GlobalVariableClass(const std::string &Name_, const ValueTypeDescriptorClass &Type_) : VariableClass(Name_, Type_), Content(Type_) {}
+    GlobalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_), Content(Type_) {}
     virtual ~GlobalVariableClass() override {}
     virtual Variables::VariableContentClass GetValue() const override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
@@ -55,7 +61,7 @@ class LocalVariableClass : public VariableClass
     std::shared_ptr<Variables::FunctionDefinitionClass> Parent;
 
 public:
-    LocalVariableClass(const std::string &Name_, const ValueTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionClass> Parent_) : VariableClass(Name_, Type_), Reference(Reference_), Parent(Parent_) {}
+    LocalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionClass> Parent_) : VariableClass(Name_, Type_), Reference(Reference_), Parent(Parent_) {}
     virtual ~LocalVariableClass() override {}
     virtual Variables::VariableContentClass GetValue() const override;
     virtual void        SetValue(Variables::VariableContentClass v) override;

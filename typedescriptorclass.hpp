@@ -158,9 +158,7 @@ private:
     { /* No invalid type in descriptor for now*/}
 
     void ThrowOnInvalidType(Type t)
-    {   if ((t == Type::Undefined) || (t == Type::Dynamic)) {
-            throw INTERNAL_ERROR_OBJECT("Invalid Type");
-        }
+    {
     }
 
 };
@@ -181,7 +179,7 @@ private:
     { /* No invalid type in descriptor for now*/}
 
     void ThrowOnInvalidType(Type t)
-    {   if ((t == Type::Undefined) || (t == Type::Dynamic)) {
+    {   if (/*(t == Type::Undefined) || (*/ t == Type::Dynamic) {
         throw INTERNAL_ERROR_OBJECT("Invalid Type");
         }
     }
