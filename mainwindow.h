@@ -51,6 +51,16 @@ class MainWindow : public QMainWindow
 
     QtEnvironment Env;
 
+public slots:
+    void about();
+    void newFile();
+    void openFile(const QString &path = QString());
+    void saveFile(const QString &path = QString());
+
+private:
+    void setupFileMenu();
+    void setupHelpMenu();
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
