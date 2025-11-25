@@ -872,7 +872,8 @@ void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 void PrintStatementClass::Execute(Environment &Env) const
 {
     for (auto &e: Expressions) {
-        Env.OutputStream() << e->Evaluate(Env);
+        // Env.OutputStream() << e->Evaluate(Env);
+        e->Evaluate(Env).PrintDetail(Env.OutputStream(), 200);
     }
 }
 

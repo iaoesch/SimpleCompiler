@@ -95,7 +95,7 @@ const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
 }
 
 
-ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r)
+ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r) , BaseType(TypeDescriptorClass::Type::Undefined)
 {
     CommonInitialization();
 }
@@ -109,25 +109,76 @@ void ArrayClass::CommonInitialization()
     if (SizeMismatch) {
         FillUpMissingElements(Data, Dimensions, VariableContentClass(0.0), 0);
     }
+    BaseType = Type;
 }
 
 ValueTypeDescriptorClass ArrayClass::GetTypeDescriptor() const
 {
    // ArrayDescriptorClass Arraydescriptor;
 
-  // TypeDescriptor Descriptor =
+    return ValueTypeDescriptorClass(ArrayDescriptorClass(Dimensions, std::make_unique<VariableTypeDescriptorClass>(BaseType)));
 }
 
 void ArrayClass::PrintDimensions(std::ostream &s) const
 {
-    s << "<";
+    s << "[";
     for (auto n: Dimensions) {
         s << n << ",";
     }
-    s << ">";
+    s << "]";
+}
+void ArrayClass::PrintDetail(const ArrayContent &Data, std::ostream &s, int &Limit, int Indent) const
+{
+    if (Limit <= 0) {
+        return;
+    }
+    for (int i = 0; i < Indent; i++) {
+        s << "   ";
+    }
+    s << "[";
+
+    if (std::holds_alternative<VectorOfRows>(Data)) {
+        VectorOfRows const &Rows = std::get<VectorOfRows>(Data);
+
+        for (auto const &r: Rows.Data) {
+            s << "\n";
+            PrintDetail(r->Data, s, Limit, Indent + 3);
+            if (Limit <= 0) {
+                return;
+            }
+        }
+        s << "\n";
+        for (int i = 0; i < Indent; i++) {
+            s << "   ";
+        }
+    } else if(std::holds_alternative<Row>(Data)) {
+        Row const &Rows = std::get<Row>(Data);
+        bool first = true;
+        for (auto const &v: Rows.Data) {
+            if (first == false) {
+                s << ", ";
+            }
+            first = false;
+            s << *v;
+            Limit--;
+            if (Limit <= 0) {
+                s << "\n ... ]";
+                return;
+            }
+        }
+
+    } else {
+        throw INTERNAL_ERROR_OBJECT("Arrayclass content invalid");
+    }
+    s << "]";
 }
 
-void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint32_t> &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth)
+void ArrayClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    PrintDetail(Data, s, Limit, 0);
+}
+
+void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint64_t> &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth)
 {
     if (std::holds_alternative<VectorOfRows>(Data)) {
         VectorOfRows const &Rows = std::get<VectorOfRows>(Data);
@@ -155,7 +206,7 @@ void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint
     }
 }
 
-void ArrayClass::FillUpMissingElements(ArrayContent &Data, std::vector<uint32_t> const &Dimensions, const VariableContentClass &FillValue, int Deepth)
+void ArrayClass::FillUpMissingElements(ArrayContent &Data, DimensionType const &Dimensions, const VariableContentClass &FillValue, int Deepth)
 {
     if (std::holds_alternative<VectorOfRows>(Data)) {
         VectorOfRows &Rows = std::get<VectorOfRows>(Data);
@@ -195,19 +246,38 @@ overloaded(Ts...) -> overloaded<Ts...>;
 std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
 {
     std::visit(overloaded{
-                   [&s](const std::monostate &arg) { s << "empty"; },
-                   [&s](int64_t arg) { s << "<int:" << arg << ">"; },
-                   [&s](double arg) { s << "<float:"  << std::fixed << arg << ">"; },
-                   [&s](const StackClass &arg) { s << "<stack>"; },
-                   [&s](const ListClass &arg) { s << "<list>"; },
-                   [&s](const ArrayClass &arg) { s << "<Array "; arg.PrintDimensions(s); s << ">";  },
-                   [&s](const MapClass &arg) { s << "<map>"; },
-                   [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "<expression>\n"; arg->Print(s);  },
-                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "<function>\n"; arg->Print(s);  },
+                   [&s](const std::monostate &arg) { s << "[empty]"; },
+                   [&s](int64_t arg) { s << "[int:" << arg << "]"; },
+                   [&s](double arg) { s << "[float:"  << std::fixed << arg << "]"; },
+                   [&s](const StackClass &arg) { s << "<stack]"; },
+                   [&s](const ListClass &arg) { s << "[list]"; },
+                   [&s](const ArrayClass &arg) { s << "[Array "; arg.PrintDimensions(s); s << "]";  },
+                   [&s](const MapClass &arg) { s << "[map]"; },
+                   [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
+                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function]\n"; arg->Print(s);  },
                    [&s](const std::string& arg) { s << '"' << arg << '"'; }
                }, v.Data);
     return s;
 }
+
+void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
+{
+         std::visit(overloaded{
+                       [&s](const std::monostate &arg) { s << "[empty]"; },
+                       [&s](int64_t arg) { s << "[int:" << arg << "]"; },
+                       [&s](double arg) { s << "[float:"  << std::fixed << arg << "]"; },
+                       [&s, Limit](const StackClass &arg) { s << "[Stack:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s, Limit](const ListClass &arg) { s << "[list:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s, Limit](const ArrayClass &arg) { s << "[Array "; arg.PrintDetail(s, Limit); s << "]";  },
+                       [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; arg->Print(s);  },
+                       [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function>\n"; arg->Print(s);  },
+                       [&s](const std::string& arg) { s << '"' << arg << '"'; }
+                   }, Data);
+
+}
+
+
 
 VariableContentClass operator +(const VariableContentClass &l, const VariableContentClass &r)
 {
@@ -327,6 +397,28 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         return VariableContentClass::MakeUndefined();
     }
 }
+
+void StackClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    s << "[Detail Stack]";
+}
+
+void ListClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    s << "[Detail List]";
+}
+
+void SparseArrayClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    s << "[Detail sparse array]";
+
+}
+
+void MapClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    s << "[Detail map]";
+}
+
 
 }
 

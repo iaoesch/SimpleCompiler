@@ -24,6 +24,7 @@ Variables::VariableContentClass GlobalVariableClass::GetValue() const
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
     std::cout << "GlbSet:" << v;
+    PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
@@ -47,6 +48,7 @@ Variables::VariableContentClass LocalVariableClass::GetValue() const
 
 void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 {
+    PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Parent->GetVariableContentForOffset(Reference) = v;
     } else {

@@ -33,12 +33,17 @@ public:
 };
 
 class ArrayDescriptorClass  {
+    friend std::ostream &operator << (std::ostream &s, ArrayDescriptorClass const&t);
+
 public:
-    ArrayDescriptorClass(std::vector<int64_t> Dimensions,
+    typedef std::vector<uint64_t> DimensionType;
+    ArrayDescriptorClass(DimensionType Dimensions,
+                         std::unique_ptr<VariableTypeDescriptorClass> BaseType);
+    ArrayDescriptorClass(std::vector<int64_t> UncheckedDimensions,
                          std::unique_ptr<VariableTypeDescriptorClass> BaseType);
     ArrayDescriptorClass(const ArrayDescriptorClass &s);
     ArrayDescriptorClass &operator=(const ArrayDescriptorClass &s);
-    std::vector<int64_t> Dimensions; // -1 = flexible dimension
+    DimensionType Dimensions; // -1 = flexible dimension
     std::unique_ptr<VariableTypeDescriptorClass> BaseType;
 };
 
@@ -190,6 +195,9 @@ public:
 
     VariableTypeDescriptorClass(Type t)
         : TypeDescriptorClass(t) {ThrowOnInvalidType(t);}
+
+    VariableTypeDescriptorClass(ValueTypeDescriptorClass desc)
+        : TypeDescriptorClass(desc) {/*ThrowOnInvalidType(t);*/}
 
     ValueTypeDescriptorClass ToValueType() const
     {

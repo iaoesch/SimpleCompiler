@@ -32,6 +32,13 @@ public:
 
     }
 
+    void PrepareForAssignment(Variables::VariableContentClass const &Content)
+    {
+        if(MyType == TypeDescriptorClass::Type::Undefined) {
+           MyType = Content.getType() ;
+        }
+    }
+
     const VariableTypeDescriptorClass &Type() const {return MyType;}
     const ValueTypeDescriptorClass &ContaindedType() const {return GetContainedType();}
 private:

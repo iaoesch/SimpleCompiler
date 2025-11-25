@@ -25,6 +25,7 @@ class StackClass {
 public:
     StackClass(const StackClass &s){SIGNAL_UNIMPLEMENTED();}
     StackClass &operator = (const StackClass &s){SIGNAL_UNIMPLEMENTED();}
+    void PrintDetail(std::ostream &s, int Limit) const;
 
 };
 
@@ -33,6 +34,8 @@ class ListClass {
 public:
     ListClass(const ListClass &s){SIGNAL_UNIMPLEMENTED();}
     ListClass &operator = (const ListClass &s){SIGNAL_UNIMPLEMENTED();}
+
+    void PrintDetail(std::ostream &s, int Limit) const;
 };
 
 class ArrayClass {
@@ -42,7 +45,7 @@ class ArrayClass {
     //std::vector<std::unique_ptr<ArrayClass>> Data;
     DataType Data;
 #endif
-
+    using DimensionType = ArrayDescriptorClass::DimensionType;
 
 public:
     struct Entry;
@@ -50,6 +53,7 @@ public:
     //typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::vector<std::unique_ptr<Entry>>> RecursiveDataType;
 
     class Row {
+        friend class ArrayClass;
         std::vector<std::unique_ptr<VariableContentClass>> Data;
     public:
         Row() = default;
@@ -96,14 +100,14 @@ public:
     typedef ArrayContent ArrayContentType;
 
     ArrayContent Data;
-    std::vector<uint32_t> Dimensions;
-
+    DimensionType Dimensions;
+    VariableTypeDescriptorClass BaseType;
 
 public:
     ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
     ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
-    ArrayClass(const VectorOfRows &vr) : Data(vr) {CommonInitialization();}
-    ArrayClass(const Row &r) : Data(r) {CommonInitialization();}
+    ArrayClass(const VectorOfRows &vr) : Data(vr), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
+    ArrayClass(const Row &r) : Data(r), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const ArrayContentType &r);
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
@@ -111,11 +115,13 @@ public:
     static Row CreateRowOfValues() {return Row();}
     static VectorOfRows CreateRowOfRows() {return VectorOfRows();}
     void PrintDimensions(std::ostream &s) const;
+    void PrintDetail(std::ostream &s, int Limit) const;
 
 private:
-    void DetectArrayStructure(const ArrayContent &Data, std::vector<uint32_t> &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
-    void FillUpMissingElements(ArrayContent &Data, const std::vector<uint32_t> &Dimensions, const VariableContentClass &FillValue, int Deepth);
+    void DetectArrayStructure(const ArrayContent &Data, DimensionType &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
+    void FillUpMissingElements(ArrayContent &Data, const DimensionType &Dimensions, const VariableContentClass &FillValue, int Deepth);
     void CommonInitialization();
+    void PrintDetail(const ArrayContent &Data, std::ostream &s, int &Limit, int Indent) const;
 };
 
 
@@ -141,6 +147,8 @@ class SparseArrayClass {
 public:
     SparseArrayClass(const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
     SparseArrayClass &operator = (const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+
+    void PrintDetail(std::ostream &s, int Limit) const;
 };
 
 class MapClass {
@@ -149,6 +157,8 @@ class MapClass {
 public:
     MapClass(const MapClass &s) {SIGNAL_UNIMPLEMENTED();}
     MapClass &operator = (const MapClass &s){SIGNAL_UNIMPLEMENTED();}
+
+    void PrintDetail(std::ostream &s, int Limit) const;
 };
 
 class FunctionDefinitionClass;
@@ -164,7 +174,6 @@ class VariableContentClass {
     friend bool operator ==(const VariableContentClass &r, const VariableContentClass &l);
     friend bool operator !=(const VariableContentClass &r, const VariableContentClass &l) {return !(l==r);}
 
-public:
     typedef std::variant<std::monostate,
                          int64_t,
                          double,
@@ -175,6 +184,8 @@ public:
                          MapClass,
                          std::shared_ptr<ExpressionClass>,
                          std::shared_ptr<FunctionDefinitionClass>> dataType;
+
+public:
 
     VariableContentClass(const VariableContentClass &) = default;
     VariableContentClass(VariableContentClass &&) = default;
@@ -195,6 +206,8 @@ public:
    // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 
     static VariableContentClass MakeUndefined() {return VariableContentClass(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Undefined));}
+
+    void PrintDetail(std::ostream &s, int Limit) const;
 
     const ValueTypeDescriptorClass &getType() const;
     void setType(const ValueTypeDescriptorClass &newType);

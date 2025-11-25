@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include "typedescriptorclass.hpp"
 
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
@@ -87,6 +88,21 @@ const ValueTypeDescriptorClass &ValueTypeDescriptorClass::GetDynamicType() const
 }
 
 #endif
+std::ostream &operator << (std::ostream &s, ArrayDescriptorClass const&t)
+{
+    s << *(t.BaseType) << "[";
+    bool first = true;
+    for (auto d: t.Dimensions) {
+        if (first == false) {
+            s << ",";
+        }
+        first = false;
+        s << d;
+    }
+    s << "]";
+    return s;
+}
+
 
 std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
 {
@@ -100,7 +116,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::String:    s << "String"; break;
     case ValueTypeDescriptorClass::Type::Stack:     s << "Stack"; break;
     case ValueTypeDescriptorClass::Type::List:      s << "List"; break;
-    case ValueTypeDescriptorClass::Type::Array:     s << "Array"; break;
+    case ValueTypeDescriptorClass::Type::Array:     s << std::get<ArrayDescriptorClass>(t.Descriptor); break;
     case ValueTypeDescriptorClass::Type::Map:       s << "Map"; break;
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
     case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;
@@ -114,7 +130,24 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
 
 
 ArrayDescriptorClass::ArrayDescriptorClass(
-    std::vector<int64_t> Dimensions, std::unique_ptr<VariableTypeDescriptorClass> BaseType)
+    DimensionType Dimensions, std::unique_ptr<VariableTypeDescriptorClass> BaseType)
     : Dimensions(std::move(Dimensions)), BaseType(std::move(BaseType)) {}
+
+ArrayDescriptorClass::ArrayDescriptorClass(std::vector<int64_t> UncheckedDimensions, std::unique_ptr<VariableTypeDescriptorClass> BaseType)
+    : BaseType(std::move(BaseType))
+{
+    for(auto d: UncheckedDimensions) {
+        if (d <= 0) {
+            std::ostringstream s;
+            s << "[";
+            for(auto n: UncheckedDimensions) {
+                s << n << ",";
+            }
+            s << "]";
+            throw RuntimeErrorClass("invalid Dimension: " + s.str());
+        }
+        Dimensions.push_back(static_cast<DimensionType::value_type>(d));
+    }
+}
 
 

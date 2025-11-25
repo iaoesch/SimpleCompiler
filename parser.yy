@@ -142,7 +142,7 @@
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
-%type  <std::unique_ptr<VariableTypeDescriptorClass>> typedefinition, returntype.opt
+%type  <std::unique_ptr<VariableTypeDescriptorClass>> typedefinition returntype.opt
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
 %type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
@@ -371,13 +371,19 @@ term
 ;
 
 factor
-: unary  { std::swap ($$, $1); $$->Print(std::cout);}
+: unary  {
+             std::swap ($$, $1);
+             auto exp = $$;
+             exp->Print(std::cout);
+         }
 ;
 
 unary
 : primary    { std::swap ($$, $1); $$->Print(std::cout); }
 | "+" unary  { std::swap ($$, $2); }
-| "-" unary  { std::make_shared<NegationClass>($2, @1);}
+| "-" unary  {
+                 $$ = std::make_shared<NegationClass>($2, @1);
+              }
 ;
 
 primary
