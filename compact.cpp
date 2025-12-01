@@ -4,6 +4,7 @@
 #include <sstream>
 #include "compact.h"
 
+
 static int NodeNumber = 1;
 
 int GetNextNodeNumber()
@@ -19,6 +20,31 @@ void RestartNodeNumber()
 using std::endl;
 
 static Environment DummyEnvironment;
+
+static std::string EscapeStringForDot(const std::string& input)
+{
+    std::string output;
+    output.reserve(input.size());
+    for (const char c: input) {
+        switch (c) {
+        case '\a':  output += "\\a";        break;
+        case '\b':  output += "\\b";        break;
+        case '\f':  output += "\\f";        break;
+        case '\n':  output += "\\n";        break;
+        case '\r':  output += "\\r";        break;
+        case '\t':  output += "\\t";        break;
+        case '\v':  output += "\\v";        break;
+        case '\\':  output += "\\\\";        break;
+        case '|':   output += "\\|";        break;
+        case '>':   output += "\\>";        break;
+        case '<':   output += "\\<";        break;
+        case '"':   output += "\\\"";        break;
+        default:    output += c;            break;
+        }
+    }
+
+    return output;
+}
 
 
 Variables::VariableContentClass ExpressionClass::Evaluate() const
@@ -480,9 +506,12 @@ bool ConstantClass::IsSame(std::shared_ptr<ExpressionClass>Other)
    }
    return false;
 }
-void              ConstantClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+void ConstantClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-   s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Value << "|<f2> \"];" << endl;
+    std::ostringstream UnescapedValue;
+    UnescapedValue << Value;
+    std::string EscapedValue = EscapeStringForDot(UnescapedValue.str());
+   s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << EscapedValue << "|<f2> \"];" << endl;
 }
 
 const TypeDescriptorClass ConstantClass::GetType() const
@@ -504,6 +533,11 @@ bool VariableValueClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
+}
+
+VariableReferenceType const VariableValueClass::GetWriteReferenceToContent()
+{
+    return Val;
 }
 
 const TypeDescriptorClass VariableValueClass::GetType() const
@@ -579,8 +613,13 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 void AssignementClass::Execute(Environment &Env) const
 {
     try {
-        std::cout << "AsgExe:" << AssignedExpression->Evaluate(Env);
-       Variable->SetValue(AssignedExpression->Evaluate(Env));
+        Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
+        std::cout << "AsgExe:" << Result;
+        if (Result.Isempty()) {
+           Variable->GetWriteReferenceToContent()->SetValue(Variables::VariableContentClass(AssignedExpression));
+        } else {
+           Variable->GetWriteReferenceToContent()->SetValue(Result);
+        }
     }
     catch (RuntimeErrorClass &e) {
         std::stringstream s;
@@ -871,10 +910,13 @@ void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void PrintStatementClass::Execute(Environment &Env) const
 {
+    Env.OutputStream() << "\x1b[31m";
     for (auto &e: Expressions) {
         // Env.OutputStream() << e->Evaluate(Env);
         e->Evaluate(Env).PrintDetail(Env.OutputStream(), 200);
     }
+    Env.OutputStream() << "\x1b[30"
+                          "m";
 }
 
 
@@ -893,4 +935,115 @@ void RepeatLoopClass::Execute(Environment &Env) const
 void FunctionCallStatementClass::Execute(Environment &Env) const
 {
     Function->Evaluate(Env);
+}
+
+Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
+{
+    return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
+}
+
+void IndexedValueClass::Print(std::ostream &s) const
+{
+    s << "(";
+    IndexedValue->Print(s);
+    s << "[";
+    if (std::holds_alternative<IndexList>(Indices)) {
+        for (auto const &i: std::get<IndexList>(Indices)) {
+            i->Print(s);
+            s << ",";
+        }
+    } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
+        std::get<std::shared_ptr<ExpressionClass>>(Indices)->Print(s);
+    } else {
+        throw INTERNAL_ERROR_OBJECT("unknown index type");
+    }
+
+    s << "]";
+    s << ")";
+}
+
+void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> print |<f2> \"];" << endl;
+    int NodeNumber1 = NodeNumber++;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    IndexedValue->DrawNode(s, NodeNumber1);
+    if (std::holds_alternative<IndexList>(Indices)) {
+        for (auto const &i: std::get<IndexList>(Indices) ) {
+            NodeNumber1 = NodeNumber++;
+            s << "\"Node" << MyNodeNumber << "\":f3 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+            i->DrawNode(s, NodeNumber1);
+        }
+    } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
+        NodeNumber1 = NodeNumber++;
+        s << "\"Node" << MyNodeNumber << "\":f3 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+        std::get<std::shared_ptr<ExpressionClass>>(Indices)->DrawNode(s, NodeNumber1);
+    } else {
+        throw INTERNAL_ERROR_OBJECT("unknown index type");
+    }
+
+
+}
+
+const VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
+{
+    Variables::ElementSelectorType Selector;
+    if (std::holds_alternative<IndexList>(Indices)) {
+        Selector.reserve(std::get<IndexList>(Indices).size());
+        for (auto const &i: std::get<IndexList>(Indices) ) {
+
+            // Build index vector
+            Selector.push_back(i->GetIndex());
+        }
+    } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
+
+        auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
+
+        if (Result.holds_alternative<int64_t>()) {
+            Selector.push_back(Variables::IndexType(Result.GetValue<int64_t>()));
+        } else {
+           // here we could handle vector n or n*2 for ranges and list
+           throw RuntimeErrorClass("Index other than integer not allowed yet");
+        }
+    } else {
+        throw INTERNAL_ERROR_OBJECT("unknown index type");
+    }
+    IndexedValue->GetWriteReferenceToContent()->GetValue()[Selector];
+}
+
+void SingleIndexExpressionClass::Print(std::ostream &s) const
+{
+    Index->Print(s);
+}
+
+void SingleIndexExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    // Just forward to subnode
+    Index->DrawNode(s, MyNodeNumber);
+}
+
+void RangedIndexExpressionClass::Print(std::ostream &s) const
+{
+    if (FromIndex != nullptr) {
+        FromIndex->Print(s);
+    } else {
+
+    }
+    s << "...";
+    if (ToIndex != nullptr) {
+        ToIndex->Print(s);
+    } else {
+
+    }
+}
+
+void RangedIndexExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> Range |<f2> \"];" << endl;
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    FromIndex->DrawNode(s, NodeNumber1);
+    ToIndex->DrawNode(s, NodeNumber1);
 }

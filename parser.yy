@@ -130,9 +130,9 @@
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
-%type  <std::list<std::shared_ptr<VariableClass>>> argumentlist
-%type  <std::shared_ptr<StatementClass>> parameter
-%type  <std::list<std::shared_ptr<StatementClass>>> parameterlist
+%type  <std::vector<std::shared_ptr<VariableClass>>> argumentlist
+%type  <std::shared_ptr<StatementClass>> Positionalparameter Namedparameter
+%type  <std::list<std::shared_ptr<StatementClass>>> parameterlist Positionalparameterlist Namedparameterlist
 %type  <std::shared_ptr<VariableClass>> assignable
 %type  <Variables::VariableContentClass> literal
 %type  <Variables::VariableContentClass> numericliteral
@@ -158,7 +158,7 @@
 %printer { yyoutput << "array vector of rows [[],[] .. []"  << "]"; } <Variables::ArrayClass::VectorOfRows>
 %printer { yyoutput << "array content"; } <Variables::ArrayClass::ArrayContentType>
 %printer { yyoutput << "Statement list[" << $$.size() << "]"; } <std::list<std::shared_ptr<StatementClass>>>
-%printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::list<std::shared_ptr<VariableClass>>>
+%printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<VariableClass>>>
 %printer { yyoutput << "expression list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<ExpressionClass>>>
 %printer { yyoutput << "dimension vector[" << $$.size() << "]"; } <std::vector<int64_t>>
 %printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypes>
@@ -218,6 +218,8 @@ assignment:
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
 assignable:
+: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
+
   "identifier"  { $$ = drv.Variables.GetOrCreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
 | assignable "[" rangedindexes "]"
 | assignable "{" rangedindex "}"
@@ -285,16 +287,36 @@ exp_or_star:
 ;
 
 functioncall:
-  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);} "(" parameterlist ")" {$$ = std::make_shared<FunctionCallClass>($2, $4, @$);};
+  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);}
+  "("
+  parameterlist
+  ")" {$$ = std::make_shared<FunctionCallClass>($2, $4, @$);};
 
 parameterlist:
   %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}
-| parameterlist parameter   {$$ = $1; $$.push_back($2);};
+| Positionalparameterlist   {$$ = $1;}
+| Namedparameterlist        {$$ = $1;}
+;
 
-parameter:
+Positionalparameterlist:
+  Positionalparameter                            {$$ = std::list<std::shared_ptr<StatementClass>>();$$.push_back($1);}
+| Positionalparameterlist Positionalparameter    {$$ = $1; $$.push_back($2);}
+;
+
+Positionalparameter:
+  exp       {$$ = drv.Currentfunction.MakeAssignBySequence($1, @1);}
+| "->" exp    {$$ = drv.Currentfunction.MakeRefBySequence($2, @1+@2);}
+;
+
+
+Namedparameterlist:
+  Namedparameter                      {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
+| Namedparameterlist Namedparameter   {$$ = $1; $$.push_back($2);}
+;
+
+Namedparameter:
    "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3, @1+@2);}
 |  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3, @1+@2);};
-
 
 functiondefinition:
   "function" "identifier" {
@@ -325,7 +347,7 @@ returntype.opt:
  | "returning" typedefinition {$$ = std::move($2);}
 
 argumentlist:
-  "identifier"           {$$ = std::list<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
+  "identifier"           {$$ = std::vector<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
 | argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $1.push_back(var); $$ = $1; };
 
 %left or;

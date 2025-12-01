@@ -174,11 +174,36 @@ std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string R
 
 }
 
+std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRefBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
+{
+}
+
+
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass> Assigned, LocationType const &Loc)
 {
+    if ((NextPositionalParameter >= 0) && (NextPositionalParameter < 0xFFFF)) {
+        throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
+    }
+    // set marker for positionalmode
+    NextPositionalParameter = 0xFFFF;
     std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByName(Assignee);
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
     return std::make_shared<AssignementClass>(Assigned, Var, Loc);
 }
+
+std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
+{
+    if (NextPositionalParameter >= 0xFFFF) {
+        throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
+    }
+    // set marker for positionalmode
+    std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByIndex(NextPositionalParameter);
+    if (Var == nullptr) {
+        throw INTERNAL_ERROR_OBJECT ("Parameter not found");
+    }
+    NextPositionalParameter++;
+    return std::make_shared<AssignementClass>(Assigned, Var, Loc);
+}
+

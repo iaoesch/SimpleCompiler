@@ -51,15 +51,18 @@ class MainWindow : public QMainWindow
 
     QtEnvironment Env;
 
+    QString Documentpath;
+
 public slots:
     void about();
     void newFile();
-    void openFile(const QString &path = QString());
-    void saveFile(const QString &path = QString());
+    void openFile(QString path = QString());
+    void saveFile(QString path = QString());
 
 private:
     void setupFileMenu();
     void setupHelpMenu();
+    bool userReallyWantsToQuit() {return true;}
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -69,6 +72,8 @@ public slots:
     void TextChanged();
     void StopButtonClicked();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
 private:
     void setupEditor();
 

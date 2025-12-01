@@ -5,7 +5,7 @@
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
 {
     using Type = TypeDescriptorClass::Type;
-    
+
     // List dominates everything
     if (t1.MyType == Type::List) {
         return t1;
@@ -13,7 +13,37 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
     if (t2.MyType == Type::List) {
         return t2;
     }
+
+    // Handle case of just one referencetype
+    if (t1.MyType != t2.MyType) {
+
+        // helper lambda to avoid codeduplication, just used below...
+        auto CommonTypeFirstDereferenced = [](const TypeDescriptorClass &t1, const TypeDescriptorClass &t2) -> TypeDescriptorClass
+        {
+            const TypeDescriptorClass &rt = *std::get<ReferenceDescriptorClass>(t1.Descriptor).ReferedType;
+
+            // allow just one level of dereferencing
+            if (rt.MyType == Type::Reference) {
+                return TypeDescriptorClass(Type::Undefined);
+            } else {
+                // examine dereferenced first type an second type
+                return CommonType(rt, t2);
+            }
+        };
+
+        if (t1.MyType == Type::Reference) {
+            return CommonTypeFirstDereferenced(t1, t2);
+        }
+
+        if (t2.MyType == Type::Reference) {
+            return CommonTypeFirstDereferenced(t2, t1);
+        }
+        // here we have no referenced types
+    }
+    // here we have either no referenced types or both types references
+
     
+
     if (t1.MyType == t2.MyType) {
         switch(t1.MyType) {
             
@@ -39,7 +69,24 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
             }
         }
         break;
-            
+        case Type::Reference:   {
+            // Follow chain of references,
+            TypeDescriptorClass *tt1 = &*std::get<ReferenceDescriptorClass>(t1.Descriptor).ReferedType;
+            TypeDescriptorClass *tt2 = &*std::get<ReferenceDescriptorClass>(t2.Descriptor).ReferedType;
+            while ((std::get<ReferenceDescriptorClass>(tt1->Descriptor).ReferedType->MyType == Type::Reference) && (std::get<ReferenceDescriptorClass>(tt2->Descriptor).ReferedType->MyType == Type::Reference)) {
+                tt1 = &*std::get<ReferenceDescriptorClass>(t1.Descriptor).ReferedType;
+                tt2 = &*std::get<ReferenceDescriptorClass>(t2.Descriptor).ReferedType;
+            }
+            auto tc = CommonType(*(std::get<ReferenceDescriptorClass>(tt1->Descriptor).ReferedType), *(std::get<ReferenceDescriptorClass>(tt2->Descriptor).ReferedType));
+            if (tc.MyType == Type::Undefined) {
+                return tc;
+            } else {
+                // Use common type chain
+                return t1;
+            }
+        }
+        break;
+
         case Type::Array:   {auto tc = CommonType(*(std::get<ArrayDescriptorClass>(t1.Descriptor).BaseType), *(std::get<ArrayDescriptorClass>(t2.Descriptor).BaseType));
             if (tc.MyType == Type::Undefined) {
                 return tc;
@@ -121,6 +168,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
     case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;
     case ValueTypeDescriptorClass::Type::Dynamic:   s << "Dynamic"; break;
+    case ValueTypeDescriptorClass::Type::Reference: s << "->" << std::get<ReferenceDescriptorClass>(t.Descriptor).ReferedType; break;
     case ValueTypeDescriptorClass::Type::Illegal:   s << "illegal"; break;
         break;
     }

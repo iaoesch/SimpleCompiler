@@ -26,7 +26,7 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 
 namespace Variables {
 
-FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_)
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_)
     : Parameters(Parameters), Statements(Statements), Name(Name_),
     StorageTemplate(std::move(StorageTemplate_)),
     ReturnVariable(nullptr)
@@ -79,6 +79,15 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::
         return nullptr;
     } else {
         return *Var;
+    }
+}
+
+std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int i)
+{
+    if(i >= Parameters.size()) {
+       return nullptr;
+    } else {
+        return Parameters[i];
     }
 }
 
@@ -178,6 +187,60 @@ void ArrayClass::PrintDetail(std::ostream &s, int Limit) const
     PrintDetail(Data, s, Limit, 0);
 }
 
+std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector)
+{
+    std::string Text = "[";
+    for(auto &i: Selector) {
+        if (std::holds_alternative<IndexType>(i)) {
+            IndexType SimpleSelector = std::get<IndexType>(i);
+            Text.append(std::to_string(SimpleSelector));
+        } else if(std::holds_alternative<IndexRangeType>(i)) {
+            IndexRangeType RangeSelector = std::get<IndexRangeType>(i);
+            Text.append(std::to_string(RangeSelector.From));
+            Text.append(":");
+            Text.append(std::to_string(RangeSelector.To));
+        } else {
+            // Should not happen...
+            throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
+        }
+        Text.append(",");
+    }
+    Text.append("]");
+    return Text;
+}
+
+
+ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector)
+{
+    return ProxyVariableClass("@" + BaseName + ConvertIndexToText(Selector), BaseType, GetIndexedElement(Selector));
+}
+
+VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector)
+{
+    if (Selector.size() != Dimensions.size()) {
+        throw RuntimeErrorClass("Dimension missmatch");
+    }
+    ArrayContentType *CurrentElement = &Data;
+    for(auto &i: Selector) {
+        if (std::holds_alternative<IndexType>(i)) {
+            IndexType SimpleSelector = std::get<IndexType>(i);
+            if (std::holds_alternative<Row>(*CurrentElement)) {
+                return *(std::get<Row>(*CurrentElement).Data.at(SimpleSelector));
+            } else if (std::holds_alternative<VectorOfRows>(*CurrentElement)) {
+                CurrentElement = &(std::get<VectorOfRows>(*CurrentElement).Data.at(SimpleSelector)->Data);
+            } else {
+                throw INTERNAL_ERROR_OBJECT("Unknown vector element type");
+            }
+        } else if(std::holds_alternative<IndexRangeType>(i)) {
+            throw INTERNAL_ERROR_OBJECT("Ranged indices not aupported");
+        } else {
+            // Should not happen...
+            throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
+        }
+    }
+    throw INTERNAL_ERROR_OBJECT("internal dimension trouble");
+}
+
 void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint64_t> &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth)
 {
     if (std::holds_alternative<VectorOfRows>(Data)) {
@@ -270,7 +333,7 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const ListClass &arg) { s << "[list:"; arg.PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const ArrayClass &arg) { s << "[Array "; arg.PrintDetail(s, Limit); s << "]";  },
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
-                       [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; arg->Print(s);  },
+                   [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
                        [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function>\n"; arg->Print(s);  },
                        [&s](const std::string& arg) { s << '"' << arg << '"'; }
                    }, Data);

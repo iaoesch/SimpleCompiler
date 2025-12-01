@@ -15,6 +15,8 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QStandardPaths>
+#include <QSettings>
 
 #include "driver.hh"
 #include "highlighter.h"
@@ -25,6 +27,12 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), Env(*this)
 {
+    QSettings settings("OsiSoft", "Compiler Experiments");
+    settings.beginGroup("mainwindow");
+    Documentpath = settings.value("Last Path", QStandardPaths::displayName(QStandardPaths::DocumentsLocation)).toString();
+    settings.endGroup();
+
+
     //QWidget *widget = new QWidget();
     QSplitter *Splitter = new QSplitter;
     Splitter->setOrientation(Qt::Vertical);
@@ -98,6 +106,18 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (userReallyWantsToQuit()) {
+        QSettings settings("OsiSoft", "Compiler Experiments");
+        settings.beginGroup("mainwindow");
+        settings.setValue("Last Path", Documentpath);
+        settings.endGroup();
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
 
 
 MainWindow::~MainWindow()
@@ -354,28 +374,30 @@ void MainWindow::newFile()
     editor->clear();
 }
 
-void MainWindow::openFile(const QString &path)
+void MainWindow::openFile(QString path)
 {
     QString fileName = path;
 
-    if (fileName.isNull())
-        fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", "C++ Files (*.cpp *.h)");
+    if (fileName.isEmpty())
+        fileName = QFileDialog::getOpenFileName(this, tr("Open File"), Documentpath, "OsiComp Files (*.occ)");
 
     if (!fileName.isEmpty()) {
+        Documentpath = fileName;
         QFile file(fileName);
         if (file.open(QFile::ReadOnly | QFile::Text))
             editor->setPlainText(file.readAll());
     }
 }
 
-void MainWindow::saveFile(const QString &path)
+void MainWindow::saveFile( QString path)
 {
     QString fileName = path;
 
     if (fileName.isNull())
-        fileName = QFileDialog::getSaveFileName(this, tr("Open File"), "", "C++ Files (*.cpp *.h)");
+        fileName = QFileDialog::getSaveFileName(this, tr("Open File"), Documentpath, "OsiComp Files (*.occ)");
 
     if (!fileName.isEmpty()) {
+        Documentpath = fileName;
         QFile file(fileName);
         if (file.open(QFile::WriteOnly | QFile::Text))
             file.write(editor->toPlainText().toLatin1());

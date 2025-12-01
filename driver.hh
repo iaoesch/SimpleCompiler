@@ -25,10 +25,11 @@ class FunctionNodeHelper {
     VariableManager &Variables;
     std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
     std::shared_ptr<VariableClass> ReturnVariable;
+    int NextPositionalParameter;
 
 public:
     explicit FunctionNodeHelper(VariableManager &Variables)
-        : Variables(Variables) , CurrentFunction(nullptr) {}
+        : Variables(Variables) , CurrentFunction(nullptr), NextPositionalParameter(-1) {}
     std::shared_ptr<Variables::FunctionDefinitionClass> Set(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Create(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
@@ -37,6 +38,8 @@ public:
 
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
+    std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
+    std::shared_ptr<AssignementClass> MakeAssignBySequence(std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
 
 };
 

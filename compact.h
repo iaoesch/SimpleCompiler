@@ -35,13 +35,13 @@ static inline LocationType operator | (LocationType const &o1, LocationType cons
     }
 }
 
-class VariableClasse {
+class VariableClasse_no_longer_used {
    std::string Name;
    double      Value;
 
    public:
 
-               VariableClasse(std::string N, double V) : Name(N), Value(V) {}
+               VariableClasse_no_longer_used(std::string N, double V) : Name(N), Value(V) {}
    std::string GetName()  const {return Name; }
    double      GetValue() const {return Value; }
    void        SetValue(double v) {Value = v; }
@@ -79,6 +79,7 @@ class ValueClass : public ExpressionClass {
    public:
                             ValueClass(const LocationType &Loc) : ExpressionClass(Loc) {}
    virtual                 ~ValueClass() override{}
+ //                           virtual Variables::VariableContentClass &GetWriteReferenceToContent();
 };
 
 class UnaryOperationClass : public ExpressionClass {
@@ -159,19 +160,28 @@ class ConstantClass : public ValueClass {
    virtual bool              IsConstant() override {return true;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+ //  virtual Variables::VariableContentClass &GetWriteReferenceToContent() override;
 
    private:
    virtual const TypeDescriptorClass GetType() const override;
 };
 
-class VariableValueClass : public ValueClass {
+class WritableValueClass : public ValueClass {
+
+public:
+    using ValueClass::ValueClass;
+    virtual VariableReferenceType const GetWriteReferenceToContent();
+
+};
+
+class VariableValueClass : public WritableValueClass {
    const VariableReferenceType Val;
 
    public:
-                             VariableValueClass(VariableReferenceType v, const LocationType &Loc) : ValueClass(Loc), Val(v) {}
-                             VariableValueClass(const VariableValueClass &v, const LocationType &Loc) : ValueClass(Loc), Val(v.Val) {}
+                             VariableValueClass(VariableReferenceType v, const LocationType &Loc) : WritableValueClass(Loc), Val(v) {}
+                             VariableValueClass(const VariableValueClass &v, const LocationType &Loc) : WritableValueClass(Loc), Val(v.Val) {}
    virtual                  ~VariableValueClass() override {}
-   virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override{ return Val->GetValue(); }
+   virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override{ return Val->GetValue().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue(); }
    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == Val) {return std::make_shared<ConstantClass>(1.0, GetLocation());} else {return std::make_shared<ConstantClass>(0.0, GetLocation());}}
    virtual void              Print(std::ostream &s) const override { s << Val->GetName(); }
    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<VariableValueClass>(*this); }
@@ -179,9 +189,65 @@ class VariableValueClass : public ValueClass {
    virtual bool              IsConstant() override {return false;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+   virtual VariableReferenceType const GetWriteReferenceToContent() override;
 
    private:
    virtual const TypeDescriptorClass GetType() const override;
+};
+
+class IndexExpressionClass {
+public:
+    virtual void              Print(std::ostream &s) const = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const = 0;
+    virtual Variables::SingleElementSelectorType GetIndex() const = 0;
+  //      struct IndexRangeType {IndexType From; IndexType To;};
+  //  typedef std::variant<IndexType, IndexRangeType> SingleElementSelectorType;
+  //  typedef std::vector<SingleElementSelectorType> ElementSelectorType;
+
+};
+
+class SingleIndexExpressionClass : public IndexExpressionClass{
+public:
+    virtual ~SingleIndexExpressionClass() {}
+    std::shared_ptr<ExpressionClass> Index;
+    virtual void Print(std::ostream &s) const override;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+    virtual Variables::SingleElementSelectorType GetIndex() const override {return Index->Evaluate().GetValue<uint64_t>();}
+};
+
+class RangedIndexExpressionClass : public IndexExpressionClass{
+public:
+    virtual ~RangedIndexExpressionClass() {}
+    std::shared_ptr<ExpressionClass> FromIndex;
+    std::shared_ptr<ExpressionClass> ToIndex;
+    virtual void Print(std::ostream &s) const override;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+    virtual Variables::SingleElementSelectorType GetIndex() const override {return Variables::IndexRangeType{FromIndex->Evaluate().GetValue<uint64_t>(), ToIndex->Evaluate().GetValue<uint64_t>()};}
+};
+
+class IndexedValueClass : public WritableValueClass {
+    typedef std::vector<std::shared_ptr<IndexExpressionClass>> IndexList;
+    std::variant<IndexList, std::shared_ptr<ExpressionClass>> Indices;
+    std::shared_ptr<WritableValueClass> IndexedValue;
+
+
+public:
+    IndexedValueClass(std::shared_ptr<WritableValueClass> IndexedValue_, IndexList Indices_, const LocationType &Loc) : WritableValueClass(Loc), Indices(Indices_), IndexedValue(IndexedValue_) {}
+    IndexedValueClass(std::shared_ptr<WritableValueClass> IndexedValue_, std::shared_ptr<ExpressionClass> Indices_, const LocationType &Loc) : WritableValueClass(Loc), Indices(Indices_), IndexedValue(IndexedValue_) {}
+   //( IndexedValueClass(const IndexedValueClass &v, const LocationType &Loc) : ValueClass(Loc), Val(v.Val) {}
+    virtual                  ~IndexedValueClass() override {}
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { throw RuntimeErrorClass("cannot derive indexed expressions...");}
+    virtual void              Print(std::ostream &s) const override;
+    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<IndexedValueClass>(*this); }
+    virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { return shared_from_this(); }
+    virtual bool              IsConstant() override {return false;}
+    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+    virtual VariableReferenceType const GetWriteReferenceToContent() override;
+
+private:
+    virtual const TypeDescriptorClass GetType() const override;
 };
 
 class FunctionClass;
@@ -448,10 +514,10 @@ private:
 
 class AssignementClass : public StatementClass {
     std::shared_ptr<ExpressionClass> AssignedExpression;
-    const VariableReferenceType Variable;
+    const std::shared_ptr<WritableValueClass> Variable;
 
 public:
-    AssignementClass(std::shared_ptr<ExpressionClass> _AssignedExpression, VariableReferenceType _Variable, const LocationType &Loc) :
+    AssignementClass(std::shared_ptr<ExpressionClass> _AssignedExpression, const std::shared_ptr<WritableValueClass> _Variable, const LocationType &Loc) :
         StatementClass(Loc), AssignedExpression(_AssignedExpression), Variable(_Variable) {}
 
     virtual                  ~AssignementClass() override;

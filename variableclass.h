@@ -80,6 +80,41 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
 
+class TemporaryVariableClass : public VariableClass
+{
+    Variables::VariableContentClass Content;
+
+public:
+    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_), Content(Type_) {}
+    virtual ~TemporaryVariableClass() override {}
+    virtual Variables::VariableContentClass GetValue() const override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+    //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+
+private:
+    virtual const ValueTypeDescriptorClass &GetContainedType() const override;
+};
+
+
+class ProxyVariableClass : public VariableClass
+{
+    Variables::VariableContentClass &Content;
+
+public:
+    ProxyVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, Variables::VariableContentClass &ReferedContent) : VariableClass(Name_, Type_), Content(ReferedContent) {}
+    virtual ~ProxyVariableClass() override {}
+    virtual Variables::VariableContentClass GetValue() const override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+    //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+
+private:
+    virtual const ValueTypeDescriptorClass &GetContainedType() const override;
+};
+
 #if 0
 class DoubleVariableClass : public VariableClass {
 

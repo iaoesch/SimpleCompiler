@@ -13,10 +13,18 @@
 #include "typedescriptorclass.hpp"
 
 //#include "varmanag.hpp"
+class ProxyVariableClass;
 
 
 
 namespace Variables {
+
+using DimensionType = ArrayDescriptorClass::DimensionType;
+using IndexType = DimensionType::value_type;
+
+struct IndexRangeType {IndexType From; IndexType To;};
+typedef std::variant<IndexType, IndexRangeType> SingleElementSelectorType;
+typedef std::vector<SingleElementSelectorType> ElementSelectorType;
 
 class VariableContentClass;
 
@@ -46,9 +54,11 @@ class ArrayClass {
     DataType Data;
 #endif
     using DimensionType = ArrayDescriptorClass::DimensionType;
+    using IndexType = DimensionType::value_type;
 
 public:
     struct Entry;
+
 
     //typedef std::variant<std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::vector<std::unique_ptr<Entry>>> RecursiveDataType;
 
@@ -117,11 +127,15 @@ public:
     void PrintDimensions(std::ostream &s) const;
     void PrintDetail(std::ostream &s, int Limit) const;
 
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector);
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector);
 private:
+
     void DetectArrayStructure(const ArrayContent &Data, DimensionType &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
     void FillUpMissingElements(ArrayContent &Data, const DimensionType &Dimensions, const VariableContentClass &FillValue, int Deepth);
     void CommonInitialization();
     void PrintDetail(const ArrayContent &Data, std::ostream &s, int &Limit, int Indent) const;
+    std::string ConvertIndexToText(ElementSelectorType Selector);
 };
 
 
@@ -164,7 +178,8 @@ public:
 class FunctionDefinitionClass;
 
 
-class VariableContentClass {
+class
+    VariableContentClass {
     friend std::ostream &operator << (std::ostream &s, const VariableContentClass &v);
     friend VariableContentClass operator + (const VariableContentClass &l, const VariableContentClass &r);
     friend bool operator <(const VariableContentClass &r, const VariableContentClass &l);
@@ -183,7 +198,8 @@ class VariableContentClass {
                          Variables::ArrayClass,
                          MapClass,
                          std::shared_ptr<ExpressionClass>,
-                         std::shared_ptr<FunctionDefinitionClass>> dataType;
+                         std::shared_ptr<FunctionDefinitionClass>,
+                         std::shared_ptr<VariableContentClass>> dataType;
 
 public:
 
@@ -203,7 +219,14 @@ public:
     VariableContentClass(std::string Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::String)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
-   // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}
+    // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
+//        Variables::StackClass,
+//        Variables::ListClass,
+//        MapClass,
+//        std::shared_ptr<VariableContentClass>;
+
+    bool Isempty() const {return std::holds_alternative<std::monostate>(Data);}
 
     static VariableContentClass MakeUndefined() {return VariableContentClass(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Undefined));}
 
@@ -212,10 +235,31 @@ public:
     const ValueTypeDescriptorClass &getType() const;
     void setType(const ValueTypeDescriptorClass &newType);
 
+    VariableContentClass &operator [](const ElementSelectorType &Selector)
+    {
+        if (Type == TypeDescriptorClass::Type::Array) {
+            return std::get<ArrayClass>(Data).GetIndexedElement(Selector);
+        } else if(Type == TypeDescriptorClass::Type::Map) {
+            throw RuntimeErrorClass("Indexing not possible");
+//            return std::get<MapClass>(Data).GetIndexedElement(Selector);
+        } else if(Type == TypeDescriptorClass::Type::List) {
+            throw RuntimeErrorClass("Indexing not possible");
+//            return std::get<ListClass>(Data).GetIndexedElement(Selector);
+        } else {
+            throw RuntimeErrorClass("Indexing not possible");
+        }
+    }
+
     template <class T>
         const T &GetValue() {
         return std::get<T>(Data);
     }
+
+    template <class T>
+    bool holds_alternative() const {
+        return std::holds_alternative<T>(Data);
+    }
+
 private:
     template <class T>
     void SetValue(const T &v) {
@@ -321,7 +365,7 @@ class FunctionDefinitionClass {
 public:
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
 private:
-    std::list<std::shared_ptr<VariableClass>> Parameters;
+    std::vector<std::shared_ptr<VariableClass>> Parameters;
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::string Name;
     LocalStorageType StorageTemplate;
@@ -329,12 +373,12 @@ private:
     std::shared_ptr<VariableClass> ReturnVariable;
 
 public:
-    FunctionDefinitionClass(const std::string &Name_, const std::list<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate);
+    FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate);
     FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
     FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
     FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
 
-    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::list<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType());}
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType());}
 public:
     //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
     //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
@@ -350,6 +394,7 @@ public:
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
+    std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
   };
 }

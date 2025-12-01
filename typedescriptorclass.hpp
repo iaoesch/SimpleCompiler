@@ -18,10 +18,11 @@ class VariableContextClass;
 class StackDescriptorClass;
 class ArrayDescriptorClass;
 class MapDescriptorClass;
+class ReferenceDescriptorClass;
 class DynamicDescriptorClass;
 class VariableTypeDescriptorClass;
 
-using ValueTypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass>;
+using ValueTypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass, ReferenceDescriptorClass>;
 
 
 class StackDescriptorClass  {
@@ -68,6 +69,12 @@ public:
     std::unique_ptr<VariableTypeDescriptorClass> CurrentType;
 };
 
+class ReferenceDescriptorClass {
+public:
+    ReferenceDescriptorClass(const ReferenceDescriptorClass &s);
+    ReferenceDescriptorClass &operator = (const ReferenceDescriptorClass &s);
+    std::unique_ptr<VariableTypeDescriptorClass> ReferedType;
+};
 
 
 
@@ -87,6 +94,7 @@ public:
         Function,
         Expression,
         Dynamic,
+        Reference,
         Illegal  // $Internal flag
     };
     
@@ -121,6 +129,8 @@ protected:
             return Type::Array;
         } else if (std::holds_alternative<MapDescriptorClass>(Descriptor)) {
             return Type::Map;
+        } else if (std::holds_alternative<ReferenceDescriptorClass>(Descriptor)) {
+            return Type::Reference;
         } else {
             throw std::runtime_error("Inconsistent type state");
         }
@@ -144,6 +154,7 @@ protected:
         case Type::Stack:
         case Type::Array:
         case Type::Map:
+        case Type::Reference:
         case Type::Illegal:
             throw INTERNAL_ERROR_OBJECT("Invalid Type");
             break;
@@ -292,6 +303,9 @@ inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const
     }
     if (t1.MyType == TypeDescriptorClass::Type::Stack) {
         return std::get<StackDescriptorClass>(t1.Descriptor).BaseType->MyType == std::get<StackDescriptorClass>(t2.Descriptor).BaseType->MyType;
+    }
+    if (t1.MyType == TypeDescriptorClass::Type::Reference) {
+        return std::get<ReferenceDescriptorClass>(t1.Descriptor).ReferedType->MyType == std::get<ReferenceDescriptorClass>(t2.Descriptor).ReferedType->MyType;
     }
     // Array: Basetype and dimensions must match
     if (t1.MyType == TypeDescriptorClass::Type::Array) {
