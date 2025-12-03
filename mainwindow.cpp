@@ -240,6 +240,7 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
             int  NextNodeNumber = GetNextNodeNumber();
             Drawing << "\"Node" << CurrentNodeNumber << "\":f0 -> \"Node" << NextNodeNumber << "\":f1;" << std::endl;
             Drawing << "subgraph cluster_g" << GraphNumber++ <<  "{" << std::endl;
+            Drawing << "rank = same;" << std::endl;
             s->DrawNode(Drawing, NextNodeNumber);
             Drawing << "}" << std::endl;
             CurrentNodeNumber = NextNodeNumber;

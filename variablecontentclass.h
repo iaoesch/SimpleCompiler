@@ -116,7 +116,7 @@ public:
 
 public:
     ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
-    ArrayClass &operator = (const ArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ArrayClass &operator = (const ArrayClass &s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     ArrayClass(const VectorOfRows &vr) : Data(vr), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const Row &r) : Data(r), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const ArrayContentType &r);
@@ -228,6 +228,7 @@ public:
 //        std::shared_ptr<VariableContentClass>;
 
     bool Isempty() const {return std::holds_alternative<std::monostate>(Data);}
+    VariableContentClass GetEmtpy() const {return VariableContentClass(this->Type);}
 
     static VariableContentClass MakeUndefined() {return VariableContentClass(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Undefined));}
 
@@ -347,13 +348,13 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l);
 inline VariableContentClass operator *(const VariableContentClass &r, const VariableContentClass &l)
 {
     (void)l;
-    return r;
+    return r.GetEmtpy();
 }
 
 inline VariableContentClass operator /(const VariableContentClass &r, const VariableContentClass &l)
 {
     (void)l;
-    return r;
+    return r.GetEmtpy();
 }
 
 VariableContentClass operator +(const VariableContentClass &r, const VariableContentClass &l);
@@ -361,33 +362,33 @@ VariableContentClass operator +(const VariableContentClass &r, const VariableCon
 inline VariableContentClass operator -(const VariableContentClass &r, const VariableContentClass &l)
 {
     (void)l;
-    return r;
+    return r.GetEmtpy();
 }
 
 inline VariableContentClass operator -(const VariableContentClass &o)
 {
-    return o;
+    return o.GetEmtpy();
 }
 
 inline VariableContentClass log(const VariableContentClass &o)
 {
-    return o;
+    return o.GetEmtpy();
 }
 
 inline VariableContentClass exp(const VariableContentClass &o)
 {
-    return o;
+    return o.GetEmtpy();
 }
 
 inline VariableContentClass sqrt(const VariableContentClass &o)
 {
-    return o;
+    return o.GetEmtpy();
 }
 
 inline VariableContentClass pow(const VariableContentClass &l, const VariableContentClass &r)
 {
     (void)r;
-    return l;
+    return l.GetEmtpy();
 }
 
 class FunctionDefinitionClass {
