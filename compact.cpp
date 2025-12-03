@@ -1008,19 +1008,19 @@ bool IndexedValueClass::IsSame(std::shared_ptr<ExpressionClass> Other)
 
 void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> print |<f2> \"];" << endl;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> [...] |<f2> \"];" << endl;
     int NodeNumber1 = NodeNumber++;
     s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
     IndexedValue->DrawNode(s, NodeNumber1);
     if (std::holds_alternative<IndexList>(Indices)) {
         for (auto const &i: std::get<IndexList>(Indices) ) {
             NodeNumber1 = NodeNumber++;
-            s << "\"Node" << MyNodeNumber << "\":f3 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+            s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
             i->DrawNode(s, NodeNumber1);
         }
     } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
         NodeNumber1 = NodeNumber++;
-        s << "\"Node" << MyNodeNumber << "\":f3 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+        s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
         std::get<std::shared_ptr<ExpressionClass>>(Indices)->DrawNode(s, NodeNumber1);
     } else {
         throw INTERNAL_ERROR_OBJECT("unknown index type");
@@ -1093,7 +1093,7 @@ void RangedIndexExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) con
     s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
     s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
     FromIndex->DrawNode(s, NodeNumber1);
-    ToIndex->DrawNode(s, NodeNumber1);
+    ToIndex->DrawNode(s, NodeNumber2);
 }
 Variables::SingleElementSelectorType RangedIndexExpressionClass::GetIndex() const
 {

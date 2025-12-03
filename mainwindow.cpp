@@ -233,13 +233,15 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
     Drawing << "node [shape = record,height=.1];" << std::endl;
     int CurrentNodeNumber = GetNextNodeNumber();
     Drawing << "Node" << CurrentNodeNumber << "[label = \"<f0> |<f1> Start |<f2> \"];" << std::endl;
+    int GraphNumber = 0;
 
     for (auto &s: Graph) {
         if (s!=nullptr)  {
             int  NextNodeNumber = GetNextNodeNumber();
             Drawing << "\"Node" << CurrentNodeNumber << "\":f0 -> \"Node" << NextNodeNumber << "\":f1;" << std::endl;
-
+            Drawing << "subgraph cluster_g" << GraphNumber++ <<  "{" << std::endl;
             s->DrawNode(Drawing, NextNodeNumber);
+            Drawing << "}" << std::endl;
             CurrentNodeNumber = NextNodeNumber;
         }
     }
