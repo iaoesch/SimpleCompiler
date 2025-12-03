@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <variant>
 #include <iostream>
@@ -31,8 +32,8 @@ class VariableContentClass;
 class StackClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
-    StackClass(const StackClass &s){SIGNAL_UNIMPLEMENTED();}
-    StackClass &operator = (const StackClass &s){SIGNAL_UNIMPLEMENTED();}
+    StackClass(const StackClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    StackClass &operator = (const StackClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
 
 };
@@ -40,8 +41,8 @@ public:
 class ListClass {
     std::list<std::unique_ptr<VariableContentClass>> Data;
 public:
-    ListClass(const ListClass &s){SIGNAL_UNIMPLEMENTED();}
-    ListClass &operator = (const ListClass &s){SIGNAL_UNIMPLEMENTED();}
+    ListClass(const ListClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass &operator = (const ListClass &s){(void)s; SIGNAL_UNIMPLEMENTED();}
 
     void PrintDetail(std::ostream &s, int Limit) const;
 };
@@ -115,7 +116,7 @@ public:
 
 public:
     ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
-    ArrayClass &operator = (const ArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    ArrayClass &operator = (const ArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ArrayClass(const VectorOfRows &vr) : Data(vr), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const Row &r) : Data(r), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const ArrayContentType &r);
@@ -127,15 +128,15 @@ public:
     void PrintDimensions(std::ostream &s) const;
     void PrintDetail(std::ostream &s, int Limit) const;
 
-    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector);
-    VariableContentClass &GetIndexedElement(ElementSelectorType Selector);
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector) const;
 private:
 
     void DetectArrayStructure(const ArrayContent &Data, DimensionType &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
-    void FillUpMissingElements(ArrayContent &Data, const DimensionType &Dimensions, const VariableContentClass &FillValue, int Deepth);
+    void FillUpMissingElements(ArrayContent &Data, const DimensionType &Dimensions, const VariableContentClass &FillValue, unsigned int Deepth);
     void CommonInitialization();
     void PrintDetail(const ArrayContent &Data, std::ostream &s, int &Limit, int Indent) const;
-    std::string ConvertIndexToText(ElementSelectorType Selector);
+    std::string ConvertIndexToText(ElementSelectorType Selector) const;
 };
 
 
@@ -159,8 +160,8 @@ class SparseArrayClass {
 
     std::map<int, std::unique_ptr<VariableContentClass>> Data;
 public:
-    SparseArrayClass(const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
-    SparseArrayClass &operator = (const SparseArrayClass &s){SIGNAL_UNIMPLEMENTED();}
+    SparseArrayClass(const SparseArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    SparseArrayClass &operator = (const SparseArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
 
     void PrintDetail(std::ostream &s, int Limit) const;
 };
@@ -169,8 +170,8 @@ class MapClass {
 
     std::map<std::string, std::unique_ptr<VariableContentClass>> Data;
 public:
-    MapClass(const MapClass &s) {SIGNAL_UNIMPLEMENTED();}
-    MapClass &operator = (const MapClass &s){SIGNAL_UNIMPLEMENTED();}
+    MapClass(const MapClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass &operator = (const MapClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
 
     void PrintDetail(std::ostream &s, int Limit) const;
 };
@@ -233,11 +234,29 @@ public:
     void PrintDetail(std::ostream &s, int Limit) const;
 
     const ValueTypeDescriptorClass &getType() const;
-    void setType(const ValueTypeDescriptorClass &newType);
+    //void setType(const ValueTypeDescriptorClass &newType);
 
-    VariableContentClass &operator [](const ElementSelectorType &Selector)
+    const VariableTypeDescriptorClass &getContainedType() const
     {
-        if (Type == TypeDescriptorClass::Type::Array) {
+        if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
+            return std::get<ArrayClass>(Data).BaseType;
+        } else if(Type == TypeDescriptorClass::Type::Map) {
+            throw RuntimeErrorClass("No Basetype availlable");
+            //            return std::get<MapClass>(Data).GetIndexedElement(Selector);
+        } else if(Type == TypeDescriptorClass::Type::List) {
+            throw RuntimeErrorClass("No Basetype availlable");
+            //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
+        } else {
+            std::ostringstream Msg;
+            Msg << "No Basetype availlable [" << Type << "]";
+            throw RuntimeErrorClass(Msg.str());
+        }
+
+    }
+
+    VariableContentClass &operator [](const ElementSelectorType &Selector) const
+    {
+        if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
             return std::get<ArrayClass>(Data).GetIndexedElement(Selector);
         } else if(Type == TypeDescriptorClass::Type::Map) {
             throw RuntimeErrorClass("Indexing not possible");
@@ -246,12 +265,14 @@ public:
             throw RuntimeErrorClass("Indexing not possible");
 //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
         } else {
-            throw RuntimeErrorClass("Indexing not possible");
+            std::ostringstream Msg;
+            Msg << "Indexing not possible [" << Type << "]";
+            throw RuntimeErrorClass(Msg.str());
         }
     }
 
     template <class T>
-        const T &GetValue() {
+        const T &GetValue() const {
         return std::get<T>(Data);
     }
 
@@ -267,6 +288,7 @@ private:
     }
 public:
 
+#if 0
     void AssignValue(const VariableContentClass &v) {
         if (getType() == TypeDescriptorClass::Type::Dynamic) {
                 Data = v.Data;
@@ -279,6 +301,7 @@ public:
             throw INTERNAL_ERROR_OBJECT("Incompatible type for assignement");
         }
     }
+#endif
 
 private:
     dataType Data;
@@ -293,10 +316,12 @@ inline ValueTypeDescriptorClass const &VariableContentClass::getType() const
     return Type;
 }
 
+/*
 inline void VariableContentClass::setType(const ValueTypeDescriptorClass &newType)
 {
     Type = newType;
 }
+*/
 
 inline void Variables::ArrayClass::Row::AppendElement(Variables::VariableContentClass const &e)
 {
@@ -321,11 +346,13 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l);
 
 inline VariableContentClass operator *(const VariableContentClass &r, const VariableContentClass &l)
 {
+    (void)l;
     return r;
 }
 
 inline VariableContentClass operator /(const VariableContentClass &r, const VariableContentClass &l)
 {
+    (void)l;
     return r;
 }
 
@@ -333,6 +360,7 @@ VariableContentClass operator +(const VariableContentClass &r, const VariableCon
 
 inline VariableContentClass operator -(const VariableContentClass &r, const VariableContentClass &l)
 {
+    (void)l;
     return r;
 }
 
@@ -358,6 +386,7 @@ inline VariableContentClass sqrt(const VariableContentClass &o)
 
 inline VariableContentClass pow(const VariableContentClass &l, const VariableContentClass &r)
 {
+    (void)r;
     return l;
 }
 
@@ -392,7 +421,9 @@ public:
     void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ReturnVariable = ReturnVariable_;}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
-    VariableContentClass &GetVariableContentForOffset(uint32_t Offset) {return ActiveStorage.at(Offset);}
+    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const {return ActiveStorage.at(Offset);}
+    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {return ActiveStorage.at(Offset);}
+    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {ActiveStorage.at(Offset) = v;}
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;

@@ -16,9 +16,15 @@ void VariableClass::SetContext(VariableContextClass *Context)
     MyContext = Context;
 }
 
-Variables::VariableContentClass GlobalVariableClass::GetValue() const
+const Variables::VariableContentClass &GlobalVariableClass::GetValue() const
 {
     return Content;
+}
+
+
+Variables::VariableContentClass &GlobalVariableClass::GetWriteReferenceToValue()
+{
+   return Content;
 }
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
@@ -41,16 +47,21 @@ void GlobalVariableClass::Print(std::ostream &s)
     s <<  "<" << GetName() << ":" << Type()  << ": " << Content << ">";
 }
 
-Variables::VariableContentClass LocalVariableClass::GetValue() const
+const Variables::VariableContentClass &LocalVariableClass::GetValue() const
 {
     return Parent->GetVariableContentForOffset(Reference);
+}
+
+Variables::VariableContentClass &LocalVariableClass::GetWriteReferenceToValue()
+{
+    return Parent->GetVariableContentWriteReferenceForOffset(Reference);
 }
 
 void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 {
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
-        Parent->GetVariableContentForOffset(Reference) = v;
+        Parent->SetVariableContentForOffset(Reference, v);
     } else {
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
@@ -83,7 +94,12 @@ const ValueTypeDescriptorClass &LocalVariableClass::GetContainedType() const
 }
 
 
-Variables::VariableContentClass TemporaryVariableClass::GetValue() const
+const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
+{
+    return Content;
+}
+
+Variables::VariableContentClass &TemporaryVariableClass::GetWriteReferenceToValue()
 {
     return Content;
 }
@@ -112,19 +128,24 @@ const ValueTypeDescriptorClass &TemporaryVariableClass::GetContainedType() const
     return Content.getType();
 }
 
-Variables::VariableContentClass ProxyVariableClass::GetValue() const
+Variables::VariableContentClass const &ProxyVariableClass::GetValue() const
+{
+    return Content;
+}
+
+Variables::VariableContentClass &ProxyVariableClass::GetWriteReferenceToValue()
 {
     return Content;
 }
 
 void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    std::cout << "TmpSet:" << v;
+    std::cout << "PxySet:" << v;
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "TmpSetexcp:" << v;
+        std::cout << "PxySetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str());

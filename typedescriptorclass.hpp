@@ -71,8 +71,8 @@ public:
 
 class ReferenceDescriptorClass {
 public:
-    ReferenceDescriptorClass(const ReferenceDescriptorClass &s);
-    ReferenceDescriptorClass &operator = (const ReferenceDescriptorClass &s);
+    ReferenceDescriptorClass(const ReferenceDescriptorClass &s) : ReferedType(std::make_unique<VariableTypeDescriptorClass>(*(s.ReferedType))) {}
+    ReferenceDescriptorClass &operator = (const ReferenceDescriptorClass &s) {ReferedType = std::make_unique<VariableTypeDescriptorClass>(*(s.ReferedType)); return *this;}
     std::unique_ptr<VariableTypeDescriptorClass> ReferedType;
 };
 
@@ -97,6 +97,8 @@ public:
         Reference,
         Illegal  // $Internal flag
     };
+
+    bool IsKindOf(Type t) const {return MyType == t;}
     
 protected:
     TypeDescriptorClass(const ValueTypeDescriptor &Descriptor)
@@ -161,6 +163,9 @@ protected:
         }
     }
    // friend class VariableTypeDescriptorClass;
+
+
+
     Type MyType;
     ValueTypeDescriptor Descriptor;
 };
@@ -182,7 +187,7 @@ private:
         : TypeDescriptorClass(Descriptor_, t) {ThrowOnInvalidType(t); ThrowOnInvalidType(Descriptor_);}
 
     void ThrowOnInvalidType(const ValueTypeDescriptor &Descriptor_)
-    { /* No invalid type in descriptor for now*/}
+    { (void)Descriptor_; /* No invalid type in descriptor for now*/}
 
     void ThrowOnInvalidType(Type t)
     {   if (/*(t == Type::Undefined) || (*/ t == Type::Dynamic) {
@@ -201,6 +206,9 @@ private:
 
 class VariableTypeDescriptorClass : public TypeDescriptorClass {
 public:
+    VariableTypeDescriptorClass(const VariableTypeDescriptorClass &D) = default;
+    VariableTypeDescriptorClass &operator =(const VariableTypeDescriptorClass &D) = default;
+
     VariableTypeDescriptorClass(const ValueTypeDescriptor &Descriptor_)
         : TypeDescriptorClass(Descriptor_) {ThrowOnInvalidType(Descriptor_);}
 
@@ -208,6 +216,9 @@ public:
         : TypeDescriptorClass(t) {ThrowOnInvalidType(t);}
 
     VariableTypeDescriptorClass(ValueTypeDescriptorClass desc)
+        : TypeDescriptorClass(desc) {/*ThrowOnInvalidType(t);*/}
+
+    explicit VariableTypeDescriptorClass(const TypeDescriptorClass &desc)
         : TypeDescriptorClass(desc) {/*ThrowOnInvalidType(t);*/}
 
     ValueTypeDescriptorClass ToValueType() const
@@ -222,10 +233,11 @@ public:
 
 private:
     void ThrowOnInvalidType(const ValueTypeDescriptor &Descriptor_)
-    { /* No invalid type in descriptor for now*/}
+    { (void)Descriptor_;/* No invalid type in descriptor for now*/}
 
     void ThrowOnInvalidType(Type t)
     {
+        (void)t;
     }
 
 };

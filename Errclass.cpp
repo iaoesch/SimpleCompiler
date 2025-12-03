@@ -21,8 +21,7 @@
 /*****************************************************************************/
 
 /* imports */
-#include "errclass.hpp"
-#include "errtexts.ipp"
+#include "Errclass.hpp"
 #include <stdio.h>
 
 /* Class constant declaration  */

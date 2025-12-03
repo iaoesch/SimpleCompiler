@@ -84,17 +84,19 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::
 
 std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int i)
 {
-    if(i >= Parameters.size()) {
+    size_t index = static_cast<size_t>(i);
+    if(index >= Parameters.size()) {
        return nullptr;
     } else {
-        return Parameters[i];
+        return Parameters[index];
     }
 }
 
 const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
 {
     if (ReturnVariable == nullptr) {
-        return VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined);
+        static VariableTypeDescriptorClass Undef(TypeDescriptorClass::Type::Undefined);
+        return Undef;
     } else {
         return ReturnVariable->Type();
     }
@@ -187,7 +189,7 @@ void ArrayClass::PrintDetail(std::ostream &s, int Limit) const
     PrintDetail(Data, s, Limit, 0);
 }
 
-std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector)
+std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector) const
 {
     std::string Text = "[";
     for(auto &i: Selector) {
@@ -210,17 +212,17 @@ std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector)
 }
 
 
-ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector)
+ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const
 {
     return ProxyVariableClass("@" + BaseName + ConvertIndexToText(Selector), BaseType, GetIndexedElement(Selector));
 }
 
-VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector)
+VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector) const
 {
     if (Selector.size() != Dimensions.size()) {
         throw RuntimeErrorClass("Dimension missmatch");
     }
-    ArrayContentType *CurrentElement = &Data;
+    const ArrayContentType *CurrentElement = &Data;
     for(auto &i: Selector) {
         if (std::holds_alternative<IndexType>(i)) {
             IndexType SimpleSelector = std::get<IndexType>(i);
@@ -269,7 +271,7 @@ void ArrayClass::DetectArrayStructure(const ArrayContent &Data, std::vector<uint
     }
 }
 
-void ArrayClass::FillUpMissingElements(ArrayContent &Data, DimensionType const &Dimensions, const VariableContentClass &FillValue, int Deepth)
+void ArrayClass::FillUpMissingElements(ArrayContent &Data, DimensionType const &Dimensions, const VariableContentClass &FillValue, unsigned int Deepth)
 {
     if (std::holds_alternative<VectorOfRows>(Data)) {
         VectorOfRows &Rows = std::get<VectorOfRows>(Data);
@@ -309,24 +311,26 @@ overloaded(Ts...) -> overloaded<Ts...>;
 std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
 {
     std::visit(overloaded{
-                   [&s](const std::monostate &arg) { s << "[empty]"; },
+                   [&s](const std::monostate &arg) { (void)arg; s << "[empty]"; },
                    [&s](int64_t arg) { s << "[int:" << arg << "]"; },
                    [&s](double arg) { s << "[float:"  << std::fixed << arg << "]"; },
-                   [&s](const StackClass &arg) { s << "<stack]"; },
-                   [&s](const ListClass &arg) { s << "[list]"; },
+                   [&s](const StackClass &arg) { (void)arg; s << "<stack]"; },
+                   [&s](const ListClass &arg) { (void)arg; s << "[list]"; },
                    [&s](const ArrayClass &arg) { s << "[Array "; arg.PrintDimensions(s); s << "]";  },
-                   [&s](const MapClass &arg) { s << "[map]"; },
+                   [&s](const MapClass &arg) { (void)arg; s << "[map]"; },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function]\n"; arg->Print(s);  },
+                   [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
                    [&s](const std::string& arg) { s << '"' << arg << '"'; }
                }, v.Data);
     return s;
 }
 
+
 void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
 {
          std::visit(overloaded{
-                       [&s](const std::monostate &arg) { s << "[empty]"; },
+                       [&s](const std::monostate &arg) { (void)arg; s << "[empty]"; },
                        [&s](int64_t arg) { s << "[int:" << arg << "]"; },
                        [&s](double arg) { s << "[float:"  << std::fixed << arg << "]"; },
                        [&s, Limit](const StackClass &arg) { s << "[Stack:"; arg.PrintDetail(s, Limit); s << "]"; },
@@ -335,6 +339,7 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
                        [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function>\n"; arg->Print(s);  },
+                       [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
                        [&s](const std::string& arg) { s << '"' << arg << '"'; }
                    }, Data);
 
@@ -349,7 +354,7 @@ VariableContentClass operator +(const VariableContentClass &l, const VariableCon
 
               [&Result](int64_t arg1, int64_t arg2) { Result = VariableContentClass(arg1 + arg2); },
               [&Result](double arg1, double arg2)   { Result = VariableContentClass(arg1 + arg2); },
-              [&Result](auto &arg1, auto &arg2) { } // All other cases: do nothing
+              [&Result](auto &arg1, auto &arg2) { (void)arg1; (void)arg2; (void)Result;} // All other cases: do nothing
                }, l.Data, r.Data);
     return Result;
 }
@@ -421,7 +426,7 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l)
 
         [&Result](int64_t arg1, int64_t arg2) { Result = arg1 < arg2; },
             [&Result](double arg1, double arg2)   { Result = arg1 < arg2; },
-            [&Result](auto &arg1, auto &arg2) { } // All other cases: do nothing
+            [&Result](auto &arg1, auto &arg2) { (void)arg1; (void)arg2; (void)Result;} // All other cases: do nothing
     }, l.Data, r.Data);
     return Result;
 }
@@ -437,7 +442,7 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
         //[&Result](auto arg1, decltype(arg1) arg2)   { Result = arg1 == arg2; },
         //[&Result]<class T>(T arg1, T arg2)   { Result = arg1 == arg2; },
 
-            [&Result](auto &arg1, auto &arg2) { } // All other cases: do nothing
+                   [&Result](auto &arg1, auto &arg2) {(void)arg1; (void)arg2; (void)Result; } // All other cases: do nothing
     }, l.Data, r.Data);
     return Result;
 }
@@ -463,22 +468,26 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
 
 void StackClass::PrintDetail(std::ostream &s, int Limit) const
 {
+    (void)Limit;
     s << "[Detail Stack]";
 }
 
 void ListClass::PrintDetail(std::ostream &s, int Limit) const
 {
+    (void)Limit;
     s << "[Detail List]";
 }
 
 void SparseArrayClass::PrintDetail(std::ostream &s, int Limit) const
 {
+    (void)Limit;
     s << "[Detail sparse array]";
 
 }
 
 void MapClass::PrintDetail(std::ostream &s, int Limit) const
 {
+    (void)Limit;
     s << "[Detail map]";
 }
 

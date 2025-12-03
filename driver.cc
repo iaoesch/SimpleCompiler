@@ -52,7 +52,7 @@ void driver::Run()
 
 void driver::Run(std::string id)
 {
-
+  (void)id;
 }
 
 void driver::execute(std::shared_ptr<StatementClass> s)
@@ -80,6 +80,7 @@ void driver::AddStatement(std::shared_ptr<StatementClass> s)
 
 void driver::compile(std::string id)
 {
+    (void)id;
 
 }
 
@@ -102,11 +103,13 @@ void driver::Dump()
 
 void driver::SetParserDebugLevel(int Level)
 {
+    (void)Level;
  //  parser.set_debug_level (trace_parsing);
 }
 
 void driver::Tree(std::string FilePath)
 {
+    (void)FilePath;
     if (LastStatement != nullptr) {
         std::ofstream Drawing("DrawDot.dot");
         Drawing << "digraph g {" << std::endl;
@@ -190,7 +193,8 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::stri
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
-    return std::make_shared<AssignementClass>(Assigned, Var, Loc);
+    auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+    return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
 }
 
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
@@ -204,6 +208,7 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
     NextPositionalParameter++;
-    return std::make_shared<AssignementClass>(Assigned, Var, Loc);
+    auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+    return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
 }
 

@@ -524,6 +524,7 @@ VariableManager::LocalStorageType VariableManager::EndLocal()
 
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
+    (void)Value;
     if (ContextStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;

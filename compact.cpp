@@ -4,6 +4,8 @@
 #include <sstream>
 #include "compact.h"
 
+// Helpervlass to suppress Warning on typeid on polymorphic shared/unique ptr
+template <typename T> auto &Type_Id( T const& obj ) { return typeid( obj );}
 
 static int NodeNumber = 1;
 
@@ -52,14 +54,14 @@ Variables::VariableContentClass ExpressionClass::Evaluate() const
     return Evaluate(DummyEnvironment);
 }
 
-Variables::VariableContentClass            ExpressionClass::Evaluate(Environment &Env) const {std::cout << "\nVirtual Call expression Evaluate(Env)"; return 0.0;};
-std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const {std::cout << "\nVirtual Call expression Derive()"; return NULL;};
-void              ExpressionClass::Print(std::ostream &s) const {std::cout << "\nVirtual Call expression print()"; };
+Variables::VariableContentClass            ExpressionClass::Evaluate(Environment &Env) const { (void)Env; std::cout << "\nVirtual Call expression Evaluate(Env)"; return 0.0;};
+std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const { (void)ToDerive; std::cout << "\nVirtual Call expression Derive()"; return NULL;};
+void              ExpressionClass::Print(std::ostream &s) const { (void)s; std::cout << "\nVirtual Call expression print()"; };
 std::shared_ptr<ExpressionClass> ExpressionClass::Clone() const {std::cout << "\nVirtual Call expression Clone()"; return NULL;};
-std::shared_ptr<ExpressionClass> ExpressionClass::Optimize(Environment &Env) {std::cout << "\nVirtual Call expression Optimize(Environment &Env)"; return NULL;};
+std::shared_ptr<ExpressionClass> ExpressionClass::Optimize(Environment &Env) { (void)Env; std::cout << "\nVirtual Call expression Optimize(Environment &Env)"; return NULL;};
 bool              ExpressionClass::IsConstant() {std::cout << "\nVirtual Call expression IsConstant()"; return false;};
-bool              ExpressionClass::IsSame(std::shared_ptr<ExpressionClass>Other) {std::cout << "\nVirtual Call expression IsSame()"; return false;};
-void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const {std::cout << "\nVirtual Call expression DrawNode()";};
+bool              ExpressionClass::IsSame(std::shared_ptr<ExpressionClass>Other) { (void)Other; std::cout << "\nVirtual Call expression IsSame()"; return false;};
+void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const { (void)MyNodeNumber;  (void)s; std::cout << "\nVirtual Call expression DrawNode()";};
 
 
 
@@ -156,17 +158,17 @@ std::shared_ptr<ExpressionClass> ExponentialClass::Optimize(Environment &Env)
      return std::make_shared<ConstantClass>(exp(Operand->Evaluate(Env)), GetLocation());
   }
 
-  if (typeid(*Operand) == typeid(LogarithmClass)) {
+  if (Type_Id(*Operand) == typeid(LogarithmClass)) {
      return (std::dynamic_pointer_cast<LogarithmClass>(Operand))->Operand->Clone();
   }
 
-  if (typeid(*Operand) == typeid(MultiplyClass)) {
+  if (Type_Id(*Operand) == typeid(MultiplyClass)) {
      std::shared_ptr<MultiplyClass> op = std::dynamic_pointer_cast<MultiplyClass>(Operand);
-     if (typeid(*(op->LeftOperand)) == typeid(LogarithmClass)) {
+     if (Type_Id(*(op->LeftOperand)) == typeid(LogarithmClass)) {
         return std::make_shared<PowerClass>( (std::dynamic_pointer_cast<LogarithmClass>(op->LeftOperand))->Operand->Clone(),
                                      op->RightOperand->Clone(), GetLocation());
      }
-     if (typeid(*(op->RightOperand)) == typeid(LogarithmClass)) {
+     if (Type_Id(*(op->RightOperand)) == typeid(LogarithmClass)) {
         return std::make_shared<PowerClass>( (std::dynamic_pointer_cast<LogarithmClass>(op->RightOperand))->Operand->Clone(),
                                      op->LeftOperand->Clone(), GetLocation());
      }
@@ -302,8 +304,8 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
   }
 
   /* Convert trees */
-  if (   (typeid(*LeftOperand) == typeid(MultiplyClass))
-      && (typeid(*RightOperand) == typeid(MultiplyClass))){
+  if (   (Type_Id(*LeftOperand) == typeid(MultiplyClass))
+      && (Type_Id(*RightOperand) == typeid(MultiplyClass))){
      std::shared_ptr<MultiplyClass> lop = std::dynamic_pointer_cast<MultiplyClass>(LeftOperand);
      std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
      LeftOperand = lop->LeftOperand;
@@ -312,12 +314,12 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
      RightOperand = lop;
   }
   /* make constant allways left */
-  if (typeid(*LeftOperand) == typeid(MultiplyClass)) {
+  if (Type_Id(*LeftOperand) == typeid(MultiplyClass)) {
      std::shared_ptr<ExpressionClass>ep = LeftOperand;
      LeftOperand = RightOperand;
      RightOperand = ep;
   }
-  if (typeid(*RightOperand) == typeid(MultiplyClass)){
+  if (Type_Id(*RightOperand) == typeid(MultiplyClass)){
      std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
      if (rop->LeftOperand->IsConstant()) {
         std::shared_ptr<ExpressionClass>ep = LeftOperand;
@@ -326,7 +328,7 @@ std::shared_ptr<ExpressionClass> MultiplyClass::Optimize(Environment &Env)
      }
   }
 
-  if (typeid(*RightOperand) == typeid(MultiplyClass)){
+  if (Type_Id(*RightOperand) == typeid(MultiplyClass)){
      std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
      if (  rop->LeftOperand->IsConstant()
          &&LeftOperand->IsConstant()) {
@@ -411,9 +413,9 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
      //delete this; // Dangerous !!!
      return ep;
   }
-  if (typeid(*LeftOperand) == typeid(MultiplyClass)) {
+  if (Type_Id(*LeftOperand) == typeid(MultiplyClass)) {
      std::shared_ptr<MultiplyClass> lop = std::dynamic_pointer_cast<MultiplyClass>(LeftOperand);
-     if (typeid(*RightOperand) == typeid(MultiplyClass)) {
+     if (Type_Id(*RightOperand) == typeid(MultiplyClass)) {
         std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
         if (lop->RightOperand->IsSame(rop->RightOperand)) {
            std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(lop->LeftOperand, rop->LeftOperand, GetLocation());
@@ -448,7 +450,7 @@ std::shared_ptr<ExpressionClass> AdditionClass::Optimize(Environment &Env)
         }
 
    }
-     if (typeid(*RightOperand) == typeid(MultiplyClass)) {
+     if (Type_Id(*RightOperand) == typeid(MultiplyClass)) {
         std::shared_ptr<MultiplyClass> rop = std::dynamic_pointer_cast<MultiplyClass>(RightOperand);
         if (rop->LeftOperand->IsSame(LeftOperand)) {
            std::shared_ptr<ExpressionClass>ep1 = std::make_shared<AdditionClass>(std::make_shared<ConstantClass>(1.0, GetLocation()), rop->RightOperand, GetLocation());
@@ -479,7 +481,7 @@ void              AdditionClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 bool UnaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
-   if (typeid(*this) == typeid(*Other)) {
+   if (Type_Id(*this) == Type_Id(*Other)) {
       return Operand->IsSame(std::dynamic_pointer_cast<UnaryOperationClass>(Other)->Operand);
    }
    return false;
@@ -487,7 +489,7 @@ bool UnaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 
 bool BinaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
-   if (typeid(*this) == typeid(*Other)) {
+   if (Type_Id(*this) == Type_Id(*Other)) {
       return  ( LeftOperand->IsSame(std::dynamic_pointer_cast<BinaryOperationClass>(Other)->LeftOperand))
             &&( RightOperand->IsSame(std::dynamic_pointer_cast<BinaryOperationClass>(Other)->RightOperand));
    }
@@ -501,7 +503,7 @@ const TypeDescriptorClass BinaryOperationClass::GetType() const
 
 bool ConstantClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
-   if (typeid(*this) == typeid(*Other)) {
+   if (Type_Id(*this) == Type_Id(*Other)) {
       return  ( Value == std::dynamic_pointer_cast<ConstantClass>(Other)->Value);
    }
    return false;
@@ -524,7 +526,7 @@ bool VariableValueClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
    //cout << "Var";
    //cout << typeid(*this).name() << ":" << typeid(*Other).name();
-   if (typeid(*this) == typeid(*Other)) {
+   if (Type_Id(*this) == Type_Id(*Other)) {
       //cout << "sameid";
       return  ( Val == std::dynamic_pointer_cast<VariableValueClass>(Other)->Val);
    }
@@ -535,7 +537,7 @@ void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
 }
 
-VariableReferenceType const VariableValueClass::GetWriteReferenceToContent()
+VariableReferenceType VariableValueClass::GetWriteReferenceToContent()
 {
     return Val;
 }
@@ -560,6 +562,7 @@ std::shared_ptr<StatementClass> StatementClass::Clone() const
 
 std::shared_ptr<StatementClass> StatementClass::Optimize(Environment &Env)
 {
+    (void)Env;
     std::cout << "\nVirtual Call StatementClass Optimize(Environment &Env)";
     return nullptr;
 }
@@ -595,6 +598,7 @@ std::shared_ptr<StatementClass> AssignementClass::Clone() const
 
 std::shared_ptr<StatementClass> AssignementClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -612,13 +616,14 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void AssignementClass::Execute(Environment &Env) const
 {
+    VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent();
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
         std::cout << "AsgExe:" << Result;
         if (Result.Isempty()) {
-           Variable->GetWriteReferenceToContent()->SetValue(Variables::VariableContentClass(AssignedExpression));
+            ReferedVariable->SetValue(Variables::VariableContentClass(AssignedExpression));
         } else {
-           Variable->GetWriteReferenceToContent()->SetValue(Result);
+            ReferedVariable->SetValue(Result);
         }
     }
     catch (RuntimeErrorClass &e) {
@@ -631,6 +636,7 @@ void AssignementClass::Execute(Environment &Env) const
 
 bool ConditionalExpressionClass::Evaluate(Environment &Env) const
 {
+    (void)Env;
     std::cout << "\nVirtual Call ConditionalExpressionClass Evaluate(Env)";
     return false;
 }
@@ -648,6 +654,7 @@ std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Clone() 
 
 std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Optimize(Environment &Env)
 {
+    (void)Env;
     std::cout << "\nVirtual Call ConditionalExpressionClass Optimize(Environment &Env)";
     return nullptr;
 }
@@ -672,7 +679,7 @@ void ConditionalExpressionClass::DrawNode(std::ostream &s[[maybe_unused]], int M
 
 bool BinaryConditionalOperationClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
 {
-    if (typeid(*this) == typeid(*Other)) {
+    if (Type_Id(*this) == Type_Id(*Other)) {
         return  ( LeftOperand->IsSame(std::dynamic_pointer_cast<BinaryConditionalOperationClass>(Other)->LeftOperand))
         &&( RightOperand->IsSame(std::dynamic_pointer_cast<BinaryConditionalOperationClass>(Other)->RightOperand));
     }
@@ -696,6 +703,7 @@ std::shared_ptr<ConditionalExpressionClass> AndClass::Clone() const
 
 std::shared_ptr<ConditionalExpressionClass> AndClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -713,7 +721,7 @@ void AndClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 bool BinaryRelationalOperationClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other)
 {
-    if (typeid(*this) == typeid(*Other)) {
+    if (typeid(*this) == Type_Id(*Other)) {
         return  ( LeftOperand->IsSame(std::dynamic_pointer_cast<BinaryRelationalOperationClass>(Other)->LeftOperand))
         &&( RightOperand->IsSame(std::dynamic_pointer_cast<BinaryRelationalOperationClass>(Other)->RightOperand));
     }
@@ -738,6 +746,7 @@ std::shared_ptr<ConditionalExpressionClass> LessThanClass::Clone() const
 
 std::shared_ptr<ConditionalExpressionClass> LessThanClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -770,6 +779,7 @@ std::shared_ptr<StatementClass> RepeatLoopClass::Clone() const
 
 std::shared_ptr<StatementClass> RepeatLoopClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -808,6 +818,7 @@ std::shared_ptr<StatementClass> FunctionCallStatementClass::Clone() const
 
 std::shared_ptr<StatementClass> FunctionCallStatementClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -835,6 +846,7 @@ void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }
 
 bool FunctionCallClass::IsSame(std::shared_ptr<ExpressionClass> Other)
 {
+    (void)Other;
     return false;
 }
 
@@ -870,6 +882,7 @@ std::shared_ptr<StatementClass> ErrorStatement::Clone() const
 
 std::shared_ptr<StatementClass> ErrorStatement::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 }
 
@@ -894,6 +907,7 @@ std::shared_ptr<StatementClass> PrintStatementClass::Clone() const
 
 std::shared_ptr<StatementClass> PrintStatementClass::Optimize(Environment &Env)
 {
+    (void)Env;
     return shared_from_this();
 
 }
@@ -939,8 +953,32 @@ void FunctionCallStatementClass::Execute(Environment &Env) const
 
 Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
 {
-    return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
+    (void)Env;
+    //return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
+    Variables::ElementSelectorType Selector;
+    if (std::holds_alternative<IndexList>(Indices)) {
+        Selector.reserve(std::get<IndexList>(Indices).size());
+        for (auto const &i: std::get<IndexList>(Indices) ) {
+
+            // Build index vector
+            Selector.push_back(i->GetIndex());
+        }
+    } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
+
+        auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
+
+        if (Result.holds_alternative<int64_t>()) {
+            Selector.push_back(Variables::IndexType(Result.GetValue<int64_t>()));
+        } else {
+            // here we could handle vector n or n*2 for ranges and list
+            throw RuntimeErrorClass("Index other than integer not allowed yet");
+        }
+    } else {
+        throw INTERNAL_ERROR_OBJECT("unknown index type");
+    }
+    return IndexedValue->GetWriteReferenceToContent()->GetValue()[Selector];
 }
+
 
 void IndexedValueClass::Print(std::ostream &s) const
 {
@@ -960,6 +998,12 @@ void IndexedValueClass::Print(std::ostream &s) const
 
     s << "]";
     s << ")";
+}
+
+bool IndexedValueClass::IsSame(std::shared_ptr<ExpressionClass> Other)
+{
+    (void)Other;
+    return false;
 }
 
 void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
@@ -985,7 +1029,7 @@ void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-const VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
+ VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
 {
     Variables::ElementSelectorType Selector;
     if (std::holds_alternative<IndexList>(Indices)) {
@@ -1008,7 +1052,11 @@ const VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
     } else {
         throw INTERNAL_ERROR_OBJECT("unknown index type");
     }
-    IndexedValue->GetWriteReferenceToContent()->GetValue()[Selector];
+    //VariableTypeDescriptorClass t(Type());
+    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
+    const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
+    Variables::VariableContentClass &SelectedElement = ReferedContent[Selector];
+    return std::make_shared<ProxyVariableClass>(GetName(), ReferedContent.getContainedType(), SelectedElement);
 }
 
 void SingleIndexExpressionClass::Print(std::ostream &s) const
@@ -1046,4 +1094,24 @@ void RangedIndexExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) con
     s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
     FromIndex->DrawNode(s, NodeNumber1);
     ToIndex->DrawNode(s, NodeNumber1);
+}
+Variables::SingleElementSelectorType RangedIndexExpressionClass::GetIndex() const
+{
+    uint64_t From = 0;
+    uint64_t To = std::numeric_limits<uint64_t>::max();
+    if (FromIndex != nullptr) {
+        int64_t t = FromIndex->Evaluate().GetValue<int64_t>();
+        if (t < 0) {
+            throw RuntimeErrorClass("Negative Index not allowed");
+        }
+        From = uint64_t(t);
+    }
+    if (ToIndex != nullptr) {
+        int64_t t = ToIndex->Evaluate().GetValue<int64_t>();
+        if (t < 0) {
+            throw RuntimeErrorClass("Negative Index not allowed");
+        }
+        To = uint64_t(t);
+    }
+    return Variables::IndexRangeType{From, To};
 }

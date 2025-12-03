@@ -193,7 +193,7 @@ bool QtEnvironment::CheckForStop()
 
 std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::string Codeblock)
 {
-    int res = 0;
+    //int res = 0;
     driver drv(Env);
     drv.result.clear();
     try {

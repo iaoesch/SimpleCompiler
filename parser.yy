@@ -17,6 +17,11 @@
   class ConditionalExpressionClass;
   class VariableClass;
   class VariableValueClass;
+  class IndexExpressionClass;
+  class WritableValueClass;
+
+  typedef std::vector<std::shared_ptr<IndexExpressionClass>> IndexList;
+
   namespace Variables {
      class FunctionDefinitionClass;
      class VariableContentClass;
@@ -133,7 +138,7 @@
 %type  <std::vector<std::shared_ptr<VariableClass>>> argumentlist
 %type  <std::shared_ptr<StatementClass>> Positionalparameter Namedparameter
 %type  <std::list<std::shared_ptr<StatementClass>>> parameterlist Positionalparameterlist Namedparameterlist
-%type  <std::shared_ptr<VariableClass>> assignable
+%type  <std::shared_ptr<WritableValueClass>> assignable
 %type  <Variables::VariableContentClass> literal
 %type  <Variables::VariableContentClass> numericliteral
 %type  <Variables::VariableContentClass> arrayliteral
@@ -146,7 +151,8 @@
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
 %type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
-
+%type  <std::shared_ptr<IndexExpressionClass>> rangedindex
+%type  <IndexList> rangedindexes
 
 
 
@@ -162,6 +168,8 @@
 %printer { yyoutput << "expression list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<ExpressionClass>>>
 %printer { yyoutput << "dimension vector[" << $$.size() << "]"; } <std::vector<int64_t>>
 %printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypes>
+%printer { yyoutput << "IndexExpression "; }<std::shared_ptr<IndexExpressionClass>>
+%printer { yyoutput << "IndexList "; }<IndexList>
 
 %%
 %start unit;
@@ -218,24 +226,26 @@ assignment:
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
 assignable:
-: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
+/*: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }*/
 
-  "identifier"  { $$ = drv.Variables.GetOrCreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0); };
-| assignable "[" rangedindexes "]"
-| assignable "{" rangedindex "}"
+  "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetOrCreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0), @1); };
+| assignable "[" rangedindexes "]" { $$ = std::make_shared<IndexedValueClass>($1, $3, @$);}
+| assignable "[" exp "]" { $$ = std::make_shared<IndexedValueClass>($1, $3, @$);}
+| assignable "{" rangedindexes "}"
 ;
 
+
 rangedindexes:
-   rangedindex
-|  rangedindexes "," rangedindex
+   rangedindex   {$$ = IndexList(); $$.push_back($1);}
+|  rangedindexes "," rangedindex {$$ = $1;  $$.push_back($3);}
 ;
 
 rangedindex:
-   exp
-|  "..." exp
-|  exp "..."
-|  exp "..." exp
-|  "..."
+   exp           {$$ = std::make_shared<SingleIndexExpressionClass>($1);}
+|  "..." exp     {$$ = std::make_shared<RangedIndexExpressionClass>(nullptr, $2);}
+|  exp "..."     {$$ = std::make_shared<RangedIndexExpressionClass>($1, nullptr);}
+|  exp "..." exp {$$ = std::make_shared<RangedIndexExpressionClass>($1, $3);}
+|  "..."         {$$ = std::make_shared<RangedIndexExpressionClass>(nullptr, nullptr);}
 ;
 
 
