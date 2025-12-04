@@ -117,6 +117,8 @@ public:
 public:
     ArrayClass(const ArrayClass &s) = default; //{SIGNAL_UNIMPLEMENTED();}
     ArrayClass &operator = (const ArrayClass &s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ArrayClass(ArrayClass &&s) = default; //{SIGNAL_UNIMPLEMENTED();}
+    ArrayClass &operator = (ArrayClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     ArrayClass(const VectorOfRows &vr) : Data(vr), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const Row &r) : Data(r), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const ArrayContentType &r);
@@ -168,12 +170,42 @@ public:
 
 class MapClass {
 
-    std::map<std::string, std::unique_ptr<VariableContentClass>> Data;
+    typedef std::map<std::string, std::unique_ptr<VariableContentClass>> MapStringKeyType;
+    typedef std::map<int64_t, std::unique_ptr<VariableContentClass>> MapIntegerKeyType;
+    typedef std::map<std::variant<std::string, int64_t>, std::unique_ptr<VariableContentClass>> MapStringAndIntegerKeyType;
+//    typedef std::variant<std::monostate, MapStringKeyType, MapIntegerKeyType, MapStringAndIntegerKeyType> MapType;
+    typedef MapStringKeyType MapType;
+    MapType Data;
+    MapDescriptorClass::KeyTypesType KeyType;
+    VariableTypeDescriptorClass BaseType;
+
 public:
-    MapClass(const MapClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
-    MapClass &operator = (const MapClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass(const MapClass &s) : KeyType(s.KeyType), BaseType(s.BaseType) {
+        for (auto const &e: s.Data) {
+            Data[e.first] = std::make_unique<VariableContentClass>(*(e.second));
+        }
+        } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass &operator = (const MapClass &s) { //= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+        Data.clear();
+        for (auto const &e: s.Data) {
+            Data[e.first] = std::make_unique<VariableContentClass>(*(e.second));
+        }
+        return *this;
+    } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass( MapClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass &operator = (MapClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass(MapType &&r) : Data(std::move(r)) , BaseType(TypeDescriptorClass::Type::Undefined)
+    {
+        //CommonInitialization();
+    }
+
+    ValueTypeDescriptorClass GetTypeDescriptor() const;
 
     void PrintDetail(std::ostream &s, int Limit) const;
+
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector) const;
+
 };
 
 class FunctionDefinitionClass;

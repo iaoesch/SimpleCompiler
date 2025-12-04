@@ -1,10 +1,11 @@
+#if 0
+
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
 #include "compact.h"
 #include "ParserManual.hpp"
 #include "varmanag.hpp"
-#if 0
 /* forward declaration */
 std::shared_ptr<ExpressionClass>GetExpression(ParserClass &Parser);
 

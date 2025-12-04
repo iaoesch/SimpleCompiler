@@ -485,6 +485,13 @@ void SparseArrayClass::PrintDetail(std::ostream &s, int Limit) const
 
 }
 
+ValueTypeDescriptorClass MapClass::GetTypeDescriptor() const
+{
+        // ArrayDescriptorClass Arraydescriptor;
+
+        return ValueTypeDescriptorClass(MapDescriptorClass(KeyType, std::make_unique<VariableTypeDescriptorClass>(BaseType)));
+}
+
 void MapClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void)Limit;

@@ -50,16 +50,23 @@ public:
 
 class MapDescriptorClass  {
 public:
-    enum class KeyTypes {Integer = 1, String = 2, Bool = 4};
+    enum class KeyTypesType {Integer = 1, String = 2, Bool = 4};
 
-    MapDescriptorClass(KeyTypes PossibleKeys_) : PossibleKeys(PossibleKeys_) {}
-    MapDescriptorClass(const MapDescriptorClass &s) = default;
-    MapDescriptorClass &operator=(const MapDescriptorClass &s) = default;
-    KeyTypes PossibleKeys;
+    MapDescriptorClass(KeyTypesType PossibleKeys_, std::unique_ptr<VariableTypeDescriptorClass> BaseType) : PossibleKeys(PossibleKeys_), BaseType(std::move(BaseType)) {}
+    MapDescriptorClass(const MapDescriptorClass &s) : PossibleKeys(s.PossibleKeys), BaseType(std::make_unique<VariableTypeDescriptorClass>(*s.BaseType)) {}
+    MapDescriptorClass &operator=(const MapDescriptorClass &s)  {
+        PossibleKeys = s.PossibleKeys;
+        BaseType = std::make_unique<VariableTypeDescriptorClass>(*s.BaseType);
+        return *this;
+    }
+
+private:
+    KeyTypesType PossibleKeys;
+    std::unique_ptr<VariableTypeDescriptorClass> BaseType;
 };
 
-inline MapDescriptorClass::KeyTypes operator | (MapDescriptorClass::KeyTypes k1, MapDescriptorClass::KeyTypes k2) {return MapDescriptorClass::KeyTypes(int(k1) | int(k2));}
-inline MapDescriptorClass::KeyTypes operator & (MapDescriptorClass::KeyTypes k1, MapDescriptorClass::KeyTypes k2) {return MapDescriptorClass::KeyTypes(int(k1) & int(k2));}
+inline MapDescriptorClass::KeyTypesType operator | (MapDescriptorClass::KeyTypesType k1, MapDescriptorClass::KeyTypesType k2) {return MapDescriptorClass::KeyTypesType(int(k1) | int(k2));}
+inline MapDescriptorClass::KeyTypesType operator & (MapDescriptorClass::KeyTypesType k1, MapDescriptorClass::KeyTypesType k2) {return MapDescriptorClass::KeyTypesType(int(k1) & int(k2));}
 
 
 class DynamicDescriptorClass {
@@ -208,6 +215,8 @@ class VariableTypeDescriptorClass : public TypeDescriptorClass {
 public:
     VariableTypeDescriptorClass(const VariableTypeDescriptorClass &D) = default;
     VariableTypeDescriptorClass &operator =(const VariableTypeDescriptorClass &D) = default;
+    VariableTypeDescriptorClass( VariableTypeDescriptorClass &&D) = default;
+    VariableTypeDescriptorClass &operator =( VariableTypeDescriptorClass &&D) = default;
 
     VariableTypeDescriptorClass(const ValueTypeDescriptor &Descriptor_)
         : TypeDescriptorClass(Descriptor_) {ThrowOnInvalidType(Descriptor_);}

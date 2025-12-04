@@ -234,16 +234,19 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
     int CurrentNodeNumber = GetNextNodeNumber();
     Drawing << "Node" << CurrentNodeNumber << "[label = \"<f0> |<f1> Start |<f2> \"];" << std::endl;
     int GraphNumber = 0;
-
+    int CurrentGraphNumber = GraphNumber++;
     for (auto &s: Graph) {
         if (s!=nullptr)  {
             int  NextNodeNumber = GetNextNodeNumber();
-            Drawing << "\"Node" << CurrentNodeNumber << "\":f0 -> \"Node" << NextNodeNumber << "\":f1;" << std::endl;
+            int  NextGraphNumber = GraphNumber++;
+            //Drawing << "\"Node" << CurrentNodeNumber << "\":f0 -> \"Node" << NextNodeNumber << "\":f1;" << std::endl;
+            Drawing << "\"cluster_g" << CurrentGraphNumber << "\" -> \"cluster_g" << NextGraphNumber << "\";" << std::endl;
             Drawing << "subgraph cluster_g" << GraphNumber++ <<  "{" << std::endl;
             Drawing << "rank = same;" << std::endl;
             s->DrawNode(Drawing, NextNodeNumber);
             Drawing << "}" << std::endl;
             CurrentNodeNumber = NextNodeNumber;
+            CurrentGraphNumber = NextGraphNumber;
         }
     }
     Drawing << "}" << std::endl;

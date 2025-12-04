@@ -150,7 +150,7 @@
 %type  <std::unique_ptr<VariableTypeDescriptorClass>> typedefinition returntype.opt
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
-%type  <MapDescriptorClass::KeyTypes> keytype mapkeytype
+%type  <MapDescriptorClass::KeyTypesType> keytype mapkeytype
 %type  <std::shared_ptr<IndexExpressionClass>> rangedindex
 %type  <IndexList> rangedindexes
 
@@ -167,7 +167,7 @@
 %printer { yyoutput << "Parameter list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<VariableClass>>>
 %printer { yyoutput << "expression list[" << $$.size() << "]"; } <std::vector<std::shared_ptr<ExpressionClass>>>
 %printer { yyoutput << "dimension vector[" << $$.size() << "]"; } <std::vector<int64_t>>
-%printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypes>
+%printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypesType>
 %printer { yyoutput << "IndexExpression "; }<std::shared_ptr<IndexExpressionClass>>
 %printer { yyoutput << "IndexList "; }<IndexList>
 
@@ -263,9 +263,9 @@ variabledefinition:
 ;
 
 keytype:
-  "integer"  { $$ = MapDescriptorClass::KeyTypes::Integer;}
-| "boolean"  { $$ = MapDescriptorClass::KeyTypes::Bool;}
-| "string"   { $$ = MapDescriptorClass::KeyTypes::String;}
+  "integer"  { $$ = MapDescriptorClass::KeyTypesType::Integer;}
+| "boolean"  { $$ = MapDescriptorClass::KeyTypesType::Bool;}
+| "string"   { $$ = MapDescriptorClass::KeyTypesType::String;}
 ;
 
 mapkeytype:
@@ -282,7 +282,7 @@ typedefinition:
 | "list"  { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::List);}
 | "any"   { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
 | "stack" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
-| "map" "[" keytype "]" { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3));}
+| "map" "[" keytype "]" "of" typedefinition { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3, std::move($6)));}
 
 ;
 
