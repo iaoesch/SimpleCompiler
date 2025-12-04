@@ -170,25 +170,49 @@ public:
 
 class MapClass {
 
+    typedef std::variant<std::string, int64_t> KeyTypeUnion;
     typedef std::map<std::string, std::unique_ptr<VariableContentClass>> MapStringKeyType;
     typedef std::map<int64_t, std::unique_ptr<VariableContentClass>> MapIntegerKeyType;
-    typedef std::map<std::variant<std::string, int64_t>, std::unique_ptr<VariableContentClass>> MapStringAndIntegerKeyType;
-//    typedef std::variant<std::monostate, MapStringKeyType, MapIntegerKeyType, MapStringAndIntegerKeyType> MapType;
-    typedef MapStringKeyType MapType;
+    typedef std::map<KeyTypeUnion, std::unique_ptr<VariableContentClass>> MapStringAndIntegerKeyType;
+    typedef std::variant<std::monostate, MapStringKeyType, MapIntegerKeyType, MapStringAndIntegerKeyType> MapType;
+    //typedef MapStringAndIntegerKeyType MapType;
     MapType Data;
     MapDescriptorClass::KeyTypesType KeyType;
     VariableTypeDescriptorClass BaseType;
 
+template<class T>
+T CopyMap(MapClass const &Src)
+    {
+        T NewMap;
+        const T &SrcData = std::get<T>(Src.Data);
+        for (auto const &e: SrcData) {
+           NewMap[e.first] = std::make_unique<VariableContentClass>(*(e.second));
+        }
+        return NewMap;
+    }
 public:
     MapClass(const MapClass &s) : KeyType(s.KeyType), BaseType(s.BaseType) {
-        for (auto const &e: s.Data) {
-            Data[e.first] = std::make_unique<VariableContentClass>(*(e.second));
+
+        //auto CopyMap = [](auto &Src){}
+        if (std::holds_alternative<MapStringKeyType>(s.Data)) {
+            Data = CopyMap<MapStringKeyType>(s);
+        } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
+            Data = CopyMap<MapIntegerKeyType>(s);
+        } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
+            Data = CopyMap<MapStringAndIntegerKeyType>(s);
+        } else {
+            throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
         }
         } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     MapClass &operator = (const MapClass &s) { //= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
-        Data.clear();
-        for (auto const &e: s.Data) {
-            Data[e.first] = std::make_unique<VariableContentClass>(*(e.second));
+        if (std::holds_alternative<MapStringKeyType>(s.Data)) {
+            Data = CopyMap<MapStringKeyType>(s);
+        } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
+            Data = CopyMap<MapIntegerKeyType>(s);
+        } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
+            Data = CopyMap<MapStringAndIntegerKeyType>(s);
+        } else {
+            throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
         }
         return *this;
     } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
@@ -198,7 +222,9 @@ public:
     {
         //CommonInitialization();
     }
-
+    typedef std::pair<KeyTypeUnion, Variables::VariableContentClass> MapEntryType;
+    typedef std::vector<MapEntryType> MapEntryListType;
+    MapClass(const MapEntryListType &Initializer);
     ValueTypeDescriptorClass GetTypeDescriptor() const;
 
     void PrintDetail(std::ostream &s, int Limit) const;
@@ -251,6 +277,7 @@ public:
     VariableContentClass(double Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Float)), AssignedExpression(nullptr) {}
     VariableContentClass(std::string Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::String)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}
     // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}

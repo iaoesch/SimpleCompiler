@@ -50,7 +50,7 @@ public:
 
 class MapDescriptorClass  {
 public:
-    enum class KeyTypesType {Integer = 1, String = 2, Bool = 4};
+    enum class KeyTypesType {None = 0, Integer = 1, String = 2, Bool = 4};
 
     MapDescriptorClass(KeyTypesType PossibleKeys_, std::unique_ptr<VariableTypeDescriptorClass> BaseType) : PossibleKeys(PossibleKeys_), BaseType(std::move(BaseType)) {}
     MapDescriptorClass(const MapDescriptorClass &s) : PossibleKeys(s.PossibleKeys), BaseType(std::make_unique<VariableTypeDescriptorClass>(*s.BaseType)) {}
@@ -65,8 +65,8 @@ private:
     std::unique_ptr<VariableTypeDescriptorClass> BaseType;
 };
 
-inline MapDescriptorClass::KeyTypesType operator | (MapDescriptorClass::KeyTypesType k1, MapDescriptorClass::KeyTypesType k2) {return MapDescriptorClass::KeyTypesType(int(k1) | int(k2));}
-inline MapDescriptorClass::KeyTypesType operator & (MapDescriptorClass::KeyTypesType k1, MapDescriptorClass::KeyTypesType k2) {return MapDescriptorClass::KeyTypesType(int(k1) & int(k2));}
+inline constexpr MapDescriptorClass::KeyTypesType operator | (MapDescriptorClass::KeyTypesType const &k1, MapDescriptorClass::KeyTypesType const &k2) {return static_cast<MapDescriptorClass::KeyTypesType>(static_cast<int>(k1) | static_cast<int>(k2));}
+inline constexpr MapDescriptorClass::KeyTypesType operator & (MapDescriptorClass::KeyTypesType const &k1, MapDescriptorClass::KeyTypesType const &k2) {return MapDescriptorClass::KeyTypesType(int(k1) & int(k2));}
 
 
 class DynamicDescriptorClass {

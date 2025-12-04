@@ -9,6 +9,7 @@
 %code requires {
   # include <string>
   # include <list>
+  # include <vector>
   #include"variableclass.h"
   class driver;
   class ExpressionClass;
@@ -21,6 +22,9 @@
   class WritableValueClass;
 
   typedef std::vector<std::shared_ptr<IndexExpressionClass>> IndexList;
+  typedef std::variant<std::string, int64_t> KeyTypeUnion;
+  typedef std::pair<KeyTypeUnion, Variables::VariableContentClass> MapEntryType;
+  typedef std::vector<MapEntryType> MapEntryListType;
 
   namespace Variables {
      class FunctionDefinitionClass;
@@ -139,7 +143,7 @@
 %type  <std::shared_ptr<StatementClass>> Positionalparameter Namedparameter
 %type  <std::list<std::shared_ptr<StatementClass>>> parameterlist Positionalparameterlist Namedparameterlist
 %type  <std::shared_ptr<WritableValueClass>> assignable
-%type  <Variables::VariableContentClass> literal
+%type  <Variables::VariableContentClass> literal mapliteral
 %type  <Variables::VariableContentClass> numericliteral
 %type  <Variables::VariableContentClass> arrayliteral
 %type  <Variables::VariableContentClass> arraycontentliteral
@@ -153,7 +157,9 @@
 %type  <MapDescriptorClass::KeyTypesType> keytype mapkeytype
 %type  <std::shared_ptr<IndexExpressionClass>> rangedindex
 %type  <IndexList> rangedindexes
-
+%type  <KeyTypeUnion> key
+%type  <MapEntryType> mapentry
+%type  <MapEntryListType> mapentries
 
 
 
@@ -170,6 +176,9 @@
 %printer { yyoutput << "map key [" << int($$) << "]"; } <MapDescriptorClass::KeyTypesType>
 %printer { yyoutput << "IndexExpression "; }<std::shared_ptr<IndexExpressionClass>>
 %printer { yyoutput << "IndexList "; }<IndexList>
+%printer { yyoutput << "MapEntryListType "; }<MapEntryListType>
+%printer { yyoutput << "MapEntryType "; }<MapEntryType>
+%printer { yyoutput << "KeyTypeUnion "; }<KeyTypeUnion>
 
 %%
 %start unit;
@@ -282,7 +291,7 @@ typedefinition:
 | "list"  { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::List);}
 | "any"   { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
 | "stack" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
-| "map" "[" keytype "]" "of" typedefinition { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3, std::move($6)));}
+| "map" "[" mapkeytype "]" "of" typedefinition { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3, std::move($6)));}
 
 ;
 
@@ -477,21 +486,21 @@ listentries:
 ;
 
 mapliteral:
-   "[" mapentries "]"
+   "[" mapentries "]"      {$$ = Variables::VariableContentClass(Variables::MapClass($2));}
 ;
 
 mapentries:
-   mapentry
-|  mapentries "," mapentry
+   mapentry                 { $$ = MapEntryListType(); $$.push_back($1);}
+|  mapentries "," mapentry  { $$ = $1; $$.push_back($3);}
 ;
 
 mapentry:
-   "<" key ":=" literal ">"
+   "<" key ":=" literal ">"  {$$ = {$2, $4};}
 ;
 
 key:
-   "stringliteral"
-|  "integerliteral"
+   "stringliteral"    {$$ = $1;}
+|  "integerliteral"   {$$ = $1;}
 ;
 
 %%

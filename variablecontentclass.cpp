@@ -498,9 +498,68 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
     s << "[Detail map]";
 }
 
+MapClass::MapClass(const MapEntryListType &Initializer)
+    : BaseType(TypeDescriptorClass::Type::Undefined) {
+    // Check indextype
+    KeyType = MapDescriptorClass::KeyTypesType::None;
+    for (auto const &e : Initializer) {
+        if (std::holds_alternative<std::string>(e.first)) {
+            KeyType = KeyType | MapDescriptorClass::KeyTypesType::String;
+        } else if (std::holds_alternative<int64_t>(e.first)) {
+            KeyType = KeyType | MapDescriptorClass::KeyTypesType::Integer;
+            //  } else if (std::holds_alternative<bool>(e.first)) {
+            //      KeyType = KeyType | MapDescriptorClass::KeyTypesType::bool;
+        } else {
+            throw INTERNAL_ERROR_OBJECT("Unexpected type");
+        }
+        if (BaseType == TypeDescriptorClass::Type::Undefined) {
+            BaseType = e.second.getType();
+        } else if (BaseType == e.second.getType()) {
+            // All types same...
+        } else if (   (BaseType == TypeDescriptorClass::Type::Integer)
+                   &&(e.second.getType() == TypeDescriptorClass::Type::Float)) {
+            // Float dominates int
+            BaseType = e.second.getType();
+        } else if ((e.second.getType() == TypeDescriptorClass::Type::Illegal)) {
+            // illegal dominates all
+            BaseType = e.second.getType();
+        } else {
+            // We have a type mix
+            BaseType = TypeDescriptorClass::Type::Dynamic;
+        }
+    }
+    switch (KeyType) {
+    default:
+    case MapDescriptorClass::KeyTypesType::None: throw INTERNAL_ERROR_OBJECT("Map without keytype");
 
+    case MapDescriptorClass::KeyTypesType::Integer:
+    {
+        MapIntegerKeyType NewMap;
+        for(auto const &e: Initializer) {
+            NewMap[std::get<int64_t>(e.first)] = std::make_unique<VariableContentClass>((e.second));
+        }
+        Data = std::move(NewMap);
+    }
+    break;
+
+    case MapDescriptorClass::KeyTypesType::String:
+    {
+        MapStringKeyType NewMap;
+        for(auto const &e: Initializer) {
+            NewMap[std::get<std::string>(e.first)] = std::make_unique<VariableContentClass>((e.second));
+        }
+        Data = std::move(NewMap);
+    }
+        //  case static_cast<MapDescriptorClass::KeyTypesType>(static_cast<int>(MapDescriptorClass::KeyTypesType::Integer) | static_cast<int>(MapDescriptorClass::KeyTypesType::String)):
+    case (MapDescriptorClass::KeyTypesType::Integer | MapDescriptorClass::KeyTypesType::String):
+    {
+        MapStringAndIntegerKeyType NewMap;
+        for(auto const &e: Initializer) {
+            NewMap[e.first] = std::make_unique<VariableContentClass>((e.second));
+        }
+        Data = std::move(NewMap);
+    }
+    }
 }
 
-
-
-
+} // namespace Variables
