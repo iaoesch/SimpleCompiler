@@ -57,6 +57,7 @@ blank [ \t]
 ":="     return yy::parser::make_ASSIGN (loc);
 "=="     return yy::parser::make_EQUAL (loc);
 "<"      return yy::parser::make_LESSTHAN (loc);
+">"      return yy::parser::make_MORETHAN (loc);
 ";"      return yy::parser::make_SEMICOLON (loc);
 ","      return yy::parser::make_KOMMA (loc);
 "->"     return yy::parser::make_ARROWRIGHT (loc);

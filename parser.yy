@@ -445,7 +445,7 @@ arraycontentliteral:
   numericliteral {$$ = $1;}
 | "stringliteral"       {$$ = Variables::VariableContentClass($1); }
 | listliteral    {$$ = Variables::VariableContentClass::MakeUndefined();}
-| mapliteral     {$$ = Variables::VariableContentClass::MakeUndefined();}
+| mapliteral     {$$ = $1;}
 ;
 
 numericliteral:

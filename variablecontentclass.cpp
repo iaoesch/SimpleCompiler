@@ -495,7 +495,31 @@ ValueTypeDescriptorClass MapClass::GetTypeDescriptor() const
 void MapClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void)Limit;
-    s << "[Detail map]";
+    s << "[";
+    if (std::holds_alternative<MapIntegerKeyType>(Data)) {
+        for(auto const &e: std::get<MapIntegerKeyType>(Data)) {
+            s << "<" << e.first << "=" << (*(e.second)) << ">, ";
+        }
+    } else if (std::holds_alternative<MapStringKeyType>(Data)) {
+        for(auto const &e: std::get<MapStringKeyType>(Data)) {
+            s << "<" << e.first << "=" << (*(e.second)) << ">, ";
+        }
+    } else if (std::holds_alternative<MapStringAndIntegerKeyType>(Data)) {
+        for(auto const &e: std::get<MapStringAndIntegerKeyType>(Data)) {
+            s << "<";
+            if (std::holds_alternative<std::string>(e.first)) {
+                s << "\"" << std::get<std::string>(e.first) << "\"" ;
+            } else if (std::holds_alternative<int64_t>(e.first)) {
+                s << std::get<int64_t>(e.first);
+            } else {
+                s << "<?>";
+            }
+            s << "=" << (*(e.second)) << ">, ";
+        }
+    } else {
+        s << "<map unknown content>";
+    }
+    s << "]";
 }
 
 MapClass::MapClass(const MapEntryListType &Initializer)
