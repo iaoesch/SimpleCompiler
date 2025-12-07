@@ -275,6 +275,7 @@ private:
     std::variant<IndexList, std::shared_ptr<ExpressionClass>> Indices;
     std::shared_ptr<WritableValueClass> IndexedValue;
 
+    Variables::VariableContentClass &GetSelectedContent() const;
 };
 
 class FunctionClass;

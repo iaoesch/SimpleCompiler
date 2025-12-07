@@ -951,10 +951,8 @@ void FunctionCallStatementClass::Execute(Environment &Env) const
     Function->Evaluate(Env);
 }
 
-Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
+Variables::VariableContentClass &IndexedValueClass::GetSelectedContent() const
 {
-    (void)Env;
-    //return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
     Variables::ElementSelectorType Selector;
     if (std::holds_alternative<IndexList>(Indices)) {
         Selector.reserve(std::get<IndexList>(Indices).size());
@@ -968,15 +966,33 @@ Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) co
         auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
 
         if (Result.holds_alternative<int64_t>()) {
-            Selector.push_back(Variables::ArrayIndexType(Result.GetValue<int64_t>()));
+            int64_t t = Result.GetValue<int64_t>();
+            if (t < 0) {
+                Selector.push_back(t);
+            } else {
+                Selector.push_back(Variables::ArrayIndexType(t));
+            }
+        } else if (Result.holds_alternative<std::string>()) {
+            Selector.push_back(Result.GetValue<std::string>());
         } else {
+
             // here we could handle vector n or n*2 for ranges and list
-            throw RuntimeErrorClass("Index other than integer not allowed yet");
+            throw RuntimeErrorClass("Index other than integer or string not allowed yet");
         }
     } else {
         throw INTERNAL_ERROR_OBJECT("unknown index type");
     }
-    return IndexedValue->GetWriteReferenceToContent()->GetValue()[Selector];
+    //VariableTypeDescriptorClass t(Type());
+    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
+    const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
+    return ReferedContent[Selector];
+}
+
+Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
+{
+    (void)Env;
+    //return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
+    return GetSelectedContent();
 }
 
 
@@ -1031,39 +1047,9 @@ void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
 {
-    Variables::ElementSelectorType Selector;
-    if (std::holds_alternative<IndexList>(Indices)) {
-        Selector.reserve(std::get<IndexList>(Indices).size());
-        for (auto const &i: std::get<IndexList>(Indices) ) {
-
-            // Build index vector
-            Selector.push_back(i->GetIndex());
-        }
-    } else if (std::holds_alternative<std::shared_ptr<ExpressionClass>>(Indices)) {
-
-        auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
-
-        if (Result.holds_alternative<int64_t>()) {
-            int64_t t = Result.GetValue<int64_t>();
-            if (t < 0) {
-                Selector.push_back(t);
-            } else {
-                Selector.push_back(Variables::ArrayIndexType(t));
-            }
-        } else if (Result.holds_alternative<std::string>()) {
-            Selector.push_back(Result.GetValue<std::string>());
-        } else {
-
-           // here we could handle vector n or n*2 for ranges and list
-           throw RuntimeErrorClass("Index other than integer or string not allowed yet");
-        }
-    } else {
-        throw INTERNAL_ERROR_OBJECT("unknown index type");
-    }
-    //VariableTypeDescriptorClass t(Type());
     const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
     const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
-    Variables::VariableContentClass &SelectedElement = ReferedContent[Selector];
+    Variables::VariableContentClass &SelectedElement = GetSelectedContent();
     return std::make_shared<ProxyVariableClass>(GetName(), ReferedContent.getContainedType(), SelectedElement);
 }
 
