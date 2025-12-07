@@ -541,6 +541,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name,
 
 }
 
+#if 0
 
 std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
@@ -555,7 +556,7 @@ std::shared_ptr<VariableClass> VariableManager::GetOrCreateVariable(std::string 
         return CreateVariable(Name, Type, Value);
     }
 }
-
+#endif
 
 std::shared_ptr<VariableClass> VariableManager::GetVariableReference(std::string Name)
 {
@@ -575,6 +576,9 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     }
     std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
     if (VarRef == nullptr) {
+#if 1
+        VarRef = CreateVariable(Name, RequiredType, 0.0);
+#else
         if (Local) {
            VarRef = std::make_shared<LocalVariableClass>(Name, RequiredType, LocalOffset++, LocalsParent);
             LocalStorageTemplates.back().push_back(Variables::VariableContentClass(RequiredType));
@@ -582,7 +586,8 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
         } else {
            VarRef = std::make_shared<GlobalVariableClass>(Name, RequiredType);
         }
-        ContextStack.back()->RegisterVariable(Name, VarRef);
+        VarRef = ContextStack.back()->RegisterVariable(Name, VarRef);
+#endif
     }
     return VarRef;
 }

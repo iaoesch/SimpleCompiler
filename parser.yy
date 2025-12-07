@@ -235,9 +235,7 @@ assignment:
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
 assignable:
-/*: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }*/
-
-  "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetOrCreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), 0.0), @1); };
+  "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
 | assignable "[" rangedindexes "]" { $$ = std::make_shared<IndexedValueClass>($1, $3, @$);}
 | assignable "[" exp "]" { $$ = std::make_shared<IndexedValueClass>($1, $3, @$);}
 | assignable "{" rangedindexes "}"
@@ -427,8 +425,8 @@ unary
               }
 ;
 
-primary
-: "identifier"  { $$ = std::make_shared<VariableValueClass>(drv.Variables.GetVariableReferenceCreateIfNotFound($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined)), @1); }
+primary:
+  assignable    { $$ = $1; }
 | literal       { $$ = std::make_shared<ConstantClass>($1, @1); std::cout << "parser: constant " << $1 << "\n";}
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}

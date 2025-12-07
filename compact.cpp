@@ -968,7 +968,7 @@ Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) co
         auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
 
         if (Result.holds_alternative<int64_t>()) {
-            Selector.push_back(Variables::IndexType(Result.GetValue<int64_t>()));
+            Selector.push_back(Variables::ArrayIndexType(Result.GetValue<int64_t>()));
         } else {
             // here we could handle vector n or n*2 for ranges and list
             throw RuntimeErrorClass("Index other than integer not allowed yet");
@@ -1029,7 +1029,7 @@ void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
- VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
+VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
 {
     Variables::ElementSelectorType Selector;
     if (std::holds_alternative<IndexList>(Indices)) {
@@ -1044,10 +1044,18 @@ void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
         auto Result = std::get<std::shared_ptr<ExpressionClass>>(Indices)->Evaluate();
 
         if (Result.holds_alternative<int64_t>()) {
-            Selector.push_back(Variables::IndexType(Result.GetValue<int64_t>()));
+            int64_t t = Result.GetValue<int64_t>();
+            if (t < 0) {
+                Selector.push_back(t);
+            } else {
+                Selector.push_back(Variables::ArrayIndexType(t));
+            }
+        } else if (Result.holds_alternative<std::string>()) {
+            Selector.push_back(Result.GetValue<std::string>());
         } else {
+
            // here we could handle vector n or n*2 for ranges and list
-           throw RuntimeErrorClass("Index other than integer not allowed yet");
+           throw RuntimeErrorClass("Index other than integer or string not allowed yet");
         }
     } else {
         throw INTERNAL_ERROR_OBJECT("unknown index type");

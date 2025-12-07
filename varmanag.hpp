@@ -78,11 +78,13 @@ private:
 
     VariableManager() : Local(false), LocalOffset(0) {}
 
+    void clear() {Local = false; LocalOffset = 0; ContextStack.clear(); Contexts.clear();}
+
    void CreateNewContext(std::string Name);
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent);
    LocalStorageType EndLocal();
-   std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+ //  std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);

@@ -180,7 +180,7 @@ class VariableValueClass : public WritableValueClass {
    const VariableReferenceType Val;
 
    public:
-                             VariableValueClass(VariableReferenceType v, const LocationType &Loc) : WritableValueClass(Loc), Val(v) {}
+   VariableValueClass(VariableReferenceType v, const LocationType &Loc) : WritableValueClass(Loc), Val(v) {if(v==nullptr){throw INTERNAL_ERROR_OBJECT("VariableValueClass(nullptr)");}}
                              VariableValueClass(const VariableValueClass &v, const LocationType &Loc) : WritableValueClass(Loc), Val(v.Val) {}
    virtual                  ~VariableValueClass() override {}
    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override{ (void)Env; return Val->GetValue().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue(); }
@@ -218,11 +218,19 @@ public:
     virtual void Print(std::ostream &s) const override;
     virtual void DrawNode(std::ostream &s, int MyNodeNumber) const override;
     virtual Variables::SingleElementSelectorType GetIndex() const override {
-        int64_t t = Index->Evaluate().GetValue<int64_t>();
-        if (t < 0) {
-            throw RuntimeErrorClass("Negative Index not allowed");
+        Variables::VariableContentClass Value = Index->Evaluate();
+        if (Value.holds_alternative<int64_t>()) {
+           int64_t t = Value.GetValue<int64_t>();
+           if (t < 0) {
+               return t;
+           } else {
+              return uint64_t(t);
+           }
+        } else if (Value.holds_alternative<std::string>()) {
+            return Value.GetValue<std::string>();
+        } else {
+            throw RuntimeErrorClass("Illegal type in index...");
         }
-        return uint64_t(t);
     }
 };
 

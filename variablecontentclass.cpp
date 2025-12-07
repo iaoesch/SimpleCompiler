@@ -189,18 +189,22 @@ void ArrayClass::PrintDetail(std::ostream &s, int Limit) const
     PrintDetail(Data, s, Limit, 0);
 }
 
-std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector) const
+std::string ElementSelectorType::ToText() const
 {
     std::string Text = "[";
-    for(auto &i: Selector) {
-        if (std::holds_alternative<IndexType>(i)) {
-            IndexType SimpleSelector = std::get<IndexType>(i);
+    for(auto &i: *this) {
+        if (std::holds_alternative<ArrayIndexType>(i)) {
+            ArrayIndexType SimpleSelector = std::get<ArrayIndexType>(i);
             Text.append(std::to_string(SimpleSelector));
         } else if(std::holds_alternative<IndexRangeType>(i)) {
             IndexRangeType RangeSelector = std::get<IndexRangeType>(i);
             Text.append(std::to_string(RangeSelector.From));
             Text.append(":");
             Text.append(std::to_string(RangeSelector.To));
+        } else if(std::holds_alternative<MapStringIndexType>(i)) {
+            Text.append("\"");
+            Text.append(std::get<MapStringIndexType>(i));
+            Text.append("\"");
         } else {
             // Should not happen...
             throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
@@ -214,7 +218,7 @@ std::string ArrayClass::ConvertIndexToText(ElementSelectorType Selector) const
 
 ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const
 {
-    return ProxyVariableClass("@" + BaseName + ConvertIndexToText(Selector), BaseType, GetIndexedElement(Selector));
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector));
 }
 
 VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector) const
@@ -224,8 +228,8 @@ VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector
     }
     const ArrayContentType *CurrentElement = &Data;
     for(auto &i: Selector) {
-        if (std::holds_alternative<IndexType>(i)) {
-            IndexType SimpleSelector = std::get<IndexType>(i);
+        if (std::holds_alternative<ArrayIndexType>(i)) {
+            ArrayIndexType SimpleSelector = std::get<ArrayIndexType>(i);
             if (std::holds_alternative<Row>(*CurrentElement)) {
                 return *(std::get<Row>(*CurrentElement).Data.at(SimpleSelector));
             } else if (std::holds_alternative<VectorOfRows>(*CurrentElement)) {
@@ -234,7 +238,9 @@ VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector
                 throw INTERNAL_ERROR_OBJECT("Unknown vector element type");
             }
         } else if(std::holds_alternative<IndexRangeType>(i)) {
-            throw INTERNAL_ERROR_OBJECT("Ranged indices not aupported");
+            throw INTERNAL_ERROR_OBJECT("Ranged indices not supported");
+        } else if(std::holds_alternative<MapStringIndexType>(i)) {
+            throw RuntimeErrorClass("Key indices for array not supported");
         } else {
             // Should not happen...
             throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
@@ -520,6 +526,96 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
         s << "<map unknown content>";
     }
     s << "]";
+}
+
+ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+{
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector));
+}
+
+VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector) const
+{
+    if (Selector.size() != 1) {
+        throw RuntimeErrorClass("Map allows only onedimensional access");
+    }
+    SingleElementSelectorType const &ElementSelector = Selector[0];
+    if (std::holds_alternative<MapStringAndIntegerKeyType>(Data)) {
+        KeyTypeUnion Key;
+        if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
+            Key = std::get<MapStringIndexType>(ElementSelector);
+        } else if (std::holds_alternative<ArrayIndexType>(ElementSelector)) {
+            Key = int64_t(std::get<ArrayIndexType>(ElementSelector));
+        } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
+            Key = std::get<MapIntegerIndexType>(ElementSelector);
+        } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <Range> not supported for map access");
+        } else {
+            throw RuntimeErrorClass("Keytype <unknown> not supported for map access" + std::to_string(ElementSelector.index()) );
+        }
+        std::cout << "Key: union" << ":" << this  << std::endl;
+        return *(std::get<MapStringAndIntegerKeyType>(Data).at(Key));
+    } else if (std::holds_alternative<MapIntegerKeyType>(Data)) {
+        int64_t Key;
+        if (std::holds_alternative<ArrayIndexType>(ElementSelector)) {
+            Key = int64_t(std::get<ArrayIndexType>(ElementSelector));
+        } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
+            Key = std::get<MapIntegerIndexType>(ElementSelector);
+        } else if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <string> not supported for integer map access");
+        } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <Range> not supported for integer map access");
+        } else {
+            throw RuntimeErrorClass("Keytype <unknown> not supported for integer map access: " + std::to_string(ElementSelector.index()) );
+        }
+        std::cout << "Key: " << Key << ":" << this << std::endl;
+        return *(std::get<MapIntegerKeyType>(Data).at(Key));
+    } else if (std::holds_alternative<MapStringKeyType>(Data)) {
+        std::string Key;
+        if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
+            Key = std::get<MapStringIndexType>(ElementSelector);
+        } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <integer> not supported for string map access");
+        } else if (std::holds_alternative<ArrayIndexType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <arrayindex> not supported for string map access");
+        } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
+            throw RuntimeErrorClass("Keytype <Range> not supported for string map access");
+        } else {
+            throw RuntimeErrorClass("Keytype <unknown> not supported for string map access" + std::to_string(ElementSelector.index()) );
+        }
+        std::cout << "Key: " << Key << ":" << this << std::endl;
+        return *(std::get<MapStringKeyType>(Data).at(Key));
+    } else {
+        throw INTERNAL_ERROR_OBJECT("Unsupported maptype");
+    }
+    throw INTERNAL_ERROR_OBJECT("internal dimension trouble");
+}
+
+
+MapClass::MapClass(const MapClass &s) : KeyType(s.KeyType), BaseType(s.BaseType) {
+
+    //auto CopyMap = [](auto &Src){}
+    if (std::holds_alternative<MapStringKeyType>(s.Data)) {
+        Data = CopyMap<MapStringKeyType>(s);
+    } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
+        Data = CopyMap<MapIntegerKeyType>(s);
+    } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
+        Data = CopyMap<MapStringAndIntegerKeyType>(s);
+    } else {
+        throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
+    }
+}
+
+MapClass &MapClass::operator =(const MapClass &s) { //= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    if (std::holds_alternative<MapStringKeyType>(s.Data)) {
+        Data = CopyMap<MapStringKeyType>(s);
+    } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
+        Data = CopyMap<MapIntegerKeyType>(s);
+    } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
+        Data = CopyMap<MapStringAndIntegerKeyType>(s);
+    } else {
+        throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
+    }
+    return *this;
 }
 
 MapClass::MapClass(const MapEntryListType &Initializer)

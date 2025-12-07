@@ -21,11 +21,17 @@ class ProxyVariableClass;
 namespace Variables {
 
 using DimensionType = ArrayDescriptorClass::DimensionType;
-using IndexType = DimensionType::value_type;
+using ArrayIndexType = DimensionType::value_type;
+using MapStringIndexType  = std::string;
+using MapIntegerIndexType  = int64_t;
 
-struct IndexRangeType {IndexType From; IndexType To;};
-typedef std::variant<IndexType, IndexRangeType> SingleElementSelectorType;
-typedef std::vector<SingleElementSelectorType> ElementSelectorType;
+struct IndexRangeType {ArrayIndexType From; ArrayIndexType To;};
+typedef std::variant<ArrayIndexType, IndexRangeType, MapStringIndexType, MapIntegerIndexType> SingleElementSelectorType;
+
+class ElementSelectorType : public std::vector<SingleElementSelectorType> {
+public:
+    std::string ToText() const;
+};
 
 class VariableContentClass;
 
@@ -55,7 +61,7 @@ class ArrayClass {
     DataType Data;
 #endif
     using DimensionType = ArrayDescriptorClass::DimensionType;
-    using IndexType = DimensionType::value_type;
+    using ArrayIndexType = DimensionType::value_type;
 
 public:
     struct Entry;
@@ -110,6 +116,7 @@ public:
 
     typedef ArrayContent ArrayContentType;
 
+private:
     ArrayContent Data;
     DimensionType Dimensions;
     VariableTypeDescriptorClass BaseType;
@@ -124,6 +131,7 @@ public:
     ArrayClass(const ArrayContentType &r);
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
+    VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
 
     static Row CreateRowOfValues() {return Row();}
     static VectorOfRows CreateRowOfRows() {return VectorOfRows();}
@@ -138,7 +146,6 @@ private:
     void FillUpMissingElements(ArrayContent &Data, const DimensionType &Dimensions, const VariableContentClass &FillValue, unsigned int Deepth);
     void CommonInitialization();
     void PrintDetail(const ArrayContent &Data, std::ostream &s, int &Limit, int Indent) const;
-    std::string ConvertIndexToText(ElementSelectorType Selector) const;
 };
 
 
@@ -176,7 +183,7 @@ class MapClass {
     typedef std::map<KeyTypeUnion, std::unique_ptr<VariableContentClass>> MapStringAndIntegerKeyType;
     typedef std::variant<std::monostate, MapStringKeyType, MapIntegerKeyType, MapStringAndIntegerKeyType> MapType;
     //typedef MapStringAndIntegerKeyType MapType;
-    MapType Data;
+    mutable MapType Data;
     MapDescriptorClass::KeyTypesType KeyType;
     VariableTypeDescriptorClass BaseType;
 
@@ -191,41 +198,20 @@ T CopyMap(MapClass const &Src)
         return NewMap;
     }
 public:
-    MapClass(const MapClass &s) : KeyType(s.KeyType), BaseType(s.BaseType) {
-
-        //auto CopyMap = [](auto &Src){}
-        if (std::holds_alternative<MapStringKeyType>(s.Data)) {
-            Data = CopyMap<MapStringKeyType>(s);
-        } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
-            Data = CopyMap<MapIntegerKeyType>(s);
-        } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
-            Data = CopyMap<MapStringAndIntegerKeyType>(s);
-        } else {
-            throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
-        }
-        } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
-    MapClass &operator = (const MapClass &s) { //= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
-        if (std::holds_alternative<MapStringKeyType>(s.Data)) {
-            Data = CopyMap<MapStringKeyType>(s);
-        } else if (std::holds_alternative<MapIntegerKeyType>(s.Data)) {
-            Data = CopyMap<MapIntegerKeyType>(s);
-        } else if (std::holds_alternative<MapStringAndIntegerKeyType>(s.Data)) {
-            Data = CopyMap<MapStringAndIntegerKeyType>(s);
-        } else {
-            throw INTERNAL_ERROR_OBJECT("Unexpected maptype");
-        }
-        return *this;
-    } // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass(const MapClass &s); // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    MapClass &operator = (const MapClass &s); // = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     MapClass( MapClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     MapClass &operator = (MapClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
-    MapClass(MapType &&r) : Data(std::move(r)) , BaseType(TypeDescriptorClass::Type::Undefined)
-    {
-        //CommonInitialization();
-    }
+ //   MapClass(MapType &&r) : Data(std::move(r)) , BaseType(TypeDescriptorClass::Type::Undefined)
+ //   {
+ //       //CommonInitialization();
+ //   }
     typedef std::pair<KeyTypeUnion, Variables::VariableContentClass> MapEntryType;
     typedef std::vector<MapEntryType> MapEntryListType;
     MapClass(const MapEntryListType &Initializer);
+
     ValueTypeDescriptorClass GetTypeDescriptor() const;
+    VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
 
     void PrintDetail(std::ostream &s, int Limit) const;
 
@@ -299,10 +285,9 @@ public:
     const VariableTypeDescriptorClass &getContainedType() const
     {
         if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
-            return std::get<ArrayClass>(Data).BaseType;
+            return std::get<ArrayClass>(Data).GetBaseType();
         } else if(Type == TypeDescriptorClass::Type::Map) {
-            throw RuntimeErrorClass("No Basetype availlable");
-            //            return std::get<MapClass>(Data).GetIndexedElement(Selector);
+            return std::get<MapClass>(Data).GetBaseType();
         } else if(Type == TypeDescriptorClass::Type::List) {
             throw RuntimeErrorClass("No Basetype availlable");
             //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
@@ -319,8 +304,7 @@ public:
         if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
             return std::get<ArrayClass>(Data).GetIndexedElement(Selector);
         } else if(Type == TypeDescriptorClass::Type::Map) {
-            throw RuntimeErrorClass("Indexing not possible");
-//            return std::get<MapClass>(Data).GetIndexedElement(Selector);
+            return std::get<MapClass>(Data).GetIndexedElement(Selector);
         } else if(Type == TypeDescriptorClass::Type::List) {
             throw RuntimeErrorClass("Indexing not possible");
 //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
@@ -332,8 +316,11 @@ public:
     }
 
     template <class T>
-        const T &GetValue() const {
+        const T &GetValue() const try {
         return std::get<T>(Data);
+    }
+    catch (...) {
+        throw INTERNAL_ERROR_OBJECT("Expected type not availlable");
     }
 
     template <class T>

@@ -33,6 +33,7 @@ int driver::parse(const char *Code)
     scan_begin (Code);
     yy::parser parser (*this);
     parser.set_debug_level (trace_parsing);
+    Variables.clear();
     Variables.CreateNewContext("$$Global_Context$$");
     int res = 0;
     res = parser.parse ();
@@ -170,6 +171,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable)
 {
     ReturnVariable = NewReturnVariable;
+    return CurrentFunction;
 }
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
