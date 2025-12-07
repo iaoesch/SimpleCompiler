@@ -537,8 +537,9 @@ void              VariableValueClass::DrawNode(std::ostream &s, int MyNodeNumber
    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Val->GetName() << "|<f2> \"];" << endl;
 }
 
-VariableReferenceType VariableValueClass::GetWriteReferenceToContent()
+VariableReferenceType VariableValueClass::GetWriteReferenceToContent(ModeType Mode)
 {
+    (void) Mode; // Variable allways exist...
     return Val;
 }
 
@@ -951,7 +952,7 @@ void FunctionCallStatementClass::Execute(Environment &Env) const
     Function->Evaluate(Env);
 }
 
-Variables::VariableContentClass &IndexedValueClass::GetSelectedContent() const
+Variables::ElementSelectorType IndexedValueClass::BuildSelector() const
 {
     Variables::ElementSelectorType Selector;
     if (std::holds_alternative<IndexList>(Indices)) {
@@ -985,14 +986,16 @@ Variables::VariableContentClass &IndexedValueClass::GetSelectedContent() const
     //VariableTypeDescriptorClass t(Type());
     const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
     const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
-    return ReferedContent[Selector];
+    return ReferedContent[Selector, Mode];
 }
 
 Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
 {
     (void)Env;
     //return IndexedValue->Evaluate().Isempty()?Variables::VariableContentClass(std::const_pointer_cast<ExpressionClass>(shared_from_this())):Val->GetValue();
-    return GetSelectedContent();
+    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent(IfNotExistDoNotCreate);
+    const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
+    return ReferedContent.at(BuildSelector());
 }
 
 
@@ -1045,11 +1048,11 @@ void IndexedValueClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-VariableReferenceType IndexedValueClass::GetWriteReferenceToContent()
+VariableReferenceType IndexedValueClass::GetWriteReferenceToContent(ModeType Mode)
 {
-    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
+    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent(Mode);
     const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
-    Variables::VariableContentClass &SelectedElement = GetSelectedContent();
+    Variables::VariableContentClass &SelectedElement = (Mode == IfNotExistCreateIfPossible) ? ReferedContent[BuildSelector()] : ReferedContent.at(BuildSelector());
     return std::make_shared<ProxyVariableClass>(GetName(), ReferedContent.getContainedType(), SelectedElement);
 }
 

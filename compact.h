@@ -171,8 +171,9 @@ class ConstantClass : public ValueClass {
 class WritableValueClass : public ValueClass {
 
 public:
+    enum ModeType {IfNotExistDoNotCreate, IfNotExistCreateIfPossible};
     using ValueClass::ValueClass;
-    virtual VariableReferenceType GetWriteReferenceToContent() = 0;
+    virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) = 0;
     virtual const std::string &GetName() const = 0;
 };
 
@@ -191,7 +192,7 @@ class VariableValueClass : public WritableValueClass {
    virtual bool              IsConstant() override {return false;}
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
-   virtual VariableReferenceType GetWriteReferenceToContent() override;
+   virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) override;
 
    private:
    virtual const TypeDescriptorClass GetType() const override;
@@ -266,7 +267,7 @@ public:
     virtual bool              IsConstant() override {return false;}
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
-    virtual VariableReferenceType GetWriteReferenceToContent() override;
+    virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) override;
 
 private:
     virtual const TypeDescriptorClass GetType() const override {return  IndexedValue->Type();}
@@ -275,7 +276,7 @@ private:
     std::variant<IndexList, std::shared_ptr<ExpressionClass>> Indices;
     std::shared_ptr<WritableValueClass> IndexedValue;
 
-    Variables::VariableContentClass &GetSelectedContent() const;
+    Variables::ElementSelectorType BuildSelector() const;
 };
 
 class FunctionClass;

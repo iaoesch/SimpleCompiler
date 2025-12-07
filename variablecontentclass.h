@@ -138,8 +138,11 @@ public:
     void PrintDimensions(std::ostream &s) const;
     void PrintDetail(std::ostream &s, int Limit) const;
 
-    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
-    VariableContentClass &GetIndexedElement(ElementSelectorType Selector) const;
+    ProxyVariableClass GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
+    VariableContentClass &GetOrCreateIndexedElement(ElementSelectorType Selector) const {return GetIndexedElement(Selector, true);}
+
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded = false) const;
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded = false) const;
 private:
 
     void DetectArrayStructure(const ArrayContent &Data, DimensionType &Dimensions, ValueTypeDescriptorClass &ContentType, bool &SizeMissmatch, int Deepth = 0);
@@ -215,8 +218,11 @@ public:
 
     void PrintDetail(std::ostream &s, int Limit) const;
 
-    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
-    VariableContentClass &GetIndexedElement(ElementSelectorType Selector) const;
+    ProxyVariableClass GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
+    VariableContentClass &GetOrCreateIndexedElement(ElementSelectorType Selector) const {return GetIndexedElement(Selector, true);}
+
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded = false) const;
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded = false) const;
 
 };
 
@@ -299,7 +305,7 @@ public:
 
     }
 
-    VariableContentClass &operator [](const ElementSelectorType &Selector) const
+    VariableContentClass &at(const ElementSelectorType &Selector) const
     {
         if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
             return std::get<ArrayClass>(Data).GetIndexedElement(Selector);
@@ -308,6 +314,22 @@ public:
         } else if(Type == TypeDescriptorClass::Type::List) {
             throw RuntimeErrorClass("Indexing not possible");
 //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
+        } else {
+            std::ostringstream Msg;
+            Msg << "Indexing not possible [" << Type << "]";
+            throw RuntimeErrorClass(Msg.str());
+        }
+    }
+
+    VariableContentClass &operator [](const ElementSelectorType &Selector) const
+    {
+        if (Type.IsKindOf(TypeDescriptorClass::Type::Array)) {
+            return std::get<ArrayClass>(Data).GetOrCreateIndexedElement(Selector);
+        } else if(Type == TypeDescriptorClass::Type::Map) {
+            return std::get<MapClass>(Data).GetOrCreateIndexedElement(Selector);
+        } else if(Type == TypeDescriptorClass::Type::List) {
+            throw RuntimeErrorClass("Indexing not possible");
+            //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
         } else {
             std::ostringstream Msg;
             Msg << "Indexing not possible [" << Type << "]";

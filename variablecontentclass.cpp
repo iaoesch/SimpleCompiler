@@ -111,6 +111,11 @@ ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r) , BaseType(TypeDescr
     CommonInitialization();
 }
 
+ProxyVariableClass ArrayClass::GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+{
+    return GetIndexedElement(BaseName, Selector, true);
+}
+
 void ArrayClass::CommonInitialization()
 {
     bool SizeMismatch = false;
@@ -216,13 +221,14 @@ std::string ElementSelectorType::ToText() const
 }
 
 
-ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector));
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded));
 }
 
-VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector) const
+VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
 {
+    (void) CreateIfNeeded; // Creating not existing parts not permitted yet
     if (Selector.size() != Dimensions.size()) {
         throw RuntimeErrorClass("Dimension missmatch");
     }
@@ -528,12 +534,12 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
     s << "]";
 }
 
-ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector));
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded));
 }
 
-VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector) const
+VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
 {
     if (Selector.size() != 1) {
         throw RuntimeErrorClass("Map allows only onedimensional access");
@@ -553,7 +559,16 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector) 
             throw RuntimeErrorClass("Keytype <unknown> not supported for map access" + std::to_string(ElementSelector.index()) );
         }
         std::cout << "Key: union" << ":" << this  << std::endl;
-        return *(std::get<MapStringAndIntegerKeyType>(Data).at(Key));
+        if (CreateIfNeeded) {
+            auto &Element = std::get<MapStringAndIntegerKeyType>(Data)[Key];
+            if (Element==nullptr) {
+                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+            }
+            return *Element;
+
+        } else {
+           return *(std::get<MapStringAndIntegerKeyType>(Data).at(Key));
+        }
     } else if (std::holds_alternative<MapIntegerKeyType>(Data)) {
         int64_t Key;
         if (std::holds_alternative<ArrayIndexType>(ElementSelector)) {
@@ -568,7 +583,15 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector) 
             throw RuntimeErrorClass("Keytype <unknown> not supported for integer map access: " + std::to_string(ElementSelector.index()) );
         }
         std::cout << "Key: " << Key << ":" << this << std::endl;
+        if (CreateIfNeeded) {
+            auto &Element = std::get<MapIntegerKeyType>(Data)[Key];
+            if (Element==nullptr) {
+                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+            }
+            return *Element;
+        } else {
         return *(std::get<MapIntegerKeyType>(Data).at(Key));
+        }
     } else if (std::holds_alternative<MapStringKeyType>(Data)) {
         std::string Key;
         if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
@@ -583,7 +606,16 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector) 
             throw RuntimeErrorClass("Keytype <unknown> not supported for string map access" + std::to_string(ElementSelector.index()) );
         }
         std::cout << "Key: " << Key << ":" << this << std::endl;
-        return *(std::get<MapStringKeyType>(Data).at(Key));
+        if (CreateIfNeeded) {
+            auto &Element = std::get<MapStringKeyType>(Data)[Key];
+            if (Element==nullptr) {
+                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+            }
+            return *Element;
+
+        } else {
+           return *(std::get<MapStringKeyType>(Data).at(Key));
+        }
     } else {
         throw INTERNAL_ERROR_OBJECT("Unsupported maptype");
     }
@@ -680,6 +712,11 @@ MapClass::MapClass(const MapEntryListType &Initializer)
         Data = std::move(NewMap);
     }
     }
+}
+
+ProxyVariableClass MapClass::GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+{
+    return GetIndexedElement(BaseName, Selector, true);
 }
 
 } // namespace Variables
