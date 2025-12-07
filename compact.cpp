@@ -617,7 +617,7 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void AssignementClass::Execute(Environment &Env) const
 {
-    VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent();
+    VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
         std::cout << "AsgExe:" << Result;
@@ -984,9 +984,7 @@ Variables::ElementSelectorType IndexedValueClass::BuildSelector() const
         throw INTERNAL_ERROR_OBJECT("unknown index type");
     }
     //VariableTypeDescriptorClass t(Type());
-    const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent();
-    const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
-    return ReferedContent[Selector, Mode];
+    return Selector;
 }
 
 Variables::VariableContentClass IndexedValueClass::Evaluate(Environment &Env) const
