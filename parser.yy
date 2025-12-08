@@ -155,7 +155,7 @@
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
 %type  <MapDescriptorClass::KeyTypesType> keytype mapkeytype
-%type  <std::shared_ptr<IndexExpressionClass>> rangedindex
+%type  <std::shared_ptr<IndexExpressionClass>> rangedindex combinedindex
 %type  <IndexList> rangedindexes
 %type  <KeyTypeUnion> key
 %type  <MapEntryType> mapentry
@@ -190,7 +190,7 @@ unit:
 input:
    statement {drv.execute($1); drv.AddStatement($1);}
 |  definition
-|  command
+|  command ";"
 ;
 
 command:
@@ -244,12 +244,17 @@ assignable:
 
 rangedindexes:
    rangedindex   {$$ = IndexList(); $$.push_back($1);}
-|  rangedindexes "," rangedindex {$$ = $1;  $$.push_back($3);}
+|  exp "," combinedindex {$$ = IndexList(); $$.push_back(std::make_shared<SingleIndexExpressionClass>($1));  $$.push_back($3);}
+|  rangedindexes "," combinedindex {$$ = $1;  $$.push_back($3);}
+;
+
+combinedindex:
+   exp           {$$ = std::make_shared<SingleIndexExpressionClass>($1);}
+|  rangedindex   {$$ = $1;}
 ;
 
 rangedindex:
-   exp           {$$ = std::make_shared<SingleIndexExpressionClass>($1);}
-|  "..." exp     {$$ = std::make_shared<RangedIndexExpressionClass>(nullptr, $2);}
+   "..." exp     {$$ = std::make_shared<RangedIndexExpressionClass>(nullptr, $2);}
 |  exp "..."     {$$ = std::make_shared<RangedIndexExpressionClass>($1, nullptr);}
 |  exp "..." exp {$$ = std::make_shared<RangedIndexExpressionClass>($1, $3);}
 |  "..."         {$$ = std::make_shared<RangedIndexExpressionClass>(nullptr, nullptr);}
@@ -317,7 +322,7 @@ parameterlist:
 
 Positionalparameterlist:
   Positionalparameter                            {$$ = std::list<std::shared_ptr<StatementClass>>();$$.push_back($1);}
-| Positionalparameterlist Positionalparameter    {$$ = $1; $$.push_back($2);}
+| Positionalparameterlist "," Positionalparameter    {$$ = $1; $$.push_back($3);}
 ;
 
 Positionalparameter:
@@ -328,7 +333,7 @@ Positionalparameter:
 
 Namedparameterlist:
   Namedparameter                      {$$ = std::list<std::shared_ptr<StatementClass>>(); $$.push_back($1);}
-| Namedparameterlist Namedparameter   {$$ = $1; $$.push_back($2);}
+| Namedparameterlist "," Namedparameter   {$$ = $1; $$.push_back($3);}
 ;
 
 Namedparameter:
