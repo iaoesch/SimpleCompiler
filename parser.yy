@@ -135,7 +135,7 @@
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
 %type  <std::shared_ptr<StatementClass>> loopstatement
-%type  <FunctionDefinitionClassSharedPtr> functiondefinition
+%type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
@@ -230,7 +230,15 @@ loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);};
 
 assignment:
-  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); std::cout << "asg:"; $3->Print(std::cout); $$->Print(std::cout); std::cout << "eval:" << $3->Evaluate();};
+  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); std::cout << "asg:"; $3->Print(std::cout); $$->Print(std::cout); std::cout << "eval:" << $3->Evaluate();}
+| assignable ":=" Anonymeousfunctiondefinition {
+                                                 $$ = std::make_shared<AssignementClass>(std::make_shared<ConstantClass>(Variables::VariableContentClass($3), @1), $1, @$);
+                                                 std::cout << "asg:";
+                                                 $3->Print(std::cout);
+                                                 $$->Print(std::cout);
+                                                 /*std::cout << "eval:" << $3->Evaluate();*/
+                                                }
+;
 
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
 
@@ -340,17 +348,27 @@ Namedparameter:
    "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3, @1+@2);}
 |  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3, @1+@2);};
 
+
+Anonymeousfunctiondefinition:
+  "function" {$<std::string>$ = $<std::string>0;} functionBodydefinition {$$ = $3;}
+;
+
+
 functiondefinition:
-  "function" "identifier" {
+  "function" "identifier" functionBodydefinition {$$ = $3;}
+;
+
+functionBodydefinition:
+                          {
                              /*FktDefContainer tmp;*/
-                             auto ptr = drv.Currentfunction.Create($2, @2);
+                             auto ptr = drv.Currentfunction.Create($<std::string>0, @0);
                              /*$<FktDefContainer>$ = tmp;*/
                              drv.Variables.StartLocal(ptr);
-                             drv.Variables.CreateNewContext($2+"Params"); }
+                             drv.Variables.CreateNewContext($<std::string>0+"Params"); }
   returntype.opt
   "(" argumentlist ")"    {
-                              drv.Variables.CreateNewContext($2);
-                              drv.Variables.CreateVariable($2, *$4, 0.0);
+                              drv.Variables.CreateNewContext($<std::string>0);
+                              drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
 
                           }
   statements
@@ -358,8 +376,8 @@ functiondefinition:
                       /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
                       /*$$ = $<FktDefContainer>3.ptr;*/
                       auto StorageTemplate = drv.Variables.EndLocal();
-                      drv.Currentfunction.Define(Variables::FunctionDefinitionClass($2, $6, $9, std::move(StorageTemplate)), @9);
-                      $$ = drv.Currentfunction.Get(@9); drv.Variables.LeaveContext(2);
+                      drv.Currentfunction.Define(Variables::FunctionDefinitionClass($<std::string>0, $4, $7, std::move(StorageTemplate)), @7);
+                      $$ = drv.Currentfunction.Get(@7); drv.Variables.LeaveContext(2);
                 }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;
