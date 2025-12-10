@@ -73,6 +73,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(Stop, &QPushButton::clicked, this, &MainWindow::StopButtonClicked);
     HLayout2->addWidget(Stop);
 
+    Run = new QPushButton("Run");
+    Run->setDisabled(false);
+    connect(Run, &QPushButton::clicked, this, &MainWindow::RunButtonClicked);
+    HLayout2->addWidget(Run);
+
     connect(editor, &QTextEdit::textChanged, this, &MainWindow::TextChanged);
     ChangingInProgress = 0;
 
@@ -147,6 +152,17 @@ void MainWindow::StopButtonClicked()
     Stoprequest = true;
 }
 
+
+void MainWindow::RunButtonClicked()
+{
+    //Stoprequest = true;
+    if (CurrentCode != nullptr) {
+        Run->setDisabled(true);
+        CurrentCode->Run();
+        Run->setDisabled(false);
+    }
+}
+
 void MainWindow::setupEditor()
 {
     QFont font;
@@ -194,33 +210,34 @@ bool QtEnvironment::CheckForStop()
 std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::string Codeblock)
 {
     //int res = 0;
-    driver drv(Env);
-    drv.result.clear();
+    std::unique_ptr<driver> drv = std::make_unique<driver>(Env);
+    drv->result.clear();
     try {
-        if (drv.parse(Codeblock.c_str())) {
+        if (drv->parse(Codeblock.c_str())) {
                         std::cout << "Abnormal parsing end" << std::endl;
         }
         } catch (ErrorBaseClass &e) {
                     std::cout << "Exception: " << e.what() << std::endl;
-                    std::cout << drv.location << std::endl;
+                    std::cout << drv->location << std::endl;
         } catch (std::exception &e) {
                     std::cout << "Exception: " << e.what() << std::endl;
-                    std::cout << drv.location << std::endl;
+                    std::cout << drv->location << std::endl;
         } catch (...) {
                     std::cout << "Unknown Exception: " << std::endl;
-                    std::cout << drv.location << std::endl;
+                    std::cout << drv->location << std::endl;
 
         }
         std::ostringstream Output;
-        if (drv.result.empty()) {
+        if (drv->result.empty()) {
                     Output << "<empty list>" << std::endl;
         }
-        for (auto &s: drv.result) {
+        for (auto &s: drv->result) {
             s->Print(Output);
         }
-        drv.Variables.Dump(Output);
-        TreeToSVG(drv.result, "tree.dot", "tree.svg");
-        return {Output.str(), drv.GetErrors()};
+        drv->Variables.Dump(Output);
+        TreeToSVG(drv->result, "tree.dot", "tree.svg");
+        CurrentCode = std::move(drv);
+        return {Output.str(), CurrentCode->GetErrors()};
 }
 
 void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath)

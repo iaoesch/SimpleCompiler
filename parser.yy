@@ -378,7 +378,8 @@ functionBodydefinition:
   returntype.opt
   "(" argumentlist ")"    {
                               drv.Variables.CreateNewContext($<std::string>0);
-                              drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
+                              auto ReturnValue = drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
+                              drv.Currentfunction.SetReturnVariable(ReturnValue);
 
                           }
   statements

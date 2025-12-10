@@ -47,11 +47,14 @@ class MainWindow : public QMainWindow
     QPixmap *Cross;
     QPixmap *Circle;
     QPushButton *Stop;
+    QPushButton *Run;
     bool Stoprequest;
 
     QtEnvironment Env;
 
     QString Documentpath;
+
+    std::unique_ptr<driver> CurrentCode;
 
 public slots:
     void about();
@@ -71,6 +74,7 @@ public:
 public slots:
     void TextChanged();
     void StopButtonClicked();
+    void RunButtonClicked();
 
 protected:
     void closeEvent(QCloseEvent *event) override;

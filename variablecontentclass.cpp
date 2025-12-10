@@ -476,8 +476,12 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
     Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
 
     if (ReturnVariable != nullptr) {
+        Env.OutputStream() << "Returning ";
+        ReturnVariable->Print(Env.OutputStream());
+         Env.OutputStream() << "\n";
        return ReturnVariable->GetValue();
     } else {
+        Env.OutputStream() << "Returning Nothing\n";
         return VariableContentClass::MakeUndefined();
     }
 }

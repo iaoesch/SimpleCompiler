@@ -48,12 +48,22 @@ void driver::halt()
 
 void driver::Run()
 {
-
+    Env.ExecutionStarted();
+    try {
+        for (auto const &s: result) {
+            s->Execute(Env);
+        }
+    }
+    catch (...) {
+        Env.ExecutionStopped();
+        throw;
+    }
+    Env.ExecutionStopped();
 }
 
 void driver::Run(std::string id)
 {
-  (void)id;
+    (void)id;
 }
 
 void driver::execute(std::shared_ptr<StatementClass> s)
