@@ -230,7 +230,17 @@ loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);};
 
 assignment:
-  assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, $1, @$); std::cout << "asg:"; $3->Print(std::cout); $$->Print(std::cout); std::cout << "eval:" << $3->Evaluate();}
+  assignable ":=" exp {
+                            $$ = std::make_shared<AssignementClass>($3, $1, @$);
+                            std::cout << "asg:";
+                            $3->Print(std::cout);
+                            $$->Print(std::cout);
+                            try { std::cout << "eval:" << $3->Evaluate();}
+                            catch (...) {
+                               std::cout << "eval: <Exception>";
+                            }
+
+                      }
 | assignable ":=" Anonymeousfunctiondefinition {
                                                  $$ = std::make_shared<AssignementClass>(std::make_shared<ConstantClass>(Variables::VariableContentClass($3), @1), $1, @$);
                                                  std::cout << "asg:";
@@ -376,7 +386,7 @@ functionBodydefinition:
                       /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
                       /*$$ = $<FktDefContainer>3.ptr;*/
                       auto StorageTemplate = drv.Variables.EndLocal();
-                      drv.Currentfunction.Define(Variables::FunctionDefinitionClass($<std::string>0, $4, $7, std::move(StorageTemplate)), @7);
+                      drv.Currentfunction.Define(Variables::FunctionDefinitionClass($<std::string>0, $4, $7, std::move(StorageTemplate), @1+@5), @7);
                       $$ = drv.Currentfunction.Get(@7); drv.Variables.LeaveContext(2);
                 }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}

@@ -617,6 +617,7 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void AssignementClass::Execute(Environment &Env) const
 {
+    Env.Tracing(GetLocation(), "Assign(...)");
     VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
@@ -925,13 +926,13 @@ void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 void PrintStatementClass::Execute(Environment &Env) const
 {
-    Env.OutputStream() << "\x1b[31m";
+    Env.Tracing(GetLocation(), "Print(...)");
+    Env.SetOutputStreamColor(Environment::Color::Red);
     for (auto &e: Expressions) {
         // Env.OutputStream() << e->Evaluate(Env);
         e->Evaluate(Env).PrintDetail(Env.OutputStream(), 200);
     }
-    Env.OutputStream() << "\x1b[30"
-                          "m";
+    Env.RestoreOutputStreamColor();
 }
 
 
@@ -939,6 +940,7 @@ void PrintStatementClass::Execute(Environment &Env) const
 
 void RepeatLoopClass::Execute(Environment &Env) const
 {
+    Env.Tracing(GetLocation(), "Repeat(...)");
     do {
         for (auto const &s: Statements) {
             s->Execute(Env);
@@ -949,6 +951,7 @@ void RepeatLoopClass::Execute(Environment &Env) const
 
 void FunctionCallStatementClass::Execute(Environment &Env) const
 {
+    Env.Tracing(GetLocation(), "Call Fkt(...)");
     Function->Evaluate(Env);
 }
 

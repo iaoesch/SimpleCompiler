@@ -158,12 +158,14 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(s
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
 {
+    (void) l;
     *CurrentFunction = std::move(f);
     return CurrentFunction;
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
 {
+    (void) l;
     CurrentFunction->SetReturnValue(ReturnVariable);
     return CurrentFunction;
 }
@@ -176,11 +178,17 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetRetur
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
 {
-
+    (void) Loc;
+    (void) Refered;
+    (void) Referer;
+    return nullptr;
 }
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRefBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
 {
+    (void) Loc;
+    (void) Assigned;
+    return nullptr;
 }
 
 

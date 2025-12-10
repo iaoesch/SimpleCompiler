@@ -26,10 +26,11 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 
 namespace Variables {
 
-FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_)
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
     : Parameters(Parameters), Statements(Statements), Name(Name_),
     StorageTemplate(std::move(StorageTemplate_)),
-    ReturnVariable(nullptr)
+    ReturnVariable(nullptr),
+    Location(Loc)
    {}
 
 void FunctionDefinitionClass::Print(std::ostream &s) const
@@ -461,7 +462,9 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 
 Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
 {
-    std::cout << "FunctionDefinitionClass::Execute '" << Name << "', Statements.size() = " << Statements.size() << std::endl;
+    std::ostringstream Output;
+    Output  << "FunctionDefinitionClass::Execute '" << Name << "', Statements.size() = " << Statements.size();
+    Env.Tracing(Location, Output.str());
 
     for (auto const &s: Statements) {
         std::cout << "executing << ";
@@ -470,7 +473,8 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         s->Execute(Env);
         std::cout << "executing done" << std::endl;
     }
-    std::cout << "FunctionDefinitionClass::Execute done" << std::endl;
+    Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
+
     if (ReturnVariable != nullptr) {
        return ReturnVariable->GetValue();
     } else {

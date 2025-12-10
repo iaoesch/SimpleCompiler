@@ -11,6 +11,7 @@
 #include <iostream>
 #include "Errclass.hpp"
 #include "environment.hpp"
+#include "location.hh"
 #include "typedescriptorclass.hpp"
 
 //#include "varmanag.hpp"
@@ -467,16 +468,17 @@ private:
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::string Name;
     LocalStorageType StorageTemplate;
-    mutable LocalStorageType ActiveStorage;
+    mutable std::vector<LocalStorageType> ActiveStorage;
     std::shared_ptr<VariableClass> ReturnVariable;
+    yy::location Location;
 
 public:
-    FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate);
+    FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, LocationType const &Loc);
     FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
     FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
     FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
 
-    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType());}
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
 public:
     //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
     //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
@@ -485,14 +487,14 @@ public:
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
-    void CreateFrame() {ActiveStorage = StorageTemplate;}
-    void ReleaseFrame() {ActiveStorage.clear();}
+    void CreateFrame() {ActiveStorage.push_back(StorageTemplate);}
+    void ReleaseFrame() {ActiveStorage.pop_back();}
     void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ReturnVariable = ReturnVariable_;}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
-    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const {return ActiveStorage.at(Offset);}
-    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {return ActiveStorage.at(Offset);}
-    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {ActiveStorage.at(Offset) = v;}
+    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); } return ActiveStorage.back().at(Offset);}
+    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }return ActiveStorage.back().at(Offset);}
+    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }ActiveStorage.back().at(Offset) = v;}
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
