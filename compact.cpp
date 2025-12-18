@@ -574,10 +574,10 @@ void StatementClass::DrawNode(std::ostream &s[[maybe_unused]], int MyNodeNumber[
 
 }
 
-void StatementClass::Execute(Environment &Env[[maybe_unused]]) const
+StatementResultClass StatementClass::Execute(Environment &Env[[maybe_unused]]) const
 {
     std::cout << "\nVirtual Call StatementClass Execute()";
-
+    return{};
 }
 
 AssignementClass::~AssignementClass()
@@ -615,7 +615,7 @@ void AssignementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-void AssignementClass::Execute(Environment &Env) const
+StatementResultClass AssignementClass::Execute(Environment &Env) const
 {
     Env.Tracing(GetLocation(), "Assign(...)");
     VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
@@ -626,6 +626,63 @@ void AssignementClass::Execute(Environment &Env) const
             ReferedVariable->SetValue(Variables::VariableContentClass(AssignedExpression));
         } else {
             ReferedVariable->SetValue(Result);
+        }
+    }
+    catch (RuntimeErrorClass &e) {
+        std::stringstream s;
+        s << "at [" << GetLocation() << "]";
+        e.ExtendMessage(s.str());
+        throw e;
+    }
+    return {};
+}
+
+ReturningStatementClass::~ReturningStatementClass()
+{
+
+}
+
+void ReturningStatementClass::Print(std::ostream &s) const
+{
+    { s << "Returning ";
+        ReturnedExpression->Print(s);
+        s << ";" << std::endl; }
+}
+
+std::shared_ptr<StatementClass> ReturningStatementClass::Clone() const
+{
+    return std::make_shared<ReturningStatementClass>(*this);
+}
+
+std::shared_ptr<StatementClass> ReturningStatementClass::Optimize(Environment &Env)
+{
+    (void)Env;
+    return shared_from_this();
+}
+
+void ReturningStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> Returning |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    ReturnedExpression->DrawNode(s, NodeNumber2);
+
+}
+
+StatementResultClass ReturningStatementClass::Execute(Environment &Env) const
+{
+    Env.Tracing(GetLocation(), "Returning(...)");
+    //VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
+    try {
+        Variables::VariableContentClass Result = ReturnedExpression->Evaluate(Env);
+        std::cout << "retExe:" << Result;
+        if (Result.Isempty()) {
+           // ReferedVariable->SetValue(Variables::VariableContentClass(AssignedExpression));
+            return std::make_shared<Variables::VariableContentClass>(ReturnedExpression);
+
+        } else {
+            //ReferedVariable->SetValue(Result);
+            return std::make_shared<Variables::VariableContentClass>(Result);
         }
     }
     catch (RuntimeErrorClass &e) {
@@ -924,7 +981,7 @@ void PrintStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) const
     }
 }
 
-void PrintStatementClass::Execute(Environment &Env) const
+StatementResultClass PrintStatementClass::Execute(Environment &Env) const
 {
     Env.Tracing(GetLocation(), "Print(...)");
     Env.SetOutputStreamColor(Environment::Color::Red);
@@ -933,26 +990,32 @@ void PrintStatementClass::Execute(Environment &Env) const
         e->Evaluate(Env).PrintDetail(Env.OutputStream(), 200);
     }
     Env.RestoreOutputStreamColor();
+    return {};
 }
 
 
 
 
-void RepeatLoopClass::Execute(Environment &Env) const
+StatementResultClass RepeatLoopClass::Execute(Environment &Env) const
 {
     Env.Tracing(GetLocation(), "Repeat(...)");
     do {
         for (auto const &s: Statements) {
-            s->Execute(Env);
+            auto r = s->Execute(Env);
             Env.ThrowIfStoppRequested();
+            if (r) {
+                return r;
+            }
         }
     } while (Condition->Evaluate(Env) == false);
+    return {};
 }
 
-void FunctionCallStatementClass::Execute(Environment &Env) const
+StatementResultClass FunctionCallStatementClass::Execute(Environment &Env) const
 {
     Env.Tracing(GetLocation(), "Call Fkt(...)");
     Function->Evaluate(Env);
+    return {};
 }
 
 Variables::ElementSelectorType IndexedValueClass::BuildSelector() const

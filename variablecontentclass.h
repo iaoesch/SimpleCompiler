@@ -469,7 +469,8 @@ private:
     std::string Name;
     LocalStorageType StorageTemplate;
     mutable std::vector<LocalStorageType> ActiveStorage;
-    std::shared_ptr<VariableClass> ReturnVariable;
+    std::vector<Variables::VariableContentClass> ActiveReturnValue;
+    std::shared_ptr<VariableClass> ActiveReturnVariable;
     yy::location Location;
 
 public:
@@ -489,10 +490,16 @@ public:
 
     void CreateFrame() {ActiveStorage.push_back(StorageTemplate);}
     void ReleaseFrame() {ActiveStorage.pop_back();}
-    void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ReturnVariable = ReturnVariable_;}
+    void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
-    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); } return ActiveStorage.back().at(Offset);}
+    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
+                {
+                  if (ActiveStorage.empty()) {
+                      throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
+                  }
+                  return ActiveStorage.back().at(Offset);
+                }
     VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }return ActiveStorage.back().at(Offset);}
     void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }ActiveStorage.back().at(Offset) = v;}
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);

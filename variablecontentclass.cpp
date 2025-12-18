@@ -29,7 +29,7 @@ namespace Variables {
 FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
     : Parameters(Parameters), Statements(Statements), Name(Name_),
     StorageTemplate(std::move(StorageTemplate_)),
-    ReturnVariable(nullptr),
+    ActiveReturnVariable(nullptr),
     Location(Loc)
    {}
 
@@ -95,11 +95,11 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int 
 
 const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
 {
-    if (ReturnVariable == nullptr) {
+    if (ActiveReturnVariable == nullptr) {
         static VariableTypeDescriptorClass Undef(TypeDescriptorClass::Type::Undefined);
         return Undef;
     } else {
-        return ReturnVariable->Type();
+        return ActiveReturnVariable->Type();
     }
 
 
@@ -224,7 +224,7 @@ std::string ElementSelectorType::ToText() const
 
 ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded));
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
 }
 
 VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -475,11 +475,11 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
     }
     Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
 
-    if (ReturnVariable != nullptr) {
+    if (ActiveReturnVariable != nullptr) {
         Env.OutputStream() << "Returning ";
-        ReturnVariable->Print(Env.OutputStream());
+        ActiveReturnVariable->Print(Env.OutputStream());
          Env.OutputStream() << "\n";
-       return ReturnVariable->GetValue();
+       return ActiveReturnVariable->GetValue();
     } else {
         Env.OutputStream() << "Returning Nothing\n";
         return VariableContentClass::MakeUndefined();
@@ -544,7 +544,7 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
 
 ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded));
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
 }
 
 VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const

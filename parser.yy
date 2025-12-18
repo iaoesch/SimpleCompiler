@@ -360,12 +360,12 @@ Namedparameter:
 
 
 Anonymeousfunctiondefinition:
-  "function" {$<std::string>$ = $<std::string>0;} functionBodydefinition {$$ = $3;}
+  "function" {$$=drv.Currentfunction.Create(@1);} functionBodydefinition {$$ = $3;}
 ;
 
 
 functiondefinition:
-  "function" "identifier" functionBodydefinition {$$ = $3;}
+  "function" "identifier" {$$=drv.Currentfunction.Create($1, @1);} functionBodydefinition {$$ = $3;}
 ;
 
 functionBodydefinition:

@@ -141,49 +141,69 @@ void driver::ReportError(const yy::location &l, const std::string &m)
     Errors.push_back({l, m});
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Set(std::string Name, const yy::parser::location_type &l)
+std::shared_ptr<VariableClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
-    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
-    if (Var == nullptr) {
+    FunctionCallsPending.push_back({});
+    FunctionCallsPending.back().NextPositionalParameter = -1;
+    std::shared_ptr<VariableClass> VariableHoldingFunction =
+        Variables.GetVariableReference(Name);
+    if (VariableHoldingFunction == nullptr) {
         throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
-    CurrentFunction = Var->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
-    if (Var == nullptr) {INTERNAL_ERROR_OBJECT("Not a function object");}
-    FunctionDefinitionClassSharedPtr p = CurrentFunction;
-    return CurrentFunction;
+    FunctionCallsPending.back().CurrentFunction =
+        VariableHoldingFunction->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
+    if (FunctionCallsPending.back().CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
+    return VariableHoldingFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Create(std::string Name, const yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l)
 {
-    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Name);
-    if (Var != nullptr) {
-        throw(yy::parser::syntax_error(l, "function alllready defined"));
+    FunctionsDefinitonsPending.push_back({});
+    FunctionDefinitionInfoType &CurrentFunctionInfo = this->FunctionsDefinitonsPending.back();
+    CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.GetVariableReference(Name);
+    if (CurrentFunctionInfo.VariableHoldingCurrentFunction != nullptr) {
+        throw(yy::parser::syntax_error(l, "function allready defined"));
     }
-    Var = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
-    CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
-    Var->SetValue(Variables::VariableContentClass(CurrentFunction));
+    CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
+    CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
+    CurrentFunctionInfo.VariableHoldingCurrentFunction->SetValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
     //auto &i = typeid(CurrentFunction);
-    return CurrentFunction;
+    return CurrentFunctionInfo.CurrentFunction;
+}
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinitions(const yy::parser::location_type &l)
+{
+
+    return BeginFunctionDefinition("_Anonym_" + std::to_string(AnonymeousElementCounter++), l);
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
 {
     (void) l;
-    *CurrentFunction = std::move(f);
-    return CurrentFunction;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Define()> Not inside function"));
+    }
+    *(FunctionsDefinitonsPending.back().CurrentFunction) = std::move(f);
+    return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
+std::shared_ptr<VariableClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
 {
     (void) l;
-    CurrentFunction->SetReturnValue(ReturnVariable);
-    return CurrentFunction;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Get()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.back().CurrentFunction->SetReturnValue(FunctionsDefinitonsPending.back().ReturnVariable);
+    return FunctionsDefinitonsPending.back().VariableHoldingCurrentFunction;
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable)
 {
-    ReturnVariable = NewReturnVariable;
-    return CurrentFunction;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<SetReturnVariable()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.back().ReturnVariable = NewReturnVariable;
+    return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
@@ -204,12 +224,16 @@ std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRefBySequence(std::shar
 
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass> Assigned, LocationType const &Loc)
 {
-    if ((NextPositionalParameter >= 0) && (NextPositionalParameter < 0xFFFF)) {
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<MakeAssign()> Not inside functioncall"));
+    }
+
+    if ((FunctionCallsPending.back().NextPositionalParameter >= 0) && (FunctionCallsPending.back().NextPositionalParameter < 0xFFFF)) {
         throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
     }
     // set marker for positionalmode
-    NextPositionalParameter = 0xFFFF;
-    std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByName(Assignee);
+    FunctionCallsPending.back().NextPositionalParameter = 0xFFFF;
+    std::shared_ptr<VariableClass> Var = FunctionCallsPending.back().CurrentFunction->GetParameterByName(Assignee);
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
@@ -219,15 +243,18 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::stri
 
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
 {
-    if (NextPositionalParameter >= 0xFFFF) {
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<MakeAssign()> Not inside functioncall"));
+    }
+    if (FunctionCallsPending.back().NextPositionalParameter >= 0xFFFF) {
         throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
     }
     // set marker for positionalmode
-    std::shared_ptr<VariableClass> Var = CurrentFunction->GetParameterByIndex(NextPositionalParameter);
+    std::shared_ptr<VariableClass> Var = FunctionCallsPending.back().CurrentFunction->GetParameterByIndex(FunctionCallsPending.back().NextPositionalParameter);
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
-    NextPositionalParameter++;
+    FunctionCallsPending.back().NextPositionalParameter++;
     auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
     return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
 }

@@ -23,17 +23,33 @@ typedef yy::location  LocationType;
 
 class FunctionNodeHelper {
     VariableManager &Variables;
-    std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
-    std::shared_ptr<VariableClass> ReturnVariable;
-    int NextPositionalParameter;
+
+    struct FunctionDefinitionInfoType {
+       std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+       std::shared_ptr<VariableClass> ReturnVariable;
+       std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
+       Variables::VariableContentClass ReturnedValue;
+       int NextPositionalParameter;
+    };
+    std::vector<FunctionDefinitionInfoType> FunctionsDefinitonsPending;
+
+    uint32_t AnonymeousElementCounter;
+
+    struct FunctionCallInfoType {
+        std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+        int NextPositionalParameter;
+    };
+    std::vector<FunctionCallInfoType> FunctionCallsPending;
+
 
 public:
     explicit FunctionNodeHelper(VariableManager &Variables)
-        : Variables(Variables) , CurrentFunction(nullptr), NextPositionalParameter(-1) {}
-    std::shared_ptr<Variables::FunctionDefinitionClass> Set(std::string Name, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> Create(std::string Name, const yy::parser::location_type &l);
+        : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
+    std::shared_ptr<VariableClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinitions(const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
+    std::shared_ptr<VariableClass> Get(yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable);
 
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);

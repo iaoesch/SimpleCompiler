@@ -525,6 +525,7 @@ public:
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
+typedef std::optional<std::variant<std::shared_ptr<Variables::VariableContentClass>>> StatementResultClass;
 
 class StatementClass : public std::enable_shared_from_this<StatementClass>{
 public:
@@ -534,7 +535,7 @@ public:
     virtual std::shared_ptr<StatementClass> Clone() const;              // = 0;
     virtual std::shared_ptr<StatementClass> Optimize(Environment &Env); // = 0;
     virtual void DrawNode(std::ostream &s, int MyNodeNumber) const;
-    virtual void Execute(Environment &Env) const; // = 0;
+    virtual StatementResultClass Execute(Environment &Env) const; // = 0;
     const LocationType &GetLocation() const { return Location; }
 
 private:
@@ -555,12 +556,28 @@ public:
     virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
     virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
-    virtual void              Execute(Environment &Env) const override;// = 0;
+    virtual StatementResultClass  Execute(Environment &Env) const override;// = 0;
 };
 
 class ReferementClass  : public AssignementClass {
     using AssignementClass::AssignementClass;
 };
+
+class ReturningStatementClass : public StatementClass {
+    std::shared_ptr<ExpressionClass> ReturnedExpression;
+
+public:
+    ReturningStatementClass(std::shared_ptr<ExpressionClass> _ReturnedExpression, const std::shared_ptr<WritableValueClass> _Variable, const LocationType &Loc) :
+        StatementClass(Loc), ReturnedExpression(_ReturnedExpression) {}
+
+    virtual                  ~ReturningStatementClass() override;
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+    virtual StatementResultClass Execute(Environment &Env) const override;// = 0;
+};
+
 
 class RepeatLoopClass : public StatementClass {
     std::list<std::shared_ptr<StatementClass>> Statements;
@@ -579,7 +596,7 @@ public:
 
     // StatementClass interface
 public:
-    virtual void Execute(Environment &Env) const override;
+    virtual StatementResultClass Execute(Environment &Env) const override;
 };
 
 class FunctionCallStatementClass : public StatementClass {
@@ -603,7 +620,7 @@ public:
 
     // StatementClass interface
 public:
-    virtual void Execute(Environment &Env) const override;
+    virtual StatementResultClass Execute(Environment &Env) const override;
 };
 
 
@@ -623,7 +640,7 @@ public:
 
     // StatementClass interface
 public:
-    virtual void Execute(Environment &Env) const override;
+    virtual StatementResultClass Execute(Environment &Env) const override;
 };
 
 class ErrorStatement : public StatementClass {

@@ -74,7 +74,8 @@ private:
 
 
    // Data
-   public:
+    std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage);
+public:
 
     VariableManager() : Local(false), LocalOffset(0) {}
 
@@ -86,6 +87,8 @@ private:
    LocalStorageType EndLocal();
  //  std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
 

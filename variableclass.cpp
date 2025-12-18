@@ -24,12 +24,14 @@ const Variables::VariableContentClass &GlobalVariableClass::GetValue() const
 
 Variables::VariableContentClass &GlobalVariableClass::GetWriteReferenceToValue()
 {
+   if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
    return Content;
 }
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
     std::cout << "GlbSet:" << v;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
@@ -54,11 +56,13 @@ const Variables::VariableContentClass &LocalVariableClass::GetValue() const
 
 Variables::VariableContentClass &LocalVariableClass::GetWriteReferenceToValue()
 {
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     return Parent->GetVariableContentWriteReferenceForOffset(Reference);
 }
 
 void LocalVariableClass::SetValue(Variables::VariableContentClass v)
 {
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Parent->SetVariableContentForOffset(Reference, v);
@@ -101,12 +105,14 @@ const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
 
 Variables::VariableContentClass &TemporaryVariableClass::GetWriteReferenceToValue()
 {
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     return Content;
 }
 
 void TemporaryVariableClass::SetValue(Variables::VariableContentClass v)
 {
     std::cout << "TmpSet:" << v;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
@@ -133,16 +139,20 @@ Variables::VariableContentClass const &ProxyVariableClass::GetValue() const
     return Content;
 }
 
+// *** Proxy
+
 Variables::VariableContentClass &ProxyVariableClass::GetWriteReferenceToValue()
 {
+    if (!refered.IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     return Content;
 }
 
 void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
 {
     std::cout << "PxySet:" << v;
-    PrepareForAssignment(v);
-    if (IsAssignable(v)) {
+    if (!refered.IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    refered.PrepareForAssignment(v);
+    if (refered.IsAssignable(v)) {
         Content = v;
     } else {
         std::cout << "PxySetexcp:" << v;
