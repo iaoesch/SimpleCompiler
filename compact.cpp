@@ -1117,7 +1117,7 @@ VariableReferenceType IndexedValueClass::GetWriteReferenceToContent(ModeType Mod
     const VariableReferenceType &ReferedVariable = IndexedValue->GetWriteReferenceToContent(Mode);
     const Variables::VariableContentClass &ReferedContent = ReferedVariable->GetValue();
     Variables::VariableContentClass &SelectedElement = (Mode == IfNotExistCreateIfPossible) ? ReferedContent[BuildSelector()] : ReferedContent.at(BuildSelector());
-    return std::make_shared<ProxyVariableClass>(GetName(), ReferedContent.getContainedType(), SelectedElement);
+    return std::make_shared<ProxyVariableClass>(GetName(), ReferedContent.getContainedType(), SelectedElement, IndexedValue->GetStorageClass());
 }
 
 void SingleIndexExpressionClass::Print(std::ostream &s) const

@@ -327,7 +327,7 @@ exp_or_star:
 ;
 
 functioncall:
-  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.Set($1, @1);}
+  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.BeginFunctionCall($1, @1);}
   "("
   parameterlist
   ")" {$$ = std::make_shared<FunctionCallClass>($2, $4, @$);};
@@ -360,18 +360,18 @@ Namedparameter:
 
 
 Anonymeousfunctiondefinition:
-  "function" {$$=drv.Currentfunction.Create(@1);} functionBodydefinition {$$ = $3;}
+  "function" {$<FunctionDefinitionClassSharedPtr>$=drv.Currentfunction.BeginFunctionDefinition(@1);} functionBodydefinition {$$ = $3;}
 ;
 
 
 functiondefinition:
-  "function" "identifier" {$$=drv.Currentfunction.Create($1, @1);} functionBodydefinition {$$ = $3;}
+  "function" "identifier" {$<FunctionDefinitionClassSharedPtr>$=drv.Currentfunction.BeginFunctionDefinition($2, @2);} functionBodydefinition {$$ = $<FunctionDefinitionClassSharedPtr>3;}
 ;
 
 functionBodydefinition:
                           {
                              /*FktDefContainer tmp;*/
-                             auto ptr = drv.Currentfunction.Create($<std::string>0, @0);
+                             auto ptr = drv.Currentfunction.BeginFunctionDefinition($<std::string>0, @0);
                              /*$<FktDefContainer>$ = tmp;*/
                              drv.Variables.StartLocal(ptr);
                              drv.Variables.CreateNewContext($<std::string>0+"Params"); }

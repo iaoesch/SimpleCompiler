@@ -143,16 +143,16 @@ Variables::VariableContentClass const &ProxyVariableClass::GetValue() const
 
 Variables::VariableContentClass &ProxyVariableClass::GetWriteReferenceToValue()
 {
-    if (!refered.IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    if (IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     return Content;
 }
 
 void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
 {
     std::cout << "PxySet:" << v;
-    if (!refered.IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
-    refered.PrepareForAssignment(v);
-    if (refered.IsAssignable(v)) {
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
         Content = v;
     } else {
         std::cout << "PxySetexcp:" << v;

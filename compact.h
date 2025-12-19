@@ -175,6 +175,7 @@ public:
     using ValueClass::ValueClass;
     virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) = 0;
     virtual const std::string &GetName() const = 0;
+    virtual VariableClass::StorageClass GetStorageClass() const = 0;
 };
 
 class VariableValueClass : public WritableValueClass {
@@ -193,6 +194,7 @@ class VariableValueClass : public WritableValueClass {
    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
    virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) override;
+   virtual VariableClass::StorageClass GetStorageClass() const override {return Val->GetStorageClass();}
 
    private:
    virtual const TypeDescriptorClass GetType() const override;
@@ -268,6 +270,7 @@ public:
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
     virtual VariableReferenceType GetWriteReferenceToContent(ModeType Mode) override;
+    virtual VariableClass::StorageClass GetStorageClass() const override {return IndexedValue->GetStorageClass();}
 
 private:
     virtual const TypeDescriptorClass GetType() const override {return  IndexedValue->Type();}

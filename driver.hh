@@ -45,18 +45,19 @@ class FunctionNodeHelper {
 public:
     explicit FunctionNodeHelper(VariableManager &Variables)
         : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
-    std::shared_ptr<VariableClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinitions(const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
-    std::shared_ptr<VariableClass> Get(yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable);
+    void EndFunctionDefinition(const yy::parser::location_type &l);
 
+    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
     std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssignBySequence(std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
-
+    void EndFunctionCall(const yy::parser::location_type &l);
 };
 
 // Conducting the whole scanning and parsing of Calc++.

@@ -141,7 +141,7 @@ void driver::ReportError(const yy::location &l, const std::string &m)
     Errors.push_back({l, m});
 }
 
-std::shared_ptr<VariableClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
     FunctionCallsPending.push_back({});
     FunctionCallsPending.back().NextPositionalParameter = -1;
@@ -153,8 +153,18 @@ std::shared_ptr<VariableClass> FunctionNodeHelper::BeginFunctionCall(std::string
     FunctionCallsPending.back().CurrentFunction =
         VariableHoldingFunction->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
     if (FunctionCallsPending.back().CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
-    return VariableHoldingFunction;
+    return FunctionCallsPending.back().CurrentFunction;
 }
+
+void FunctionNodeHelper::EndFunctionCall(const yy::parser::location_type &l)
+{
+    (void) l;
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<EndFunctionCall()> Not inside function"));
+    }
+    FunctionCallsPending.pop_back();
+}
+
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l)
 {
@@ -171,10 +181,21 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFun
     return CurrentFunctionInfo.CurrentFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinitions(const yy::parser::location_type &l)
+
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinition(const yy::parser::location_type &l)
 {
 
     return BeginFunctionDefinition("_Anonym_" + std::to_string(AnonymeousElementCounter++), l);
+}
+
+void FunctionNodeHelper::EndFunctionDefinition(const yy::parser::location_type &l)
+{
+    (void) l;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<EndFunctionDefinition()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.pop_back();
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
@@ -187,14 +208,14 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(V
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
-std::shared_ptr<VariableClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
 {
     (void) l;
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Get()> Not inside function"));
     }
     FunctionsDefinitonsPending.back().CurrentFunction->SetReturnValue(FunctionsDefinitonsPending.back().ReturnVariable);
-    return FunctionsDefinitonsPending.back().VariableHoldingCurrentFunction;
+    return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable)

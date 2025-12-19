@@ -34,6 +34,8 @@ public:
     virtual void        Print(std::ostream &s) = 0;
     virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const;
 
+    StorageClass GetStorageClass() const {return Storage;}
+
     bool IsAssignable(Variables::VariableContentClass const &Content)
     {
         return( (   (MyType == TypeDescriptorClass::Type::Dynamic)
