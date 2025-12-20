@@ -29,7 +29,7 @@ namespace Variables {
 FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
     : Parameters(Parameters), Statements(Statements), Name(Name_),
     StorageTemplate(std::move(StorageTemplate_)),
-    ActiveReturnVariable(nullptr),
+    //ActiveReturnVariable(nullptr),
     Location(Loc)
    {}
 
@@ -95,11 +95,11 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int 
 
 const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
 {
-    if (ActiveReturnVariable == nullptr) {
+    if (ReturnType == nullptr) {
         static VariableTypeDescriptorClass Undef(TypeDescriptorClass::Type::Undefined);
         return Undef;
     } else {
-        return ActiveReturnVariable->Type();
+        return *ReturnType;
     }
 
 
@@ -462,6 +462,7 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 
 Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
 {
+    std::shared_ptr<Variables::VariableContentClass> ReturnValue;
     std::ostringstream Output;
     Output  << "FunctionDefinitionClass::Execute '" << Name << "', Statements.size() = " << Statements.size();
     Env.Tracing(Location, Output.str());
@@ -470,16 +471,22 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         std::cout << "executing << ";
         s->Print(std::cout);
         std::cout << ">>" << std::endl;
-        s->Execute(Env);
+        auto r = s->Execute(Env);
+        if (r) {
+            if (std::holds_alternative<std::shared_ptr<Variables::VariableContentClass>>(*r)) {
+                ReturnValue = std::get<std::shared_ptr<Variables::VariableContentClass>>(*r);
+                break;
+            }
+        }
         std::cout << "executing done" << std::endl;
     }
     Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
 
-    if (ActiveReturnVariable != nullptr) {
+    if (ReturnValue != nullptr) {
         Env.OutputStream() << "Returning ";
-        ActiveReturnVariable->Print(Env.OutputStream());
-         Env.OutputStream() << "\n";
-       return ActiveReturnVariable->GetValue();
+        Env.OutputStream() << ReturnValue;
+        Env.OutputStream() << "\n";
+       return *ReturnValue;
     } else {
         Env.OutputStream() << "Returning Nothing\n";
         return VariableContentClass::MakeUndefined();

@@ -214,16 +214,17 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Get()> Not inside function"));
     }
-    FunctionsDefinitonsPending.back().CurrentFunction->SetReturnValue(FunctionsDefinitonsPending.back().ReturnVariable);
+    FunctionsDefinitonsPending.back().CurrentFunction->SetReturnType(std::move(FunctionsDefinitonsPending.back().ReturnType));
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable)
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType)
 {
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<SetReturnVariable()> Not inside function"));
     }
-    FunctionsDefinitonsPending.back().ReturnVariable = NewReturnVariable;
+    //FunctionsDefinitonsPending.back().ReturnVariable = NewReturnVariable;
+    FunctionsDefinitonsPending.back().ReturnType = std::move(NewReturnType);
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 

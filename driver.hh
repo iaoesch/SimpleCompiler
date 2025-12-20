@@ -26,9 +26,10 @@ class FunctionNodeHelper {
 
     struct FunctionDefinitionInfoType {
        std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
-       std::shared_ptr<VariableClass> ReturnVariable;
+       //std::shared_ptr<VariableClass> ReturnVariable;
        std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
-       Variables::VariableContentClass ReturnedValue;
+       //Variables::VariableContentClass ReturnedValue;
+       std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
        int NextPositionalParameter;
     };
     std::vector<FunctionDefinitionInfoType> FunctionsDefinitonsPending;
@@ -49,7 +50,7 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnVariable(std::shared_ptr<VariableClass> NewReturnVariable);
+    std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
     void EndFunctionDefinition(const yy::parser::location_type &l);
 
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);

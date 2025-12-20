@@ -469,8 +469,9 @@ private:
     std::string Name;
     LocalStorageType StorageTemplate;
     mutable std::vector<LocalStorageType> ActiveStorage;
-    std::vector<Variables::VariableContentClass> ActiveReturnValue;
-    std::shared_ptr<VariableClass> ActiveReturnVariable;
+    //std::vector<Variables::VariableContentClass> ActiveReturnValue;
+    //std::shared_ptr<VariableClass> ActiveReturnVariable;
+    std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
     yy::location Location;
 
 public:
@@ -490,7 +491,8 @@ public:
 
     void CreateFrame() {ActiveStorage.push_back(StorageTemplate);}
     void ReleaseFrame() {ActiveStorage.pop_back();}
-    void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
+   // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
+    void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}
     VariableContentClass Execute(Environment &Env) const;// = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
