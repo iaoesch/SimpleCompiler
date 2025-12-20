@@ -26,7 +26,7 @@
   typedef std::pair<KeyTypeUnion, Variables::VariableContentClass> MapEntryType;
   typedef std::vector<MapEntryType> MapEntryListType;
 
-  namespace Variables {
+  namespace Variiiiables {
      class FunctionDefinitionClass;
      class VariableContentClass;
   }
@@ -360,24 +360,37 @@ Namedparameter:
 
 
 Anonymeousfunctiondefinition:
-  "function" {$<FunctionDefinitionClassSharedPtr>$=drv.Currentfunction.BeginFunctionDefinition(@1);} functionBodydefinition {$$ = $3;}
+  "function" {
+                 drv.Currentfunction.BeginFunctionDefinition(@1);
+             }
+  functionBodydefinition
+             {
+                 $$ = $3;
+              }
 ;
 
 
 functiondefinition:
-  "function" "identifier" {$<FunctionDefinitionClassSharedPtr>$=drv.Currentfunction.BeginFunctionDefinition($2, @2);} functionBodydefinition {$$ = $<FunctionDefinitionClassSharedPtr>3;}
+  "function" "identifier"
+       {
+           drv.Currentfunction.BeginFunctionDefinition($2, @2);
+       }
+  functionBodydefinition
+       {
+          $$ = $4;
+       }
 ;
 
 functionBodydefinition:
                           {
                              /*FktDefContainer tmp;*/
-                             auto ptr = drv.Currentfunction.BeginFunctionDefinition($<std::string>0, @0);
+                             auto ptr = drv.Currentfunction.GetReference();
                              /*$<FktDefContainer>$ = tmp;*/
                              drv.Variables.StartLocal(ptr);
-                             drv.Variables.CreateNewContext($<std::string>0+"Params"); }
+                             drv.Variables.CreateNewContext(drv.Currentfunction.GetName()+"Params"); }
   returntype.opt
   "(" argumentlist ")"    {
-                              drv.Variables.CreateNewContext($<std::string>0);
+                              drv.Variables.CreateNewContext(drv.Currentfunction.GetName());
                               //auto ReturnValue = drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
                               drv.Currentfunction.SetReturnType(std::move($2));
 

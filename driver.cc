@@ -177,6 +177,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFun
     CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
     CurrentFunctionInfo.VariableHoldingCurrentFunction->SetValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
+    CurrentFunctionInfo.Name = Name;
     //auto &i = typeid(CurrentFunction);
     return CurrentFunctionInfo.CurrentFunction;
 }
@@ -206,6 +207,22 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(V
     }
     *(FunctionsDefinitonsPending.back().CurrentFunction) = std::move(f);
     return FunctionsDefinitonsPending.back().CurrentFunction;
+}
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::GetReference()
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+    }
+    return FunctionsDefinitonsPending.back().CurrentFunction;
+}
+
+std::string FunctionNodeHelper::GetName()
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+    }
+    return FunctionsDefinitonsPending.back().Name;
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)

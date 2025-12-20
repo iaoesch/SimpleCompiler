@@ -26,6 +26,7 @@ class FunctionNodeHelper {
 
     struct FunctionDefinitionInfoType {
        std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+        std::string Name;
        //std::shared_ptr<VariableClass> ReturnVariable;
        std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
        //Variables::VariableContentClass ReturnedValue;
@@ -49,6 +50,8 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
+    std::string GetName();
+    std::shared_ptr<Variables::FunctionDefinitionClass> GetReference();
     std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
     void EndFunctionDefinition(const yy::parser::location_type &l);
