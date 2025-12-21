@@ -33,6 +33,32 @@ FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const
     Location(Loc)
    {}
 
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc)
+    : Parameters(), Statements(), Name(Name_),
+    StorageTemplate(),
+    //ActiveReturnVariable(nullptr),
+    Location(Loc)
+{}
+
+void FunctionDefinitionClass::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters_, LocationType const &Loc)
+{
+    Parameters = Parameters_;
+    Location += Loc;
+}
+
+void FunctionDefinitionClass::Set(const std::list<std::shared_ptr<StatementClass> > &Statements_, LocationType const &Loc)
+{
+    Statements = Statements_;
+    Location += Loc;
+}
+
+void FunctionDefinitionClass::Set(LocalStorageType StorageTemplate_, LocationType const &Loc)
+{
+    StorageTemplate = std::move(StorageTemplate_);
+    Location += Loc;
+}
+
+
 void FunctionDefinitionClass::Print(std::ostream &s) const
 {
     {

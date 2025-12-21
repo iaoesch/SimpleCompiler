@@ -476,6 +476,7 @@ private:
 
 public:
     FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, LocationType const &Loc);
+    FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc);
     FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
     FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
     FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
@@ -484,6 +485,9 @@ public:
 public:
     //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
     //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    void Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc);
+    void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, const LocationType &Loc);
+    void Set(LocalStorageType StorageTemplate, LocationType const &Loc);
     void              Print(std::ostream &s) const;
     const std::string &GetName() {return Name;}
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
@@ -507,7 +511,7 @@ public:
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
-  };
+};
 }
 
 #endif // VARIABLECONTENTCLASS_H

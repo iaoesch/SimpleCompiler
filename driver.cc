@@ -175,7 +175,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFun
         throw(yy::parser::syntax_error(l, "function allready defined"));
     }
     CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
-    CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());
+    CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Name, l);
     CurrentFunctionInfo.VariableHoldingCurrentFunction->SetValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
     CurrentFunctionInfo.Name = Name;
     //auto &i = typeid(CurrentFunction);
@@ -208,6 +208,48 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(V
     *(FunctionsDefinitonsPending.back().CurrentFunction) = std::move(f);
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
+
+std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc)
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Define()> Not inside function"));
+    }
+    *(FunctionsDefinitonsPending.back().CurrentFunction) = Variables::FunctionDefinitionClass(
+        FunctionsDefinitonsPending.back().Name,
+        Parameters,
+        Statements,
+        StorageTemplate,
+        Loc
+        );
+    return FunctionsDefinitonsPending.back().CurrentFunction;
+
+}
+
+void FunctionNodeHelper::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc)
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.back().CurrentFunction->Set(Parameters, Loc);
+}
+
+void FunctionNodeHelper::Set(const std::list<std::shared_ptr<StatementClass> > &Statements, LocationType const &Loc)
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.back().CurrentFunction->Set(Statements, Loc);
+}
+
+void FunctionNodeHelper::Set(Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc)
+{
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
+    }
+    FunctionsDefinitonsPending.back().CurrentFunction->Set(StorageTemplate, Loc);
+}
+
+
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::GetReference()
 {
