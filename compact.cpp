@@ -866,7 +866,7 @@ void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 void FunctionCallStatementClass::Print(std::ostream &s) const
 {
     s << "function " << Function->GetName() << "(";
-    Function->Print(s);
+    //Function->Print(s);
     s << "endfunction" << std::endl;
 }
 

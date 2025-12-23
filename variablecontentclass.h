@@ -493,7 +493,7 @@ public:
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
 
-    void CreateFrame() {ActiveStorage.push_back(StorageTemplate);}
+    void CreateFrame() {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep");} ActiveStorage.push_back(StorageTemplate);}
     void ReleaseFrame() {ActiveStorage.pop_back();}
    // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}
