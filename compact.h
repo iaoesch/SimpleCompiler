@@ -482,6 +482,8 @@ public:
     virtual bool              IsSame(std::shared_ptr<ConditionalExpressionClass>Other) override;// = 0;
 private:
     virtual const LocationType MergeLocations() const override {return GetLocation() | LeftOperand->GetMergedLocation() | RightOperand->GetMergedLocation();}
+protected:
+
 };
 
 
@@ -513,6 +515,35 @@ public:
 
 private:
     virtual const LocationType MergeLocations() const override {return GetLocation() | LeftOperand->GetMergedLocation() | RightOperand->GetMergedLocation();}
+
+protected:
+    void DrawNode(std::ostream &s, int MyNodeNumber, std::string NodeLabel) const;
+};
+
+class SameAsClass : public BinaryRelationalOperationClass {
+
+public:
+    SameAsClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2, const LocationType &Loc) : BinaryRelationalOperationClass(e1, e2, Loc) {}
+    SameAsClass(const SameAsClass &v) :  BinaryRelationalOperationClass(v) {}
+    virtual                  ~SameAsClass() override {}
+    virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
+class NotSameAsClass : public BinaryRelationalOperationClass {
+
+public:
+    NotSameAsClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2, const LocationType &Loc) : BinaryRelationalOperationClass(e1, e2, Loc) {}
+    NotSameAsClass(const NotSameAsClass &v) :  BinaryRelationalOperationClass(v) {}
+    virtual                  ~NotSameAsClass() override {}
+    virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
 class LessThanClass : public BinaryRelationalOperationClass {
@@ -521,6 +552,19 @@ public:
     LessThanClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2, const LocationType &Loc) : BinaryRelationalOperationClass(e1, e2, Loc) {}
     LessThanClass(const LessThanClass &v) :  BinaryRelationalOperationClass(v) {}
     virtual                  ~LessThanClass() override {}
+    virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ConditionalExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
+class LessOrSameThanClass : public BinaryRelationalOperationClass {
+
+public:
+    LessOrSameThanClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2, const LocationType &Loc) : BinaryRelationalOperationClass(e1, e2, Loc) {}
+    LessOrSameThanClass(const LessThanClass &v) :  BinaryRelationalOperationClass(v) {}
+    virtual                  ~LessOrSameThanClass() override {}
     virtual bool              Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
     virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
     virtual std::shared_ptr<ConditionalExpressionClass> Clone() const override;//{return new AdditionClass(*this); };

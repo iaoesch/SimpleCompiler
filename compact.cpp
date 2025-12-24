@@ -788,6 +788,73 @@ bool BinaryRelationalOperationClass::IsSame(std::shared_ptr<ConditionalExpressio
 
 }
 
+void BinaryRelationalOperationClass::DrawNode(std::ostream &s, int MyNodeNumber, std::string Label) const
+{
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> " << Label << " |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    LeftOperand->DrawNode(s, NodeNumber1);
+    RightOperand->DrawNode(s, NodeNumber2);
+
+}
+
+
+bool SameAsClass::Evaluate(Environment &Env) const
+{
+    return LeftOperand->Evaluate(Env) == RightOperand->Evaluate(Env);
+}
+
+void SameAsClass::Print(std::ostream &s) const
+{
+    s << "("; LeftOperand->Print(s); s << ") == ("; RightOperand->Print(s); s << ")";
+}
+
+std::shared_ptr<ConditionalExpressionClass> SameAsClass::Clone() const
+{
+    return std::make_shared<SameAsClass>(*this);
+}
+
+std::shared_ptr<ConditionalExpressionClass> SameAsClass::Optimize(Environment &Env)
+{
+    (void)Env;
+    return shared_from_this();
+}
+
+void SameAsClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    BinaryRelationalOperationClass::DrawNode(s, MyNodeNumber, "==");
+}
+
+
+bool NotSameAsClass::Evaluate(Environment &Env) const
+{
+    return LeftOperand->Evaluate(Env) != RightOperand->Evaluate(Env);
+}
+
+void NotSameAsClass::Print(std::ostream &s) const
+{
+    s << "("; LeftOperand->Print(s); s << ") != ("; RightOperand->Print(s); s << ")";
+}
+
+std::shared_ptr<ConditionalExpressionClass> NotSameAsClass::Clone() const
+{
+    return std::make_shared<NotSameAsClass>(*this);
+}
+
+std::shared_ptr<ConditionalExpressionClass> NotSameAsClass::Optimize(Environment &Env)
+{
+    (void)Env;
+    return shared_from_this();
+}
+
+void NotSameAsClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    BinaryRelationalOperationClass::DrawNode(s, MyNodeNumber, "!=");
+}
+
+
 bool LessThanClass::Evaluate(Environment &Env) const
 {
     return LeftOperand->Evaluate(Env) < RightOperand->Evaluate(Env);
@@ -811,14 +878,34 @@ std::shared_ptr<ConditionalExpressionClass> LessThanClass::Optimize(Environment 
 
 void LessThanClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
-    int NodeNumber1 = NodeNumber++;
-    int NodeNumber2 = NodeNumber++;
-    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> \\< |<f2> \"];" << endl;
-    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
-    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
-    LeftOperand->DrawNode(s, NodeNumber1);
-    RightOperand->DrawNode(s, NodeNumber2);
+    BinaryRelationalOperationClass::DrawNode(s, MyNodeNumber, "\\<");
+}
 
+
+bool LessOrSameThanClass::Evaluate(Environment &Env) const
+{
+    return LeftOperand->Evaluate(Env) <= RightOperand->Evaluate(Env);
+}
+
+void LessOrSameThanClass::Print(std::ostream &s) const
+{
+    s << "("; LeftOperand->Print(s); s << ") <= ("; RightOperand->Print(s); s << ")";
+}
+
+std::shared_ptr<ConditionalExpressionClass> LessOrSameThanClass::Clone() const
+{
+    return std::make_shared<LessOrSameThanClass>(*this);
+}
+
+std::shared_ptr<ConditionalExpressionClass> LessOrSameThanClass::Optimize(Environment &Env)
+{
+    (void)Env;
+    return shared_from_this();
+}
+
+void LessOrSameThanClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    BinaryRelationalOperationClass::DrawNode(s, MyNodeNumber, "\\<=");
 }
 
 void RepeatLoopClass::Print(std::ostream &s) const

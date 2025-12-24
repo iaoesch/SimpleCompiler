@@ -431,16 +431,21 @@ argumentlist:
 %left not;
 %left ">" ">=" "==" "!=" "<" "<=";
 
+// a >  b  -> b < a
+// a >= b  -> b <= a
+// a > b  -> b < a
+
+
 condexp:
   condexp and condexp   { $$ = std::make_shared<AndClass>($1, $3, @2); }
 | condexp or condexp   { $$ = std::make_shared<AndClass>($1, $3, @2); }
 | not condexp    { $$ = std::make_shared<AndClass>($2, $2, @1); }
-| exp ">" exp    { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
-| exp ">=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2);}
-| exp "==" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
-| exp "!=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp ">" exp    { $$ = std::make_shared<LessThanClass>($3, $1, @2); }
+| exp ">=" exp   { $$ = std::make_shared<LessOrSameThanClass>($3, $1, @2);}
+| exp "==" exp   { $$ = std::make_shared<SameAsClass>($1, $3, @2); }
+| exp "!=" exp   { $$ = std::make_shared<NotSameAsClass>($1, $3, @2); }
 | exp "<" exp    { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
-| exp "<=" exp   { $$ = std::make_shared<LessThanClass>($1, $3, @2); }
+| exp "<=" exp   { $$ = std::make_shared<LessOrSameThanClass>($1, $3, @2); }
 | "(" condexp ")"   { std::swap ($$, $2); };
 
 
