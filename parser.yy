@@ -84,6 +84,7 @@
   SHIFTLEFT  "<<"
   SHIFTRIGHT  ">>"
   IF       "if"
+  THEN     "then"
   ELSE     "else"
   ENDIF    "endif"
   REPEAT  "repeat"
@@ -134,7 +135,7 @@
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
-%type  <std::shared_ptr<StatementClass>> loopstatement
+%type  <std::shared_ptr<StatementClass>> loopstatement ifstatement
 %type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
@@ -214,6 +215,7 @@ statements:
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
+| ifstatement ";"       {$$ = $1;}
 | print ";"             {$$ = std::make_shared<PrintStatementClass>($1, @$);}
 | functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1, @$);}
 | error ";"             {$$ = std::make_shared<ErrorStatement>(@$);}
@@ -221,13 +223,20 @@ statement:
 
 print:
   "print" "(" explist ")" {$$ = $3;}
+;
 
 explist:
    exp              {$$ = std::vector<std::shared_ptr<ExpressionClass>>(); $$.push_back($1);}
 |  explist "," exp  {$$ = $1; $$.push_back($3);}
+;
 
 loopstatement:
-  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);};
+  "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);}
+;
+
+ifstatement:
+  "if" "(" condexp ")" "then" statements "else" statements "endif" {$$ = std::make_shared<ifClass>($6, $8, $3, @$);}
+;
 
 assignment:
   assignable ":=" exp {

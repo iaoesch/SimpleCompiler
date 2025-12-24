@@ -602,6 +602,28 @@ public:
     virtual StatementResultClass Execute(Environment &Env) const override;
 };
 
+class ifClass : public StatementClass {
+    std::list<std::shared_ptr<StatementClass>> TrueStatements;
+    std::list<std::shared_ptr<StatementClass>> FalseStatements;
+    std::shared_ptr<ConditionalExpressionClass> Condition;
+
+public:
+    ifClass(std::list<std::shared_ptr<StatementClass>> _TrueStatements, std::list<std::shared_ptr<StatementClass>> _FalseStatements, std::shared_ptr<ConditionalExpressionClass> _Condition, const LocationType &Loc) :
+        StatementClass(Loc), TrueStatements(_TrueStatements), FalseStatements(_FalseStatements), Condition(_Condition) {}
+
+    virtual                  ~ifClass() override {}
+    virtual void              Print(std::ostream &s) const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Clone() const override;// = 0;
+    virtual std::shared_ptr<StatementClass> Optimize(Environment &Env) override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+
+    // StatementClass interface
+public:
+    virtual StatementResultClass Execute(Environment &Env) const override;
+};
+
+
 class FunctionCallStatementClass : public StatementClass {
     //std::list<std::shared_ptr<StatementClass>> Statements;
     //std::list<std::shared_ptr<VariableClass>> Parameters;

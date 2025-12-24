@@ -863,6 +863,44 @@ void RepeatLoopClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
+
+void ifClass::Print(std::ostream &s) const
+{
+    s << "if (";
+    Condition->Print(s); s << ") then \n";
+    for(auto &r: TrueStatements) {
+        r->Print(s);
+    }
+    s << "else \n";
+    for(auto &r: FalseStatements) {
+        r->Print(s);
+    }
+    s << "endif ;\n";
+}
+
+std::shared_ptr<StatementClass> ifClass::Clone() const
+{
+    return std::make_shared<ifClass>(*this);
+}
+
+std::shared_ptr<StatementClass> ifClass::Optimize(Environment &Env)
+{
+    (void)Env;
+    return shared_from_this();
+}
+
+void ifClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    int NodeNumber1 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> if |<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f1 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    Condition->DrawNode(s, NodeNumber1);
+    DrawStatementNodeList(TrueStatements, s, MyNodeNumber);
+    DrawStatementNodeList(FalseStatements, s, MyNodeNumber);
+
+}
+
+
 void FunctionCallStatementClass::Print(std::ostream &s) const
 {
     s << "function " << Function->GetName() << "(";
@@ -1002,14 +1040,36 @@ StatementResultClass RepeatLoopClass::Execute(Environment &Env) const
     do {
         for (auto const &s: Statements) {
             auto r = s->Execute(Env);
-            Env.ThrowIfStoppRequested();
             if (r) {
                 return r;
             }
         }
+        Env.ThrowIfStoppRequested();
     } while (Condition->Evaluate(Env) == false);
     return {};
 }
+
+StatementResultClass ifClass::Execute(Environment &Env) const
+{
+    Env.Tracing(GetLocation(), "If(...)");
+    if (Condition->Evaluate(Env) == true) {
+        for (auto const &s: TrueStatements) {
+            auto r = s->Execute(Env);
+            if (r) {
+                return r;
+            }
+        }
+    } else {
+        for (auto const &s: FalseStatements) {
+            auto r = s->Execute(Env);
+            if (r) {
+                return r;
+            }
+        }
+    }
+    return {};
+}
+
 
 StatementResultClass FunctionCallStatementClass::Execute(Environment &Env) const
 {
