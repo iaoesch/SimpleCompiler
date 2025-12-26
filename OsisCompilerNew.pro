@@ -11,6 +11,7 @@ SOURCES += \
    compact.cpp \
    dmdmain.cpp \
    driver.cc \
+   inputdialogclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
    varmanag.cpp
@@ -48,6 +49,7 @@ HEADERS += \
    compact.h \
    driver.hh \
    environment.hpp \
+   inputdialogclass.h \
    typedescriptorclass.hpp \
    variableclass.h \
    varmanag.hpp

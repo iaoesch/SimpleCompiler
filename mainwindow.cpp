@@ -21,6 +21,7 @@
 #include "driver.hh"
 #include "highlighter.h"
 #include "compact.h"
+#include "inputdialogclass.h"
 
 
 
@@ -156,6 +157,13 @@ void MainWindow::StopButtonClicked()
 void MainWindow::RunButtonClicked()
 {
     //Stoprequest = true;
+    InputDialogClass dialog(tr("Enter Customer Details"), "Naja", this);
+
+    if (dialog.exec() == QDialog::Accepted) {
+      //  createLetter(dialog.senderName(), dialog.senderAddress(),
+      //               dialog.orderItems(), dialog.sendOffers());
+    }
+
     if (CurrentCode != nullptr) {
         Run->setDisabled(true);
         CurrentCode->Run();

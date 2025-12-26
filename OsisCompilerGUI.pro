@@ -25,6 +25,7 @@ SOURCES += \
    driver.cc \
    environment.cpp \
    highlighter.cpp \
+   inputdialogclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
    variablecontentclass.cpp \
@@ -67,6 +68,7 @@ HEADERS += \
    driver.hh \
    environment.hpp \
    highlighter.h \
+   inputdialogclass.h \
    typedescriptorclass.hpp \
    variableclass.h \
    variablecontentclass.h \
