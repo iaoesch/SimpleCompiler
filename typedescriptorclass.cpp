@@ -52,6 +52,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         case Type::Float:
         case Type::Bool:
         case Type::String:
+        case Type::Type:
         case Type::List:
         case Type::Map:
         case Type::Expression:
@@ -161,6 +162,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::Float:     s << "Float"; break;
     case ValueTypeDescriptorClass::Type::Bool:      s << "Bool"; break;
     case ValueTypeDescriptorClass::Type::String:    s << "String"; break;
+    case ValueTypeDescriptorClass::Type::Type:      s << "Type"; break;
     case ValueTypeDescriptorClass::Type::Stack:     s << "Stack"; break;
     case ValueTypeDescriptorClass::Type::List:      s << "List"; break;
     case ValueTypeDescriptorClass::Type::Array:     s << std::get<ArrayDescriptorClass>(t.Descriptor); break;

@@ -62,7 +62,7 @@ class GlobalVariableClass : public VariableClass
     Variables::VariableContentClass Content;
 
 public:
-    GlobalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Content(Type_) {}
+    GlobalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~GlobalVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
@@ -99,7 +99,7 @@ class TemporaryVariableClass : public VariableClass
     Variables::VariableContentClass Content;
 
 public:
-    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::ReadAndWrite), Content(Type_) {}
+    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::ReadAndWrite), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~TemporaryVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;

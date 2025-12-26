@@ -102,6 +102,7 @@ public:
         Expression,
         Dynamic,
         Reference,
+        Type,
         Illegal  // $Internal flag
     };
 
@@ -156,6 +157,7 @@ protected:
         case Type::Expression:
         case Type::String:
         case Type::Undefined:
+        case Type::Type:
         case Type::Dynamic:
             return std::monostate();
             break;

@@ -77,6 +77,7 @@ blank [ \t]
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);
 
 "as"      return yy::parser::make_AS (loc);
+"typeof"      return yy::parser::make_TYPEOF (loc);
 
 "holding"      return yy::parser::make_HOLDING (loc);
 "integer"      return yy::parser::make_INTEGER (loc);

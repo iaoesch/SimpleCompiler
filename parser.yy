@@ -94,6 +94,7 @@
   RETURNING "returning"
 
   AS "as"
+  TYPEOF "typeof"
   HOLDING "holding"
   INTEGER "integer"
   FLOAT "float"
@@ -257,6 +258,15 @@ assignment:
                                                  $$->Print(std::cout);
                                                  /*std::cout << "eval:" << $3->Evaluate();*/
                                                 }
+
+| assignable ":=" typedefinition {
+    $$ = std::make_shared<AssignementClass>(std::make_shared<ConstantClass>($3->ToValueType(), @3), $1, @$);
+    std::cout << "asg:";
+    std::cout << $3;
+    $$->Print(std::cout);
+
+
+}
 ;
 
 /* assignable ":=" exp { $$ = std::make_shared<AssignementClass>($3, drv.Variables.GetOrCreateVariable($1, $3->Type(), 0.0)); }; */
@@ -322,6 +332,7 @@ typedefinition:
 | "any"   { $$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Dynamic);}
 | "stack" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
 | "map" "[" mapkeytype "]" "of" typedefinition { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3, std::move($6)));}
+| "typeof" "(" exp ")"   { $$ = std::make_unique<VariableTypeDescriptorClass>($3->Type());}
 
 ;
 

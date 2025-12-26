@@ -360,7 +360,8 @@ std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
-                   [&s](const std::string& arg) { s << '"' << arg << '"'; }
+                   [&s](const std::string& arg) { s << '"' << arg << '"'; },
+                   [&s](const TypeDescriptorClass& arg) { s << '"' << arg << '"'; }
                }, v.Data);
     return s;
 }
@@ -379,7 +380,9 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
                        [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function>\n"; arg->Print(s);  },
                        [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
-                       [&s](const std::string& arg) { s << '"' << arg << '"'; }
+                       [&s](const std::string& arg) { s << '"' << arg << '"'; },
+                       [&s](const TypeDescriptorClass& arg) { s << '"' << arg << '"'; }
+
                    }, Data);
 
 }
@@ -603,7 +606,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         if (CreateIfNeeded) {
             auto &Element = std::get<MapStringAndIntegerKeyType>(Data)[Key];
             if (Element==nullptr) {
-                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+                Element = std::make_unique<Variables::VariableContentClass>(VariableContentClass::MakeEmpty(BaseType));
             }
             return *Element;
 
@@ -627,7 +630,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         if (CreateIfNeeded) {
             auto &Element = std::get<MapIntegerKeyType>(Data)[Key];
             if (Element==nullptr) {
-                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+                Element = std::make_unique<Variables::VariableContentClass>(VariableContentClass::MakeEmpty(BaseType));
             }
             return *Element;
         } else {
@@ -650,7 +653,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         if (CreateIfNeeded) {
             auto &Element = std::get<MapStringKeyType>(Data)[Key];
             if (Element==nullptr) {
-                Element = std::make_unique<Variables::VariableContentClass>(BaseType);
+                Element = std::make_unique<Variables::VariableContentClass>(VariableContentClass::MakeEmpty(BaseType));
             }
             return *Element;
 

@@ -138,7 +138,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     std::shared_ptr<VariableClass> Var;
     if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
         Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalsParent, Storage);
-        LocalStorageTemplates.back().push_back(Variables::VariableContentClass(Type));
+        LocalStorageTemplates.back().push_back(Variables::VariableContentClass::MakeEmpty(Type));
         assert(LocalOffset == LocalStorageTemplates.back().size());
     } else {
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);
