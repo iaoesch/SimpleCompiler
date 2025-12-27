@@ -471,12 +471,11 @@ inline VariableContentClass pow(const VariableContentClass &l, const VariableCon
     return l.GetEmtpy();
 }
 
-class FunctionDefinitionClass {
+class FunctionDefinitionBaseClass {
 public:
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
-private:
+protected:
     std::vector<std::shared_ptr<VariableClass>> Parameters;
-    std::list<std::shared_ptr<StatementClass>> Statements;
     std::string Name;
     LocalStorageType StorageTemplate;
     mutable std::vector<LocalStorageType> ActiveStorage;
@@ -486,29 +485,28 @@ private:
     yy::location Location;
 
 public:
-    FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, LocationType const &Loc);
-    FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc);
-    FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
-    FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
-    FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
+    FunctionDefinitionBaseClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocalStorageType StorageTemplate, LocationType const &Loc);
+    FunctionDefinitionBaseClass(const std::string &Name_, LocationType const &Loc);
+    FunctionDefinitionBaseClass(FunctionDefinitionBaseClass &&src) = default;
+  //  FunctionDefinitionBaseClass &operator =(const FunctionDefinitionBaseClass &src) = default;
+    FunctionDefinitionBaseClass &operator =(FunctionDefinitionBaseClass &&src) = default;
 
-    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
+    //static FunctionDefinitionBaseClass MakeEmpty() {return FunctionDefinitionBaseClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
 public:
     //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
     //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
     void Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc);
-    void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, const LocationType &Loc);
     void Set(LocalStorageType StorageTemplate, LocationType const &Loc);
-    void              Print(std::ostream &s) const;
+    virtual void              Print(std::ostream &s) const;
     const std::string &GetName() {return Name;}
     void DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const;
-    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const;
+    virtual void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const = 0;
 
     void CreateFrame() {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep");} ActiveStorage.push_back(StorageTemplate);}
     void ReleaseFrame() {ActiveStorage.pop_back();}
    // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}
-    VariableContentClass Execute(Environment &Env) const;// = 0;
+    virtual VariableContentClass Execute(Environment &Env) const = 0;
     const VariableContentClass &GetTemplateContentForOffset(uint32_t Offset) const {return StorageTemplate.at(Offset);}
     VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
                 {
@@ -523,6 +521,55 @@ public:
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
 };
+#if 1
+class FunctionDefinitionClass : public FunctionDefinitionBaseClass {
+private:
+    std::list<std::shared_ptr<StatementClass>> Statements;
+
+public:
+    FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, LocationType const &Loc);
+    FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc);
+    FunctionDefinitionClass(FunctionDefinitionClass &&src) = default;
+ //   FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
+    FunctionDefinitionClass &operator =(FunctionDefinitionClass &&src) = default;
+
+    static FunctionDefinitionClass MakeEmpty() {return FunctionDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
+public:
+    //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
+    //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    using FunctionDefinitionBaseClass::Set;
+    void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, const LocationType &Loc);
+    void              Print(std::ostream &s) const override;
+    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const override;
+
+    VariableContentClass Execute(Environment &Env) const override;// = 0;
+};
+#endif
+class Callable {
+public:
+    virtual VariableContentClass Execute(FunctionDefinitionBaseClass::LocalStorageType &Parameters) = 0;
+};
+
+class PredefinedFunctionDefinitionClass : public FunctionDefinitionBaseClass {
+private:
+    Callable *Function;
+
+public:
+    PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function, LocalStorageType StorageTemplate, LocationType const &Loc);
+    PredefinedFunctionDefinitionClass(PredefinedFunctionDefinitionClass &&src) = default;
+    PredefinedFunctionDefinitionClass &operator =(const PredefinedFunctionDefinitionClass &src) = default;
+    PredefinedFunctionDefinitionClass &operator =(PredefinedFunctionDefinitionClass &&src) = default;
+
+public:
+    //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
+    //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    //void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, const LocationType &Loc);
+    void              Print(std::ostream &s) const override;
+    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const override;
+
+    VariableContentClass Execute(Environment &Env) const override;// = 0;
+};
+
 }
 
 #endif // VARIABLECONTENTCLASS_H

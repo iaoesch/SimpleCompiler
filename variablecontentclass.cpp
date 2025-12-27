@@ -26,21 +26,21 @@ DoubleVariableClass::DoubleVariableClass(const std::string &Name_, double Value)
 
 namespace Variables {
 
-FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
-    : Parameters(Parameters), Statements(Statements), Name(Name_),
+FunctionDefinitionBaseClass::FunctionDefinitionBaseClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
+    : Parameters(Parameters), Name(Name_),
     StorageTemplate(std::move(StorageTemplate_)),
     //ActiveReturnVariable(nullptr),
     Location(Loc)
    {}
 
-FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc)
-    : Parameters(), Statements(), Name(Name_),
+FunctionDefinitionBaseClass::FunctionDefinitionBaseClass(const std::string &Name_, LocationType const &Loc)
+    : Parameters(), Name(Name_),
     StorageTemplate(),
     //ActiveReturnVariable(nullptr),
     Location(Loc)
 {}
 
-void FunctionDefinitionClass::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters_, LocationType const &Loc)
+void FunctionDefinitionBaseClass::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters_, LocationType const &Loc)
 {
     Parameters = Parameters_;
     Location += Loc;
@@ -52,14 +52,14 @@ void FunctionDefinitionClass::Set(const std::list<std::shared_ptr<StatementClass
     Location += Loc;
 }
 
-void FunctionDefinitionClass::Set(LocalStorageType StorageTemplate_, LocationType const &Loc)
+void FunctionDefinitionBaseClass::Set(LocalStorageType StorageTemplate_, LocationType const &Loc)
 {
     StorageTemplate = std::move(StorageTemplate_);
     Location += Loc;
 }
 
 
-void FunctionDefinitionClass::Print(std::ostream &s) const
+void FunctionDefinitionBaseClass::Print(std::ostream &s) const
 {
     {
         bool first = true;
@@ -74,6 +74,13 @@ void FunctionDefinitionClass::Print(std::ostream &s) const
             std::cout << r->GetName();
         }
         s << ")" << std::endl;
+    }
+}
+
+void FunctionDefinitionClass::Print(std::ostream &s) const
+{
+    {
+        FunctionDefinitionBaseClass::Print(s);
         for(auto &r: Statements) {
             r->Print(s);
         }
@@ -81,7 +88,7 @@ void FunctionDefinitionClass::Print(std::ostream &s) const
 
 }
 
-void FunctionDefinitionClass::DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const
+void FunctionDefinitionBaseClass::DrawDeclarationNode(std::ostream &s, int MyNodeNumber) const
 {
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> function\\n"
       << Name << "(";
@@ -99,7 +106,7 @@ void FunctionDefinitionClass::DrawDefinitionNode(std::ostream &s, int MyNodeNumb
 
 }
 
-std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::string Name)
+std::shared_ptr<VariableClass> FunctionDefinitionBaseClass::GetParameterByName(std::string Name)
 {
     auto Var = std::find_if(Parameters.begin(), Parameters.end(), [Name](auto const &v){return v->GetName() == Name;});
     if (Var == Parameters.end()) {
@@ -109,7 +116,7 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByName(std::
     }
 }
 
-std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int i)
+std::shared_ptr<VariableClass> FunctionDefinitionBaseClass::GetParameterByIndex(int i)
 {
     size_t index = static_cast<size_t>(i);
     if(index >= Parameters.size()) {
@@ -119,7 +126,7 @@ std::shared_ptr<VariableClass> FunctionDefinitionClass::GetParameterByIndex(int 
     }
 }
 
-const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
+const TypeDescriptorClass &FunctionDefinitionBaseClass::GetReturnType() const
 {
     if (ReturnType == nullptr) {
         static VariableTypeDescriptorClass Undef(TypeDescriptorClass::Type::Undefined);
@@ -127,11 +134,15 @@ const TypeDescriptorClass &FunctionDefinitionClass::GetReturnType() const
     } else {
         return *ReturnType;
     }
-
-
-
 }
 
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Parameters, std::move(StorageTemplate_), Loc)
+{}
+
+FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Loc)
+{}
 
 ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r) , BaseType(TypeDescriptorClass::Type::Undefined)
 {
@@ -513,7 +524,7 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
 
     if (ReturnValue != nullptr) {
         Env.OutputStream() << "Returning ";
-        Env.OutputStream() << ReturnValue;
+        Env.OutputStream() << *ReturnValue;
         Env.OutputStream() << "\n";
        return *ReturnValue;
     } else {
@@ -521,6 +532,24 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         return VariableContentClass::MakeUndefined();
     }
 }
+
+Variables::VariableContentClass PredefinedFunctionDefinitionClass::Execute(Environment &Env) const
+{
+    std::ostringstream Output;
+    Output  << "PredefinedFunctionDefinitionClass::Execute '" << Name << "'";
+    Env.Tracing(Location, Output.str());
+
+    VariableContentClass ReturnValue = Function->Execute(ActiveStorage.back());
+
+    Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
+
+        Env.OutputStream() << "Returning ";
+        Env.OutputStream() << ReturnValue;
+        Env.OutputStream() << "\n";
+        return ReturnValue;
+
+}
+
 
 void StackClass::PrintDetail(std::ostream &s, int Limit) const
 {
