@@ -227,7 +227,7 @@ public:
 
 };
 
-class FunctionDefinitionClass;
+class FunctionDefinitionBaseClass;
 
 
 class
@@ -251,7 +251,7 @@ class
                          MapClass,
                          TypeDescriptorClass,
                          std::shared_ptr<ExpressionClass>,
-                         std::shared_ptr<FunctionDefinitionClass>,
+                         std::shared_ptr<FunctionDefinitionBaseClass>,
                          std::shared_ptr<VariableContentClass>> dataType;
 
 public:
@@ -277,7 +277,7 @@ public:
     VariableContentClass(ValueTypeDescriptorClass Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Type)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
-    VariableContentClass(std::shared_ptr<FunctionDefinitionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}
     // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}
 //        Variables::StackClass,
@@ -555,7 +555,8 @@ private:
     Callable *Function;
 
 public:
-    PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function, LocalStorageType StorageTemplate, LocationType const &Loc);
+    PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function_, LocalStorageType StorageTemplate_, LocationType const &Loc);
+    PredefinedFunctionDefinitionClass(const std::string &Name_, Callable *Function_, LocationType const &Loc);
     PredefinedFunctionDefinitionClass(PredefinedFunctionDefinitionClass &&src) = default;
     PredefinedFunctionDefinitionClass &operator =(const PredefinedFunctionDefinitionClass &src) = default;
     PredefinedFunctionDefinitionClass &operator =(PredefinedFunctionDefinitionClass &&src) = default;

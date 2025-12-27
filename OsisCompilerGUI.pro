@@ -26,6 +26,7 @@ SOURCES += \
    environment.cpp \
    highlighter.cpp \
    inputdialogclass.cpp \
+   precompiledfunctionmanagerclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
    variablecontentclass.cpp \
@@ -69,6 +70,7 @@ HEADERS += \
    environment.hpp \
    highlighter.h \
    inputdialogclass.h \
+   precompiledfunctionmanagerclass.h \
    typedescriptorclass.hpp \
    variableclass.h \
    variablecontentclass.h \

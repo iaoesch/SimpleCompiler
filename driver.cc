@@ -4,10 +4,30 @@
 #include <fstream>
 
 driver::driver (Environment &Env_)
-    : Env(Env_), Currentfunction(Variables), trace_parsing (false), trace_scanning (false)
+    : Env(Env_), Currentfunction(Variables), PrecompiledManager(Variables), trace_parsing (false), trace_scanning (false)
 {
 //  variables["one"] = 1;
 //  variables["two"] = 2;
+}
+
+class TestCaller : public Variables::Callable {
+
+
+    // Callable interface
+public:
+    virtual Variables::VariableContentClass Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters) override;
+};
+
+Variables::VariableContentClass TestCaller::Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters)
+{
+    return Variables::VariableContentClass(6LL);
+}
+
+void driver::SetupPredefinedFunctions()
+{
+    static TestCaller t;
+    PrecompiledFunctionManagerClass::FunctionsDescriptor Fkt(t, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Integer));
+    PrecompiledManager.RegisterFunction("TTT", Fkt);
 }
 
 int
@@ -19,6 +39,7 @@ driver::parse (const std::string &f)
   yy::parser parser (*this);
   parser.set_debug_level (trace_parsing);
   Variables.CreateNewContext("$$Global_Context$$");
+  SetupPredefinedFunctions();
   int res = 0;
   res = parser.parse ();
   scan_end ();
@@ -35,6 +56,7 @@ int driver::parse(const char *Code)
     parser.set_debug_level (trace_parsing);
     Variables.clear();
     Variables.CreateNewContext("$$Global_Context$$");
+    SetupPredefinedFunctions();
     int res = 0;
     res = parser.parse ();
     scan_end ();
@@ -141,7 +163,7 @@ void driver::ReportError(const yy::location &l, const std::string &m)
     Errors.push_back({l, m});
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
+std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
     FunctionCallsPending.push_back({});
     FunctionCallsPending.back().NextPositionalParameter = -1;
@@ -151,7 +173,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFun
         throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
     FunctionCallsPending.back().CurrentFunction =
-        VariableHoldingFunction->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionClass>>();
+        VariableHoldingFunction->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
     if (FunctionCallsPending.back().CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
     return FunctionCallsPending.back().CurrentFunction;
 }

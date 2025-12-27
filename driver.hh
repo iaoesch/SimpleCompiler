@@ -5,6 +5,7 @@
 #include <list>
 #include "environment.hpp"
 # include "parser.hpp"
+#include "precompiledfunctionmanagerclass.h"
 #include"varmanag.hpp"
 
 // Tell Flex the lexer's prototype ...
@@ -38,7 +39,7 @@ class FunctionNodeHelper {
     uint32_t AnonymeousElementCounter;
 
     struct FunctionCallInfoType {
-        std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+        std::shared_ptr<Variables::FunctionDefinitionBaseClass> CurrentFunction;
         int NextPositionalParameter;
     };
     std::vector<FunctionCallInfoType> FunctionCallsPending;
@@ -60,7 +61,7 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
     void EndFunctionDefinition(const yy::parser::location_type &l);
 
-    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
     std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
@@ -79,8 +80,9 @@ public:
   // std::map<std::string, int> variables;
   VariableManager Variables;
   FunctionNodeHelper Currentfunction;
+  PrecompiledFunctionManagerClass PrecompiledManager;
 
-   std::shared_ptr<ExpressionClass> resulte;
+  std::shared_ptr<ExpressionClass> resulte;
   std::list<std::shared_ptr<StatementClass>> result;
 
    std::shared_ptr<StatementClass> LastStatement;
@@ -93,6 +95,10 @@ public:
   typedef std::list<ErrorInformation> ErrorListType;
   ErrorListType Errors;
 
+  private:
+  void SetupPredefinedFunctions();
+
+  public:
   // Run the parser on file F.  Return 0 on success.
   int parse (const std::string& f);
   int parse (const char *Code);

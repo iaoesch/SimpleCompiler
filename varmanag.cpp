@@ -85,7 +85,7 @@ void VariableManager::LeaveContext(int Levels)
     }
 }
 
-void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent)
+void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent)
 {
     Local = true;
     LocalOffset = 0;
@@ -137,10 +137,12 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     }
     std::shared_ptr<VariableClass> Var;
     if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
+        std::cout << "creating local <" << Name << ">\n";
         Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalsParent, Storage);
         LocalStorageTemplates.back().push_back(Variables::VariableContentClass::MakeEmpty(Type));
         assert(LocalOffset == LocalStorageTemplates.back().size());
     } else {
+        std::cout << "creating global <" << Name << ">\n";
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);
     }
     return ContextStack.back()->RegisterVariable(Name, Var, false);

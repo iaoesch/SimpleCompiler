@@ -78,10 +78,10 @@ private:
 class LocalVariableClass : public VariableClass
 {
     uint32_t Reference;
-    std::shared_ptr<Variables::FunctionDefinitionClass> Parent;
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent;
 
 public:
-    LocalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionClass> Parent_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Reference(Reference_), Parent(Parent_) {}
+    LocalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Reference(Reference_), Parent(Parent_) {}
     virtual ~LocalVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;

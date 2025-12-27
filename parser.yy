@@ -30,7 +30,7 @@
      class FunctionDefinitionClass;
      class VariableContentClass;
   }
-  typedef std::shared_ptr<Variables::FunctionDefinitionClass> FunctionDefinitionClassSharedPtr;
+  typedef std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionDefinitionClassSharedPtr;
 
   class FktDefContainer {
      public:

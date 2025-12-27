@@ -65,7 +65,7 @@ class VariableManager
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
     std::vector<std::shared_ptr<VariableContextClass>> Contexts;
     bool Local;
-    std::shared_ptr<Variables::FunctionDefinitionClass> LocalsParent;
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
     uint32_t LocalOffset;
 public:
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
@@ -83,7 +83,7 @@ public:
 
    void CreateNewContext(std::string Name);
    void LeaveContext(int Levels = 1);
-   void StartLocal(std::shared_ptr<Variables::FunctionDefinitionClass> Parent);
+   void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
    LocalStorageType EndLocal();
  //  std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);

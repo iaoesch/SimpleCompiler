@@ -144,6 +144,29 @@ FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, Locat
     : FunctionDefinitionBaseClass(Name_, Loc)
 {}
 
+PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function_, LocalStorageType StorageTemplate_, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Parameters, std::move(StorageTemplate_), Loc),
+    Function(Function_)
+{}
+
+PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, Callable *Function_, const LocationType &Loc)
+    : FunctionDefinitionBaseClass(Name_, Loc),
+    Function(Function_)
+{}
+
+void PredefinedFunctionDefinitionClass::Print(std::ostream &s) const
+{
+    FunctionDefinitionBaseClass::Print(s);
+    s << "<internal>\n";
+}
+
+void PredefinedFunctionDefinitionClass::DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const
+{
+    DrawDeclarationNode(s, MyNodeNumber);
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call internal |<f2> \"];" << std::endl;
+}
+
+
 ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r) , BaseType(TypeDescriptorClass::Type::Undefined)
 {
     CommonInitialization();
@@ -369,7 +392,7 @@ std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
                    [&s](const ArrayClass &arg) { s << "[Array "; arg.PrintDimensions(s); s << "]";  },
                    [&s](const MapClass &arg) { (void)arg; s << "[map]"; },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
-                   [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function]\n"; arg->Print(s);  },
+                   [&s](const std::shared_ptr<FunctionDefinitionBaseClass> &arg) { s << "[function]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
                    [&s](const std::string& arg) { s << '"' << arg << '"'; },
                    [&s](const TypeDescriptorClass& arg) { s << '"' << arg << '"'; }
@@ -389,7 +412,7 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const ArrayClass &arg) { s << "[Array "; arg.PrintDetail(s, Limit); s << "]";  },
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
-                       [&s](const std::shared_ptr<FunctionDefinitionClass> &arg) { s << "[function>\n"; arg->Print(s);  },
+                       [&s](const std::shared_ptr<FunctionDefinitionBaseClass> &arg) { s << "[function>\n"; arg->Print(s);  },
                        [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
                        [&s](const std::string& arg) { s << '"' << arg << '"'; },
                        [&s](const TypeDescriptorClass& arg) { s << '"' << arg << '"'; }
@@ -791,5 +814,6 @@ ProxyVariableClass MapClass::GetOrCreateIndexedElement(std::string BaseName, Ele
 {
     return GetIndexedElement(BaseName, Selector, true);
 }
+
 
 } // namespace Variables

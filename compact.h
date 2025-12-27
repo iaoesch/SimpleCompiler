@@ -285,12 +285,12 @@ private:
 class FunctionClass;
 
 class FunctionCallClass : public ValueClass {
-    std::shared_ptr<Variables::FunctionDefinitionClass> TheFunction;
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheFunction;
     std::list<std::shared_ptr<StatementClass>> Assignements;
    // std::vector<Variables::VariableContentClass> StorageTemplate;
 
 public:
-    FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionClass> f, std::list<std::shared_ptr<StatementClass>> a, const LocationType &Loc) : ValueClass(Loc), TheFunction(f), Assignements(a) {}
+    FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionBaseClass> f, std::list<std::shared_ptr<StatementClass>> a, const LocationType &Loc) : ValueClass(Loc), TheFunction(f), Assignements(a) {}
     FunctionCallClass(const FunctionCallClass &f) = default;
     virtual                  ~FunctionCallClass() override {}
     virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//Val->GetValue(); }
