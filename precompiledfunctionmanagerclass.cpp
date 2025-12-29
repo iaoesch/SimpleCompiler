@@ -119,7 +119,77 @@ void test2 ()
     std::vector<VariableTypeDescriptorClass> v = BuildParameterTypeList(f);
 }
 
-template <class First>
+template <class  R, class ...P>
+class FunctionInterface : public Variables::Callable{
+
+    R (*FunctionPtr)(P...);
+    std::vector<std::string> Parameternames;
+
+    struct FunctionsParameterDescriptor {
+        std::string Name;
+        VariableTypeDescriptorClass TypeDescriptor;
+        Variables::VariableContentClass DefaultValue;
+    };
+
+    typedef std::vector<FunctionsParameterDescriptor> ParameterListType;
+    VariableTypeDescriptorClass Returntype;
+
+public:
+    FunctionInterface(R (*f)(P...)) : FunctionPtr(f), Parameternames(sizeof...(P), "")
+    {
+        BuildParameterNames();
+        if (Parameternames.size() != sizeof...(P)) {
+            throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
+        }
+    }
+
+    FunctionInterface(R (*f)(P...), std::vector<std::string> Parameternames_) : FunctionPtr(f), Parameternames(Parameternames_)
+    {
+        BuildParameterNames();
+        if (Parameternames.size() != sizeof...(P)) {
+            throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
+        }
+    }
+
+    // Callable interface
+public:
+    virtual Variables::VariableContentClass Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters) override
+    {
+        if (Parameters.size() != sizeof...(P)) {
+            throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
+        }
+        auto I = std::make_index_sequence<sizeof...(P)>();
+        return FunctionPtr(std::get<P>(Parameters[I])...);
+    }
+
+    ParameterListType GetParameterDescriptorList()
+    {
+        std::vector<VariableTypeDescriptorClass> v{Convertor<P>::MakeDescriptor()...};
+        ParameterListType DescriptorList;
+
+        for (int i = 0; i < v.size(); i++) {
+            DescriptorList.push_back({Parameternames.at(i), v.at(i), Variables::VariableContentClass::MakeUndefined()});
+        }
+        return DescriptorList;
+
+    }
+
+    VariableTypeDescriptorClass GetReturnType()
+    {
+       return Convertor<R>::MakeDescriptor();
+    }
+
+private:
+    void BuildParameterNames()
+    {
+        for (int i = Parameternames.size(); i < sizeof...(P); i++) {
+            Parameternames.push_back("P_" + std::to_string(i));
+        }
+    }
+
+};
+#if 0
+template <class ...First>
 class ParameterListBuilder2 {
     void BuildParameterTypeList(std::vector<VariableTypeDescriptorClass> &v)
     {
@@ -131,7 +201,7 @@ class ParameterListBuilder2 {
 };
 
 template <class First, class ...P>
-class ParameterListBuilder2 {
+class ParameterListBuilder2<First, P...> {
     void BuildParameterTypeList(std::vector<VariableTypeDescriptorClass> &v)
     {
         ParameterListBuilder<P...> B;
@@ -140,4 +210,4 @@ class ParameterListBuilder2 {
         B.BuildParameterTypeList(v);
     }
 };
-
+#endif
