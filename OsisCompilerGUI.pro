@@ -27,6 +27,7 @@ SOURCES += \
    highlighter.cpp \
    inputdialogclass.cpp \
    precompiledfunctionmanagerclass.cpp \
+   systeminterfaceclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
    variablecontentclass.cpp \
@@ -65,12 +66,14 @@ HEADERS += \
    ERRTEXTS.IPP \
    Errclass.hpp \
    ParserManual.hpp \
+   PredefinedFunctionHelper.hpp \
    compact.h \
    driver.hh \
    environment.hpp \
    highlighter.h \
    inputdialogclass.h \
    precompiledfunctionmanagerclass.h \
+   systeminterfaceclass.h \
    typedescriptorclass.hpp \
    variableclass.h \
    variablecontentclass.h \

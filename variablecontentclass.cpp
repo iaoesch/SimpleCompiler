@@ -144,12 +144,12 @@ FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, Locat
     : FunctionDefinitionBaseClass(Name_, Loc)
 {}
 
-PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function_, LocalStorageType StorageTemplate_, LocationType const &Loc)
-    : FunctionDefinitionBaseClass(Name_, Parameters, std::move(StorageTemplate_), Loc),
+PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters_, std::shared_ptr<Callable> Function_, LocalStorageType StorageTemplate_, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Parameters_, std::move(StorageTemplate_), Loc),
     Function(Function_)
 {}
 
-PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, Callable *Function_, const LocationType &Loc)
+PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, std::shared_ptr<Callable> Function_, const LocationType &Loc)
     : FunctionDefinitionBaseClass(Name_, Loc),
     Function(Function_)
 {}

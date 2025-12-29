@@ -9,28 +9,39 @@ namespace Variables {
 }
 class VariableManager;
 
-class PrecompiledFunctionManagerClass
-{
-    VariableManager &Variables;
+
+class FunctionInterfaceBase : public Variables::Callable{
 
 public:
-
     struct FunctionsParameterDescriptor {
         std::string Name;
         VariableTypeDescriptorClass TypeDescriptor;
         Variables::VariableContentClass DefaultValue;
     };
 
-    struct FunctionsDescriptor {
-        FunctionsDescriptor(Variables::Callable &Function_, const VariableTypeDescriptorClass &ReturnType_) : Function(Function_), Returntype(ReturnType_){}
-        std::vector<FunctionsParameterDescriptor> Parameterlist;
-        Variables::Callable &Function;
-        VariableTypeDescriptorClass Returntype;
-    };
+    typedef std::vector<FunctionsParameterDescriptor> ParameterListType;
+
+    ParameterListType GetParameterDescriptorList() {return ParameterList;}
+    VariableTypeDescriptorClass GetReturnType() {return Returntype;}
+
+
+protected:
+    VariableTypeDescriptorClass Returntype;
+    ParameterListType           ParameterList;
+
+};
+
+
+
+class PrecompiledFunctionManagerClass
+{
+    VariableManager &Variables;
+
+public:
 
 
     PrecompiledFunctionManagerClass(VariableManager &Variables_);
-    void RegisterFunction(std::string Name, FunctionsDescriptor &Fkt);
+    void RegisterFunction(std::string Name, std::shared_ptr<FunctionInterfaceBase> Fkt);
 };
 
 #endif // PRECOMPILEDFUNCTIONMANAGERCLASS_H

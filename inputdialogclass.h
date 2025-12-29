@@ -33,16 +33,23 @@ public slots:
 
 public:
 
-private:
-    QDialogButtonBox *buttonBox;
-
     typedef std::variant<std::monostate, int64_t, double, std::string> ValueType;
+
     struct ElementType {
         std::string Label;
         enum Type {Int, Float, String} Type;
         ValueType Default;
-
     };
+
+    struct DialogDescriptor {
+        std::string Title;
+        std::string Description;
+        std::vector<ElementType> InputFieldDescriptors;
+    };
+
+private:
+    QDialogButtonBox *buttonBox;
+
 
     struct InputDescriptor {
         QLineEdit *InputFields;

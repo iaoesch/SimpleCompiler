@@ -46,12 +46,25 @@ public:
 };
 
 class ListClass {
-    std::list<std::unique_ptr<VariableContentClass>> Data;
+    std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
     ListClass(const ListClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ListClass &operator = (const ListClass &s){(void)s; SIGNAL_UNIMPLEMENTED();}
 
+    void Append(std::unique_ptr<VariableContentClass> Data);
+    void Append(ListClass &Data);
     void PrintDetail(std::ostream &s, int Limit) const;
+    ValueTypeDescriptorClass GetTypeDescriptor() const;
+    VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
+
+    void PrintDimensions(std::ostream &s) const;
+
+    ProxyVariableClass GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const;
+    VariableContentClass &GetOrCreateIndexedElement(ElementSelectorType Selector) const {return GetIndexedElement(Selector, true);}
+
+    ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded = false) const;
+    VariableContentClass &GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded = false) const;
+
 };
 
 class ArrayClass {
@@ -552,11 +565,11 @@ public:
 
 class PredefinedFunctionDefinitionClass : public FunctionDefinitionBaseClass {
 private:
-    Callable *Function;
+    std::shared_ptr<Callable> Function;
 
 public:
-    PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, Callable *Function_, LocalStorageType StorageTemplate_, LocationType const &Loc);
-    PredefinedFunctionDefinitionClass(const std::string &Name_, Callable *Function_, LocationType const &Loc);
+    PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, std::shared_ptr<Callable>Function_, LocalStorageType StorageTemplate_, LocationType const &Loc);
+    PredefinedFunctionDefinitionClass(const std::string &Name_, std::shared_ptr<Callable> Function_, LocationType const &Loc);
     PredefinedFunctionDefinitionClass(PredefinedFunctionDefinitionClass &&src) = default;
     PredefinedFunctionDefinitionClass &operator =(const PredefinedFunctionDefinitionClass &src) = default;
     PredefinedFunctionDefinitionClass &operator =(PredefinedFunctionDefinitionClass &&src) = default;
