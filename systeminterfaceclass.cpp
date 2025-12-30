@@ -23,35 +23,35 @@ Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Ti
     for (auto const &d: InputElements) {
         if (d->holds_alternative<Variables::ListClass>()) {
             auto &e = d->GetValue<Variables::ListClass>();
-            InputDialogClass::ElementType Descriptor;
+            InputDialogClass::ElementType FieldDescriptor;
             if (e.size() > 1) {
                 if (e[0]->holds_alternative<std::string>()) {
-                    Descriptor.Label = e[0]->GetValue<std::string>();
+                    FieldDescriptor.Label = e[0]->GetValue<std::string>();
                 } else {
                     throw RuntimeErrorClass("expected string as first entry for Input ");
                 }
                 if (e[1]->holds_alternative<TypeDescriptorClass>()) {
                     const TypeDescriptorClass &t = e[1]->GetValue<TypeDescriptorClass>();
                     if (t == TypeDescriptorClass::Type::Float) {
-                        Descriptor.Type = InputDialogClass::ElementType::Float;
+                        FieldDescriptor.Type = InputDialogClass::ElementType::Float;
                     } else if (t == TypeDescriptorClass::Type::Integer) {
-                        Descriptor.Type = InputDialogClass::ElementType::Int;
+                        FieldDescriptor.Type = InputDialogClass::ElementType::Int;
                     } else if (t == TypeDescriptorClass::Type::String) {
-                        Descriptor.Type = InputDialogClass::ElementType::String;
+                        FieldDescriptor.Type = InputDialogClass::ElementType::String;
                     } else {
                         throw RuntimeErrorClass("unsupported type for Input ");
                     }
                 } else {
                     throw RuntimeErrorClass("expected type as second entry for Input ");
                 }
-                Descriptor.Default = std::monostate();
+                FieldDescriptor.Default = std::monostate();
                 if (e.size() == 3) {
                     if (e[2]->holds_alternative<std::string>()) {
-                       Descriptor.Default = e[2]->GetValue<std::string>();
+                       FieldDescriptor.Default = e[2]->GetValue<std::string>();
                     } else if (e[2]->holds_alternative<int64_t>()) {
-                        Descriptor.Default = e[2]->GetValue<int64_t>();
+                        FieldDescriptor.Default = e[2]->GetValue<int64_t>();
                     } else if (e[2]->holds_alternative<double>()) {
-                        Descriptor.Default = e[2]->GetValue<double>();
+                        FieldDescriptor.Default = e[2]->GetValue<double>();
                     } else {
                         // ignore for now
                     }
@@ -62,8 +62,24 @@ Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Ti
             } else {
                 throw RuntimeErrorClass("too few arguments for Input ");
             }
+            Descriptor.InputFieldDescriptors.push_back(FieldDescriptor);
         } else {
             throw RuntimeErrorClass("Invalid type for Input (List expected)");
         }
     }
+    std::vector<InputDialogClass::ValueType> Result;
+    emit ShowInputDialog(&Descriptor, &Result);
+    Variables::ListClass TransformedResults;
+    for (auto &r: Result) {
+        if (std::holds_alternative<std::string>(r)) {
+            TransformedResults.Append(std::make_unique<Variables::VariableContentClass>(std::get<std::string>(r)));
+        } else if (std::holds_alternative<int64_t>(r)) {
+            TransformedResults.Append(std::make_unique<Variables::VariableContentClass>(std::get<int64_t>(r)));
+        } else if (std::holds_alternative<double>(r)) {
+            TransformedResults.Append(std::make_unique<Variables::VariableContentClass>(std::get<double>(r)));
+        } else {
+            TransformedResults.Append(std::make_unique<Variables::VariableContentClass>(Variables::VariableContentClass::MakeUndefined()));
+        }
+    }
+    return TransformedResults;
 }
