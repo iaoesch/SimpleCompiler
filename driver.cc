@@ -2,9 +2,10 @@
 #include "parser.hpp"
 #include "compact.h"
 #include <fstream>
+#include "systeminterfaceclass.h"
 
-driver::driver (Environment &Env_)
-    : Env(Env_), Currentfunction(Variables), PrecompiledManager(Variables), trace_parsing (false), trace_scanning (false)
+driver::driver (Environment &Env_, SystemInterfaceClass *SystemInterface_)
+    : Env(Env_), Currentfunction(Variables), PrecompiledManager(Variables), SystemInterface(SystemInterface_), trace_parsing (false), trace_scanning (false)
 {
 //  variables["one"] = 1;
 //  variables["two"] = 2;
@@ -26,6 +27,8 @@ Variables::VariableContentClass TestCaller::Execute(Variables::FunctionDefinitio
 void driver::SetupPredefinedFunctions()
 {
     static TestCaller t;
+
+    SystemInterface->Register(PrecompiledManager);
   //  PrecompiledFunctionManagerClass::FunctionsDescriptor Fkt(t, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Integer));
   //  PrecompiledManager.RegisterFunction("TTT", Fkt);
 }
@@ -136,7 +139,7 @@ void driver::Dump()
 
 void driver::SetParserDebugLevel(int Level)
 {
-    (void)Level;
+    trace_parsing = (Level > 0);
  //  parser.set_debug_level (trace_parsing);
 }
 

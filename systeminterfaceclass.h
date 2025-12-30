@@ -10,9 +10,9 @@ class PrecompiledFunctionManagerClass;
 class SystemInterfaceClass : public QObject
 {
     Q_OBJECT
+
 public:
     explicit SystemInterfaceClass(QObject *parent = nullptr);
-
     void Register(PrecompiledFunctionManagerClass &PrecompiledFunctionManager);
 
 signals:

@@ -1,10 +1,11 @@
 #include <iostream>
-#include "driver.hh"
+//#include "driver.hh"
 #include "compact.h"
 
 int
 drivermain (int argc, char *argv[])
 {
+#if 0
     int res = 0;
     Environment Env;
     driver drv(Env);
@@ -45,4 +46,5 @@ drivermain (int argc, char *argv[])
 
         }
     return res;
+#endif
 }

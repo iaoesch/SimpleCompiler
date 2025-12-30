@@ -531,6 +531,8 @@ arraycontentliteral:
 | "stringliteral"       {$$ = Variables::VariableContentClass($1); }
 | listliteral    {$$ = $1;}
 | mapliteral     {$$ = $1;}
+| typedefinition {
+    $$ = Variables::VariableContentClass($1->ToValueType()); }
 ;
 
 numericliteral:

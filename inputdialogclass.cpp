@@ -5,16 +5,10 @@
 
 
 //! [0]
-InputDialogClass::InputDialogClass(const QString &title, const std::string &Description, QWidget *parent)
+InputDialogClass::InputDialogClass(const DialogDescriptor *Description, std::vector<ValueType> *Results_, QWidget *parent)
     : QDialog(parent)
 {
-
-
-    ElementType Elements[3] = {
-       {"Integer", ElementType::Int},
-        {"String", ElementType::String},
-        {"Float", ElementType::Float},
-    };
+    Results = Results_;
 
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
                                      | QDialogButtonBox::Cancel);
@@ -23,7 +17,7 @@ InputDialogClass::InputDialogClass(const QString &title, const std::string &Desc
     connect(buttonBox, &QDialogButtonBox::rejected, this, &InputDialogClass::reject);
     //! [0]
     QFormLayout *Formlayout = new QFormLayout;
-    for (auto &e: Elements) {
+    for (auto &e: Description->InputFieldDescriptors) {
         QLineEdit *w = new QLineEdit;
         InputFields.push_back({w, e.Type});
         switch (e.Type) {
@@ -51,12 +45,12 @@ InputDialogClass::InputDialogClass(const QString &title, const std::string &Desc
 
     //! [1]
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(new QLabel(QString::fromStdString(Description)));
+    mainLayout->addWidget(new QLabel(QString::fromStdString(Description->Description)));
     mainLayout->addLayout(Formlayout);
     mainLayout->addWidget(buttonBox);
     setLayout(mainLayout);
 
-    setWindowTitle(title);
+    setWindowTitle(QString::fromStdString(Description->Title));
 }
 //! [1]
 
@@ -65,6 +59,7 @@ InputDialogClass::InputDialogClass(const QString &title, const std::string &Desc
 //! [7]
 void InputDialogClass::verify()
 {
+    Results->clear();
     for (auto &w: InputFields) {
         if (!w.InputFields->hasAcceptableInput()) {
            reject();
@@ -72,10 +67,10 @@ void InputDialogClass::verify()
         }
         switch(w.FieldType) {
 
-        case ElementType::Int:      Results.push_back(w.InputFields->text().toInt()); break;
-        case ElementType::Float:    Results.push_back(w.InputFields->text().toDouble()); break;
-        case ElementType::String:   Results.push_back(w.InputFields->text().toStdString()); break;
-        default:                    Results.push_back(std::monostate()); break;
+        case ElementType::Int:      Results->push_back(w.InputFields->text().toInt()); break;
+        case ElementType::Float:    Results->push_back(w.InputFields->text().toDouble()); break;
+        case ElementType::String:   Results->push_back(w.InputFields->text().toStdString()); break;
+        default:                    Results->push_back(std::monostate()); break;
         }
     }
     accept();

@@ -85,7 +85,7 @@ class FunctionOrMethodInterface : public FunctionInterfaceBase{
     std::vector<std::string> Parameternames;
 
 public:
-    FunctionOrMethodInterface() : Parameternames(sizeof...(P), "")
+    FunctionOrMethodInterface() : Parameternames()
     {
         BuildParameterNames();
         if (Parameternames.size() != sizeof...(P)) {

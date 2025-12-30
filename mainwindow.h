@@ -9,6 +9,7 @@
 #include "driver.hh"
 #include "environment.hpp"
 #include "highlighter.h"
+#include "inputdialogclass.h"
 
 QT_BEGIN_NAMESPACE
 class QTextEdit;
@@ -17,6 +18,7 @@ class QSvgWidget;
 QT_END_NAMESPACE
 class StatementClass;
 class MainWindow;
+class SystemInterfaceClass;
 
 class QtEnvironment : public Environment {
 
@@ -44,6 +46,7 @@ class MainWindow : public QMainWindow
     ButtonType *Buttons[3][3];
     QLabel *TopLabel;
     QLabel *BottomLabel;
+    QCheckBox *DebugMode;
     QPixmap *Cross;
     QPixmap *Circle;
     QPushButton *Stop;
@@ -56,11 +59,15 @@ class MainWindow : public QMainWindow
 
     std::unique_ptr<driver> CurrentCode;
 
+    SystemInterfaceClass *SystemInterface;
+
 public slots:
     void about();
     void newFile();
     void openFile(QString path = QString());
     void saveFile(QString path = QString());
+    void ShowInputDialog(InputDialogClass::DialogDescriptor *Descriptor, std::vector<InputDialogClass::ValueType> *Result);
+
 
 private:
     void setupFileMenu();

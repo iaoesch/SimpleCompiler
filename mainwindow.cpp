@@ -17,11 +17,13 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QCheckBox>
 
 #include "driver.hh"
 #include "highlighter.h"
 #include "compact.h"
 #include "inputdialogclass.h"
+#include "systeminterfaceclass.h"
 
 
 
@@ -79,9 +81,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(Run, &QPushButton::clicked, this, &MainWindow::RunButtonClicked);
     HLayout2->addWidget(Run);
 
+    DebugMode = new QCheckBox("Debug");
+    HLayout2->addWidget(DebugMode);
+
     connect(editor, &QTextEdit::textChanged, this, &MainWindow::TextChanged);
     ChangingInProgress = 0;
 
+    SystemInterface = new(SystemInterfaceClass);
+    connect(SystemInterface, &SystemInterfaceClass::ShowInputDialog, this, &MainWindow::ShowInputDialog);
 
 #if 0
     Cross = new QPixmap(30,30);
@@ -141,6 +148,8 @@ void MainWindow::TextChanged()
         Output->setText(QString::fromStdString(Result));
         UnMarkDocument();
         for (auto const &e: Errors) {
+            std::cout << "premarking: " << e.Location.begin.column << e.Location.begin.line
+                      << e.Location.end.column << e.Location.end.line << "\n";
             std::cout << "Marking: " << e.Location << std::endl;
            MarkRange(e.Location, e.Message);
         }
@@ -156,13 +165,6 @@ void MainWindow::StopButtonClicked()
 
 void MainWindow::RunButtonClicked()
 {
-    //Stoprequest = true;
-    InputDialogClass dialog(tr("Enter Customer Details"), "Naja", this);
-
-    if (dialog.exec() == QDialog::Accepted) {
-      //  createLetter(dialog.senderName(), dialog.senderAddress(),
-      //               dialog.orderItems(), dialog.sendOffers());
-    }
 
     if (CurrentCode != nullptr) {
         Run->setDisabled(true);
@@ -218,7 +220,8 @@ bool QtEnvironment::CheckForStop()
 std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::string Codeblock)
 {
     //int res = 0;
-    std::unique_ptr<driver> drv = std::make_unique<driver>(Env);
+    std::unique_ptr<driver> drv = std::make_unique<driver>(Env, SystemInterface);
+    drv->SetParserDebugLevel(DebugMode->isChecked()?1:0);
     drv->result.clear();
     try {
         if (drv->parse(Codeblock.c_str())) {
@@ -433,6 +436,20 @@ void MainWindow::saveFile( QString path)
         QFile file(fileName);
         if (file.open(QFile::WriteOnly | QFile::Text))
             file.write(editor->toPlainText().toLatin1());
+    }
+
+}
+
+void MainWindow::ShowInputDialog(InputDialogClass::DialogDescriptor *Descriptor, std::vector<InputDialogClass::ValueType> *Result)
+{
+    //Stoprequest = true;
+    InputDialogClass dialog(Descriptor, Result, this);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        //  createLetter(dialog.senderName(), dialog.senderAddress(),
+        //               dialog.orderItems(), dialog.sendOffers());
+    } else {
+        Result->clear();
     }
 
 }

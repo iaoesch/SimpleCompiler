@@ -26,12 +26,6 @@ class InputDialogClass : public QDialog
     Q_OBJECT
 
 public:
-    InputDialogClass(const QString &title, const std::string &Description, QWidget *parent);
-
-public slots:
-    void verify();
-
-public:
 
     typedef std::variant<std::monostate, int64_t, double, std::string> ValueType;
 
@@ -47,6 +41,14 @@ public:
         std::vector<ElementType> InputFieldDescriptors;
     };
 
+    InputDialogClass(const DialogDescriptor *Description, std::vector<ValueType> *Results, QWidget *parent);
+
+public slots:
+    void verify();
+
+public:
+
+
 private:
     QDialogButtonBox *buttonBox;
 
@@ -57,7 +59,7 @@ private:
     };
 
     std::vector<InputDescriptor> InputFields;
-    std::vector<ValueType> Results;
+    std::vector<ValueType> *Results;
 };
 
 

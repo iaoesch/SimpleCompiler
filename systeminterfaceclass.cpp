@@ -12,7 +12,7 @@ void SystemInterfaceClass::Register(PrecompiledFunctionManagerClass &Precompiled
    std::shared_ptr<FunctionInterfaceBase> InputMethod;
   // MethodInterface M(this, &SystemInterfaceClass::Input);
    InputMethod = std::make_shared<decltype(MethodInterface(this, &SystemInterfaceClass::Input))>(this, &SystemInterfaceClass::Input);
-   PrecompiledFunctionManager.RegisterFunction("input", InputMethod);
+   PrecompiledFunctionManager.RegisterFunction("INPUT", InputMethod);
 }
 
 Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Title, const std::string Description, const Variables::ListClass &InputElements)

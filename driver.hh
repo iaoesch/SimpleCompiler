@@ -21,6 +21,8 @@ class location;
 }
 typedef yy::location  LocationType;
 
+class SystemInterfaceClass;
+
 
 class FunctionNodeHelper {
     VariableManager &Variables;
@@ -75,12 +77,13 @@ class driver
   Environment &Env;
 
 public:
-  driver (Environment &Env);
+  driver (Environment &Env, SystemInterfaceClass *SystemInterface_);
 
   // std::map<std::string, int> variables;
   VariableManager Variables;
   FunctionNodeHelper Currentfunction;
   PrecompiledFunctionManagerClass PrecompiledManager;
+  SystemInterfaceClass *SystemInterface;
 
   std::shared_ptr<ExpressionClass> resulte;
   std::list<std::shared_ptr<StatementClass>> result;
