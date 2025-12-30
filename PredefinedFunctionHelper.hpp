@@ -61,10 +61,10 @@ public:
     }
 };
 
-void test ()
-{
-    std::vector<VariableTypeDescriptorClass> v = ParameterListBuilder<int64_t, float, float>::BuildParameterTypeList();
-}
+//void test ()
+//{
+//    std::vector<VariableTypeDescriptorClass> v = ParameterListBuilder<int64_t, float, float>::BuildParameterTypeList();
+//}
 
 template <class R, class ...P>
 std::vector<VariableTypeDescriptorClass> BuildParameterTypeList(R (*f)(P...))
@@ -72,21 +72,20 @@ std::vector<VariableTypeDescriptorClass> BuildParameterTypeList(R (*f)(P...))
     return ParameterListBuilder<P...>::BuildParameterTypeList();
 }
 
-int f(double d, int i, double d2);
+// int f(double d, int i, double d2);
 
-void test2 ()
-{
-    std::vector<VariableTypeDescriptorClass> v = BuildParameterTypeList(f);
-}
+//void test2 ()
+//{
+//    std::vector<VariableTypeDescriptorClass> v = BuildParameterTypeList(f);
+//}
 
 template <class  R, class ...P>
 class FunctionOrMethodInterface : public FunctionInterfaceBase{
 
-    R (*FunctionPtr)(P...);
     std::vector<std::string> Parameternames;
 
 public:
-    FunctionOrMethodInterface(R (*f)(P...)) : FunctionPtr(f), Parameternames(sizeof...(P), "")
+    FunctionOrMethodInterface() : Parameternames(sizeof...(P), "")
     {
         BuildParameterNames();
         if (Parameternames.size() != sizeof...(P)) {
@@ -95,7 +94,7 @@ public:
         BuildParameterDescriptorList();
     }
 
-    FunctionOrMethodInterface(R (*f)(P...), std::vector<std::string> Parameternames_) : FunctionPtr(f), Parameternames(Parameternames_)
+    FunctionOrMethodInterface(std::vector<std::string> Parameternames_) : Parameternames(Parameternames_)
     {
         BuildParameterNames();
         if (Parameternames.size() != sizeof...(P)) {
@@ -104,16 +103,6 @@ public:
         BuildParameterDescriptorList();
     }
 
-    // Callable interface
-public:
-    virtual Variables::VariableContentClass Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters) override
-    {
-        if (Parameters.size() != sizeof...(P)) {
-            throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
-        }
-        auto I = std::make_index_sequence<sizeof...(P)>();
-        return FunctionPtr(std::get<P>(Parameters[I])...);
-    }
 
 private:
 
@@ -144,11 +133,11 @@ class FunctionInterface : public FunctionOrMethodInterface<R, P...>{
     std::vector<std::string> Parameternames;
 
 public:
-    FunctionInterface(R (*f)(P...)) : FunctionOrMethodInterface<R, P...>(f)
+    FunctionInterface(R (*f)(P...)) : FunctionOrMethodInterface<R, P...>(), FunctionPtr(f)
     {
     }
 
-    FunctionInterface(R (*f)(P...), std::vector<std::string> Parameternames_) : FunctionOrMethodInterface<R, P...>(f, Parameternames_)
+    FunctionInterface(R (*f)(P...), std::vector<std::string> Parameternames_) : FunctionOrMethodInterface<R, P...>(Parameternames_), FunctionPtr(f)
     {
     }
 
@@ -173,12 +162,17 @@ class MethodInterface : public FunctionOrMethodInterface<R, P...>{
     C *Object;
 
 public:
-    MethodInterface(C *Obj, R (C::*f)(P...)) : FunctionOrMethodInterface<R, P...>(f), Object(Obj)
+    MethodInterface(C *Obj, R (C::*f)(P...)) : FunctionOrMethodInterface<R, P...>(), FunctionPtr(f), Object(Obj)
     {
     }
 
-    MethodInterface(C *Obj, R (C::*f)(P...), std::vector<std::string> Parameternames_) : FunctionOrMethodInterface<R, P...>(f, Parameternames_), Object(Obj)
+    MethodInterface(C *Obj, R (C::*f)(P...), std::vector<std::string> Parameternames_) : FunctionOrMethodInterface<R, P...>(Parameternames_), FunctionPtr(f), Object(Obj)
     {
+    }
+    template <typename T, T... ints>
+    Variables::VariableContentClass docall(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters, std::integer_sequence<T, ints...> int_seq)
+    {
+        return (Object->*FunctionPtr)(Parameters[ints].template GetValue<std::remove_cv_t<std::remove_reference_t<P>>>()...);
     }
 
     // Callable interface
@@ -188,8 +182,9 @@ public:
         if (Parameters.size() != sizeof...(P)) {
             throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
         }
-        auto I = std::make_index_sequence<sizeof...(P)>();
-        return Object->*FunctionPtr(std::get<P>(Parameters[I])...);
+//        auto I = std::make_index_sequence<sizeof...(P)>();
+//        return Object->*FunctionPtr(std::get<P>(Parameters[I])...);
+        return docall(Parameters, std::make_index_sequence<sizeof...(P)>());
     }
 
 };

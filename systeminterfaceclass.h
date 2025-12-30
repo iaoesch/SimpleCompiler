@@ -16,7 +16,7 @@ public:
 
 signals:
 private:
-    Variables::VariableContentClass Input(std::string Title, std::string Description, Variables::ListClass &InputElements);
+    Variables::VariableContentClass Input(const std::string Title, const std::string Description, const Variables::ListClass &InputElements);
 };
 
 #endif // SYSTEMINTERFACECLASS_H

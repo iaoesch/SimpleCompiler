@@ -439,6 +439,34 @@ class AdditionClass : public BinaryOperationClass {
    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 };
 
+class ExtractionClass : public UnaryOperationClass {
+
+public:
+    ExtractionClass(std::shared_ptr<ExpressionClass>e1, const LocationType &Loc) : UnaryOperationClass(e1, Loc) {}
+    ExtractionClass(const ExtractionClass &v) :  UnaryOperationClass(v) {}
+    virtual                  ~ExtractionClass() override {}
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override ;//{return new AdditionClass(LeftOperand->Derive()), RigthOperand->Derive()); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
+class CompositionClass : public BinaryOperationClass {
+
+public:
+    CompositionClass(std::shared_ptr<ExpressionClass>e1, std::shared_ptr<ExpressionClass>e2, const LocationType &Loc) : BinaryOperationClass(e1, e2, Loc) {}
+    CompositionClass(const CompositionClass &v) :  BinaryOperationClass(v) {}
+    virtual                  ~CompositionClass() override {}
+    virtual Variables::VariableContentClass            Evaluate(Environment &Env) const override;//{return LeftOperand->Evaluate(Env) + RigthOperand->Evaluate(Env); };
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType  ToDerive) const override ;//{return new AdditionClass(LeftOperand->Derive()), RigthOperand->Derive()); };
+    virtual void              Print(std::ostream &s) const override;//{ s << "("; LeftOperand->Print(s); s << ") * ("; RigthOperand->Print(s); s << ")"; };
+    virtual std::shared_ptr<ExpressionClass> Clone() const override;//{return new AdditionClass(*this); };
+    virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override;// { return NULL; };
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+};
+
 class ConditionalExpressionClass : public std::enable_shared_from_this<ConditionalExpressionClass>{
 public:
     explicit ConditionalExpressionClass(LocationType const &Location)

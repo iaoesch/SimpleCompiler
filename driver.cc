@@ -26,8 +26,8 @@ Variables::VariableContentClass TestCaller::Execute(Variables::FunctionDefinitio
 void driver::SetupPredefinedFunctions()
 {
     static TestCaller t;
-    PrecompiledFunctionManagerClass::FunctionsDescriptor Fkt(t, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Integer));
-    PrecompiledManager.RegisterFunction("TTT", Fkt);
+  //  PrecompiledFunctionManagerClass::FunctionsDescriptor Fkt(t, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Integer));
+  //  PrecompiledManager.RegisterFunction("TTT", Fkt);
 }
 
 int

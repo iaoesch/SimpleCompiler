@@ -65,6 +65,8 @@ blank [ \t]
 "..."     return yy::parser::make_TRIPPLEDOT (loc);
 "<<"     return yy::parser::make_SHIFTLEFT (loc);
 ">>"     return yy::parser::make_SHIFTRIGHT (loc);
+"<<="     return yy::parser::make_APPEND (loc);
+"=>>"     return yy::parser::make_REMOVE (loc);
 "if"     return yy::parser::make_IF (loc);
 "then"     return yy::parser::make_THEN (loc);
 "else"     return yy::parser::make_ELSE (loc);

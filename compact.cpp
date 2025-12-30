@@ -479,6 +479,41 @@ void              AdditionClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 
 
+Variables::VariableContentClass  ExtractionClass::Evaluate(Environment &Env) const {return Operand->Evaluate(Env); };
+std::shared_ptr<ExpressionClass> ExtractionClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(Operand->Derive(TD), Operand->Derive(TD), GetLocation()); };
+void              ExtractionClass::Print(std::ostream &s) const { s << "("; Operand->Print(s); s << ") =>> "; };
+std::shared_ptr<ExpressionClass> ExtractionClass::Clone() const {return std::make_shared<ExtractionClass>(*this); };
+std::shared_ptr<ExpressionClass> ExtractionClass::Optimize(Environment &Env)
+{
+    return shared_from_this();
+};
+void              ExtractionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    int NodeNumber1 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> =>>|<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    Operand->DrawNode(s, NodeNumber1);
+};
+
+Variables::VariableContentClass  CompositionClass::Evaluate(Environment &Env) const {return LeftOperand->Evaluate(Env) + RightOperand->Evaluate(Env); };
+std::shared_ptr<ExpressionClass> CompositionClass::Derive(VariableReferenceType TD) const {return std::make_shared<AdditionClass>(LeftOperand->Derive(TD), RightOperand->Derive(TD), GetLocation()); };
+void              CompositionClass::Print(std::ostream &s) const { s << "("; LeftOperand->Print(s); s << ") <<= ("; RightOperand->Print(s); s << ")"; };
+std::shared_ptr<ExpressionClass> CompositionClass::Clone() const {return std::make_shared<CompositionClass>(*this); };
+std::shared_ptr<ExpressionClass> CompositionClass::Optimize(Environment &Env)
+{
+    return shared_from_this();
+};
+void              CompositionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    int NodeNumber1 = NodeNumber++;
+    int NodeNumber2 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> <<=|<f2> \"];" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+    s << "\"Node" << MyNodeNumber << "\":f2 -> \"Node" << NodeNumber2 << "\":f1;" << endl;
+    LeftOperand->DrawNode(s, NodeNumber1);
+    RightOperand->DrawNode(s, NodeNumber2);
+};
+
 bool UnaryOperationClass::IsSame(std::shared_ptr<ExpressionClass>Other)
 {
    if (Type_Id(*this) == Type_Id(*Other)) {

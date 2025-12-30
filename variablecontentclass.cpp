@@ -167,6 +167,41 @@ void PredefinedFunctionDefinitionClass::DrawDefinitionNode(std::ostream &s, int 
 }
 
 
+
+ProxyVariableClass ListClass::GetOrCreateIndexedElement(std::string BaseName, ElementSelectorType Selector) const
+{
+    return GetIndexedElement(BaseName, Selector, true);
+}
+ProxyVariableClass ListClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
+{
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Dynamic), GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
+}
+
+VariableContentClass &ListClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
+{
+    (void) CreateIfNeeded; // Creating not existing parts not permitted yet
+    if (Selector.size() != 1) {
+        throw RuntimeErrorClass("Dimension missmatch");
+    }
+    auto i = Selector[0];
+    if (std::holds_alternative<ArrayIndexType>(i)) {
+        ArrayIndexType SimpleSelector = std::get<ArrayIndexType>(i);
+        return *Data.at(SimpleSelector);
+
+    } else if(std::holds_alternative<IndexRangeType>(i)) {
+        throw INTERNAL_ERROR_OBJECT("Ranged indices for list not supported");
+    } else if(std::holds_alternative<MapStringIndexType>(i)) {
+        throw RuntimeErrorClass("Key indices for list not supported");
+    } else {
+        // Should not happen...
+        throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
+    }
+
+    throw INTERNAL_ERROR_OBJECT("internal dimension trouble");
+}
+
+
+
 ArrayClass::ArrayClass(const ArrayContentType &r) : Data(r) , BaseType(TypeDescriptorClass::Type::Undefined)
 {
     CommonInitialization();

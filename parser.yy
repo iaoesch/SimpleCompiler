@@ -83,6 +83,8 @@
   TRIPPLEDOT  "..."
   SHIFTLEFT  "<<"
   SHIFTRIGHT  ">>"
+  APPEND  "<<="
+  REMOVE  "=>>"
   IF       "if"
   THEN     "then"
   ELSE     "else"
@@ -131,7 +133,7 @@
 %token <double> FLOAT_LIT "floatliteral"
 
 
-%type  <std::shared_ptr<ExpressionClass>> exp term factor unary primary exp_or_star
+%type  <std::shared_ptr<ExpressionClass>> exp comp term factor unary primary exp_or_star
 %type  <std::list<std::shared_ptr<StatementClass>>> statements
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
@@ -147,12 +149,13 @@
 %type  <std::shared_ptr<WritableValueClass>> assignable
 %type  <Variables::VariableContentClass> literal mapliteral
 %type  <Variables::VariableContentClass> numericliteral
-%type  <Variables::VariableContentClass> arrayliteral
+%type  <Variables::VariableContentClass> arrayliteral listliteral
 %type  <Variables::VariableContentClass> arraycontentliteral
 %type  <Variables::ArrayClass::ArrayContentType> arrayentries
 %type  <Variables::ArrayClass::ArrayContentType> subarrayliteral
 %type  <Variables::ArrayClass::VectorOfRows> arraysequence
 %type  <Variables::ArrayClass::Row> literalsequence
+%type  <Variables::ListClass> listentries
 %type  <std::unique_ptr<VariableTypeDescriptorClass>> typedefinition returntype.opt
 %type  <std::vector<std::shared_ptr<ExpressionClass>>> print explist
 %type  <std::vector<int64_t>> Dimensions
@@ -181,6 +184,7 @@
 %printer { yyoutput << "MapEntryListType "; }<MapEntryListType>
 %printer { yyoutput << "MapEntryType "; }<MapEntryType>
 %printer { yyoutput << "KeyTypeUnion "; }<KeyTypeUnion>
+%printer { yyoutput << "List "; }<Variables::ListClass>
 
 %%
 %start unit;
@@ -473,9 +477,14 @@ condexp:
 //;
 
 exp
+: comp          { std::swap ($$, $1); }
+| exp "<<=" comp { $$ = std::make_shared<CompositionClass>($1, $3, @2); }
+;
+
+comp
 : term          { std::swap ($$, $1); }
-| exp "+" term { $$ = std::make_shared<AdditionClass>($1, $3, @2); }
-| exp "-" term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3, @2), @2); }
+| comp "+" term { $$ = std::make_shared<AdditionClass>($1, $3, @2); }
+| comp "-" term { $$ = std::make_shared<AdditionClass>($1, std::make_shared<NegationClass>($3, @2), @2); }
 ;
 
 term
@@ -498,6 +507,9 @@ unary
 | "-" unary  {
                  $$ = std::make_shared<NegationClass>($2, @1);
               }
+| unary "=>>"  {
+                    $$ = std::make_shared<ExtractionClass>($1, @1);
+                }
 ;
 
 primary:
@@ -517,7 +529,7 @@ literal:
 arraycontentliteral:
   numericliteral {$$ = $1;}
 | "stringliteral"       {$$ = Variables::VariableContentClass($1); }
-| listliteral    {$$ = Variables::VariableContentClass::MakeUndefined();}
+| listliteral    {$$ = $1;}
 | mapliteral     {$$ = $1;}
 ;
 
@@ -550,12 +562,12 @@ literalsequence:
 ;
 
 listliteral:
-   "{" listentries "}"
+   "{" listentries "}"    {$$ = Variables::VariableContentClass($2);}
 ;
 
 listentries:
-   literal
-|  listentries "," literal
+   literal                  {$$ = Variables::ListClass(); $$.Append(std::make_unique<Variables::VariableContentClass>($1));}
+|  listentries "," literal  {$$ = $1; $$.Append(std::make_unique<Variables::VariableContentClass>($3));}
 ;
 
 mapliteral:

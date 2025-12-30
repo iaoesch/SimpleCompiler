@@ -48,14 +48,18 @@ public:
 class ListClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
-    ListClass(const ListClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
-    ListClass &operator = (const ListClass &s){(void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass(const ListClass &s) {for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));}};//= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass &operator = (const ListClass &s){Data.clear(); for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));} return *this;};// = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass(ListClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass &operator = (ListClass &&s) = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
 
-    void Append(std::unique_ptr<VariableContentClass> Data);
-    void Append(ListClass &Data);
+    ListClass() = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
+
+    void Append(std::unique_ptr<VariableContentClass> NewData) {Data.push_back(std::move(NewData));}
+    void Append(ListClass &Other)  {for (auto &e: Other.Data) {Data.push_back(std::make_unique<VariableContentClass>(*e));}}
     void PrintDetail(std::ostream &s, int Limit) const;
-    ValueTypeDescriptorClass GetTypeDescriptor() const;
-    VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
+    ValueTypeDescriptorClass GetTypeDescriptor() const {return ValueTypeDescriptorClass(ValueTypeDescriptorClass::Type::List);}
+   // VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
 
     void PrintDimensions(std::ostream &s) const;
 
@@ -65,6 +69,13 @@ public:
     ProxyVariableClass GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded = false) const;
     VariableContentClass &GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded = false) const;
 
+    auto begin() const {return Data.begin();}
+    auto end() const {return Data.end();}
+    auto begin()  {return Data.begin();}
+    auto end()  {return Data.end();}
+    auto size() const {return Data.size();}
+    auto const &operator [](size_t i) const {return Data[i];}
+    auto  &operator [](size_t i)  {return Data[i];}
 };
 
 class ArrayClass {
@@ -289,6 +300,7 @@ public:
     VariableContentClass(std::string Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::String)), AssignedExpression(nullptr) {}
     VariableContentClass(ValueTypeDescriptorClass Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Type)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ListClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}

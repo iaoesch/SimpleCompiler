@@ -21,6 +21,8 @@ public:
 
     typedef std::vector<FunctionsParameterDescriptor> ParameterListType;
 
+    FunctionInterfaceBase() : Returntype(VariableTypeDescriptorClass::Type::Undefined){}
+
     ParameterListType GetParameterDescriptorList() {return ParameterList;}
     VariableTypeDescriptorClass GetReturnType() {return Returntype;}
 
