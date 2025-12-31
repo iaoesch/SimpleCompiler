@@ -41,7 +41,8 @@
 #define TOSTRING(x) STRINGIFY(x)
 //#define AT __FILE__ ":" TOSTRING(__LINE__)
 
-#define INTERNAL_ERROR_OBJECT(Message) InternalErrorClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
+#define FATAL_ERROR_OBJECT(Message) InternalErrorClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
+#define INTERNAL_ERROR_OBJECT(Message) InternalErrorClass((Message) + std::string(" in ") + __FILE__ + "in Function '" + __func__ + "' at line " + std::to_string(__LINE__))
 #define SIGNAL_UNIMPLEMENTED() throw (INTERNAL_ERROR_OBJECT("Unimplemented Funcion"))
 
 /* Class Type declaration      */
@@ -67,24 +68,45 @@ class ErrorBaseClass : public std::exception
            virtual const char *what() const noexcept override {return "BaseException";}
 };
 
-class InternalErrorClass : public ErrorBaseClass
+class FatalErrorClass : public ErrorBaseClass
 {
     // Data
 public:
+    // No dynamic memory, just plain old const c-str
     const char *Message;
 
 private:
 
     // Methods
 public:
-    InternalErrorClass(const char *aWhat) : Message(aWhat) {}
-    virtual ~InternalErrorClass(void) override {}
+    FatalErrorClass(const char *aWhat) : Message(aWhat) {}
+    virtual ~FatalErrorClass(void) override {}
 
 
     // exception interface
 public:
     virtual const char *what() const noexcept override {return Message;}
 };
+
+class InternalErrorClass : public ErrorBaseClass
+{
+    // Data
+public:
+    const std::string Message;
+
+private:
+
+    // Methods
+public:
+    InternalErrorClass(const std::string &aWhat) : Message(aWhat) {}
+    virtual ~InternalErrorClass(void) override {}
+
+
+    // exception interface
+public:
+    virtual const char *what() const noexcept override {return Message.c_str();}
+};
+
 
 class SyntaxErrorClass : public ErrorBaseClass
 {
@@ -119,6 +141,26 @@ public:
     virtual ~RuntimeErrorClass(void) override {}
 
     void ExtendMessage(const std::string &NewLine) {Message.append("\n" + NewLine);}
+    // exception interface
+public:
+    virtual const char *what() const noexcept override {return Message.c_str();}
+};
+
+
+class PropagatedErrorClass : public ErrorBaseClass
+{
+    // Data
+public:
+    std::string Message;
+
+private:
+    std::unique_ptr<ErrorBaseClass> ParentError;
+    // Methods
+public:
+    PropagatedErrorClass(ErrorBaseClass &ParentError, std::string const &aWhat) : Message(aWhat) {}
+    virtual ~PropagatedErrorClass(void) override {}
+
+
     // exception interface
 public:
     virtual const char *what() const noexcept override {return Message.c_str();}

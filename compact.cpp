@@ -1052,6 +1052,7 @@ void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) const
 {
+    if (Env.DoEvaluateFunctions) {
     TheFunction->CreateFrame();
     for (auto const &s: Assignements) {
         s->Execute(Env);
@@ -1059,6 +1060,9 @@ Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) co
     auto Result = TheFunction->Execute(Env);
     TheFunction->ReleaseFrame();
     return Result;
+    } else {
+        return Variables::VariableContentClass::MakeUndefined();
+    }
 }
 
 void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }
@@ -1149,6 +1153,7 @@ StatementResultClass PrintStatementClass::Execute(Environment &Env) const
         // Env.OutputStream() << e->Evaluate(Env);
         e->Evaluate(Env).PrintDetail(Env.OutputStream(), 200);
     }
+    Env.OutputStream() << "\n";
     Env.RestoreOutputStreamColor();
     return {};
 }

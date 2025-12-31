@@ -355,10 +355,13 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::
     if (FunctionCallsPending.back().NextPositionalParameter >= 0xFFFF) {
         throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
     }
+    if (FunctionCallsPending.back().NextPositionalParameter < 0) {
+        FunctionCallsPending.back().NextPositionalParameter = 0;
+    }
     // set marker for positionalmode
     std::shared_ptr<VariableClass> Var = FunctionCallsPending.back().CurrentFunction->GetParameterByIndex(FunctionCallsPending.back().NextPositionalParameter);
     if (Var == nullptr) {
-        throw INTERNAL_ERROR_OBJECT ("Parameter not found");
+        throw INTERNAL_ERROR_OBJECT ("Parameter [" + std::to_string(FunctionCallsPending.back().NextPositionalParameter) + "] not found");
     }
     FunctionCallsPending.back().NextPositionalParameter++;
     auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);

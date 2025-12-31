@@ -618,7 +618,12 @@ void StackClass::PrintDetail(std::ostream &s, int Limit) const
 void ListClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void)Limit;
-    s << "[Detail List]";
+    s << Data.size();
+    s << "{";
+        for(auto const &e: Data) {
+            s << *e  << ", ";
+        }
+    s << "}";
 }
 
 void SparseArrayClass::PrintDetail(std::ostream &s, int Limit) const

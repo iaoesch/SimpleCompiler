@@ -15,6 +15,7 @@ typedef yy::location LocationType;
 class Environment {
 public:
     enum class Color{Default, Black, Red, Green, Blue};
+    bool DoEvaluateFunctions = true;
 
 private:
     Color CurrentColor = Color::Default;

@@ -194,7 +194,7 @@ unit:
 ;
 
 input:
-   statement {drv.execute($1); drv.AddStatement($1);}
+   statement {/*drv.execute($1)*/; drv.AddStatement($1);}
 |  definition
 |  command ";"
 ;
@@ -247,12 +247,12 @@ assignment:
   assignable ":=" exp {
                             $$ = std::make_shared<AssignementClass>($3, $1, @$);
                             std::cout << "asg:";
-                            $3->Print(std::cout);
+                       /*     $3->Print(std::cout);
                             $$->Print(std::cout);
                             try { std::cout << "eval:" << $3->Evaluate();}
                             catch (...) {
                                std::cout << "eval: <Exception>";
-                            }
+                            }*/
 
                       }
 | assignable ":=" Anonymeousfunctiondefinition {
