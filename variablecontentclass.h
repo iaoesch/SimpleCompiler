@@ -16,6 +16,7 @@
 
 //#include "varmanag.hpp"
 class ProxyVariableClass;
+class InternalObjectClass;
 
 
 
@@ -35,6 +36,27 @@ public:
 };
 
 class VariableContentClass;
+
+
+class ClassClass {
+   // std::vector<std::unique_ptr<VariableContentClass>> Data;
+public:
+    ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    void PrintDetail(std::ostream &s, int Limit) const;
+
+    ValueTypeDescriptorClass GetTypeDescriptor() const;
+};
+
+class ObjectClass {
+    // std::vector<std::unique_ptr<VariableContentClass>> Data;
+public:
+    ObjectClass(const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    void PrintDetail(std::ostream &s, int Limit) const;
+
+    ValueTypeDescriptorClass GetTypeDescriptor() const;
+};
 
 class StackClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
@@ -273,9 +295,12 @@ class
                          Variables::ListClass,
                          Variables::ArrayClass,
                          MapClass,
+                         ClassClass,
+                         ObjectClass,
                          TypeDescriptorClass,
                          std::shared_ptr<ExpressionClass>,
                          std::shared_ptr<FunctionDefinitionBaseClass>,
+                         std::shared_ptr<InternalObjectClass>,
                          std::shared_ptr<VariableContentClass>> dataType;
 
 public:
@@ -302,6 +327,9 @@ public:
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ListClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ClassClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ObjectClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<InternalObjectClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Internal)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}
     // VariableContentClass(const VariableContentClass &s) : std::shared_ptr<FunctionDefinitionClass> Value) : Type(TypeDescriptorClass(TypeDescriptorClass::Type::Function)), Data(Value), AssignedExpression(nullptr) {}

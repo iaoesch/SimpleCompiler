@@ -56,6 +56,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         case Type::List:
         case Type::Map:
         case Type::Expression:
+        case Type::Internal:
         case Type::Illegal:
         case Type::Function: return t1;
         case Type::Stack:   {
@@ -103,7 +104,36 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         }
         break;
             
-            
+        case Type::Class:
+        {
+            const ClassDescriptorClass &cd1 = std::get<ClassDescriptorClass>(t1.Descriptor);
+            const ClassDescriptorClass &cd2 = std::get<ClassDescriptorClass>(t2.Descriptor);
+            if (cd1 == cd2) {
+                return t1;
+            } else if (cd1.IsDerivedFrom(cd2)) {
+                return t2;
+            } else if (cd2.IsDerivedFrom(cd1)) {
+                return t1;
+            } else {
+                return TypeDescriptorClass(Type::Undefined);
+            }
+        }
+
+        case Type::Object:
+        {
+            const ObjectDescriptorClass &od1 = std::get<ObjectDescriptorClass>(t1.Descriptor);
+            const ObjectDescriptorClass &od2 = std::get<ObjectDescriptorClass>(t2.Descriptor);
+            if (od1 == od2) {
+                return t1;
+            } else if (od1.IsDerivedFrom(od2)) {
+                return t2;
+            } else if (od2.IsDerivedFrom(od1)) {
+                return t1;
+            } else {
+                return TypeDescriptorClass(Type::Undefined);
+            }
+        }
+
         case Type::Dynamic:  return TypeDescriptorClass(Type::Undefined);
             //CommonType(*(std::get<DynamicDescriptorClass>(t1.Descriptor).CurrentType), *(std::get<DynamicDescriptorClass>(t2.Descriptor).CurrentType));
             
@@ -167,6 +197,9 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::List:      s << "List"; break;
     case ValueTypeDescriptorClass::Type::Array:     s << std::get<ArrayDescriptorClass>(t.Descriptor); break;
     case ValueTypeDescriptorClass::Type::Map:       s << "Map"; break;
+    case ValueTypeDescriptorClass::Type::Class:     s << "Class"; break;
+    case ValueTypeDescriptorClass::Type::Object:    s << "Object"; break;
+    case ValueTypeDescriptorClass::Type::Internal:  s << "Internal"; break;
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
     case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;
     case ValueTypeDescriptorClass::Type::Dynamic:   s << "Dynamic"; break;

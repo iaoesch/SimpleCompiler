@@ -1,3 +1,4 @@
+#include "internalobjectclass.h"
 #include "variableclass.h"
 #include "Errclass.hpp"
 #include "compact.h"
@@ -426,6 +427,9 @@ std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
                    [&s](const ListClass &arg) { (void)arg; s << "[list]"; },
                    [&s](const ArrayClass &arg) { s << "[Array "; arg.PrintDimensions(s); s << "]";  },
                    [&s](const MapClass &arg) { (void)arg; s << "[map]"; },
+                   [&s](const ClassClass &arg) { (void)arg; s << "[Class]"; },
+                   [&s](const ObjectClass &arg) { (void)arg; s << "[Object]"; },
+                   [&s](const std::shared_ptr<InternalObjectClass> &arg) { (void)arg; s << "[Internal]";  },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<FunctionDefinitionBaseClass> &arg) { s << "[function]\n"; arg->Print(s);  },
                    [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
@@ -446,7 +450,10 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const ListClass &arg) { s << "[list:"; arg.PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const ArrayClass &arg) { s << "[Array "; arg.PrintDetail(s, Limit); s << "]";  },
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
-                   [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
+                       [&s, Limit](const ClassClass &arg) { s << "[Class:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s, Limit](const ObjectClass &arg) { s << "[Object:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s](const std::shared_ptr<InternalObjectClass> &arg) { s << "[Internal: "; arg->PrintDetail(s); s << "]";},
+                       [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
                        [&s](const std::shared_ptr<FunctionDefinitionBaseClass> &arg) { s << "[function>\n"; arg->Print(s);  },
                        [&s](const std::shared_ptr<VariableContentClass> &arg) { s << "[varcont:" << *arg << "]"; },
                        [&s](const std::string& arg) { s << '"' << arg << '"'; },
@@ -855,5 +862,16 @@ ProxyVariableClass MapClass::GetOrCreateIndexedElement(std::string BaseName, Ele
     return GetIndexedElement(BaseName, Selector, true);
 }
 
+void ClassClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    (void) Limit;
+    s << "Not implemented yet";
+}
+
+void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
+{
+    (void) Limit;
+    s << "Not implemented yet";
+}
 
 } // namespace Variables
