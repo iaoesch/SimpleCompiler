@@ -44,6 +44,7 @@ public:
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
+    bool operator == (const ClassClass &Other) const {(void) Other; return false;}
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
 };
@@ -56,6 +57,7 @@ public:
     void PrintDetail(std::ostream &s, int Limit) const;
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
+    bool operator == (const ObjectClass &Other) const {(void) Other; return false;}
 };
 
 class StackClass {
@@ -64,6 +66,7 @@ public:
     StackClass(const StackClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     StackClass &operator = (const StackClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
+    bool operator == (const StackClass &Other) const {(void) Other; return false;}
 
 };
 
@@ -76,6 +79,7 @@ public:
     ListClass &operator = (ListClass &&s) = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
 
     ListClass() = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
+    bool operator == (const ListClass &Other) const {(void) Other; return false;}
 
     void Append(std::unique_ptr<VariableContentClass> NewData) {Data.push_back(std::move(NewData));}
     void Append(ListClass &Other)  {for (auto &e: Other.Data) {Data.push_back(std::make_unique<VariableContentClass>(*e));}}
@@ -177,6 +181,8 @@ public:
     ArrayClass(const Row &r) : Data(r), BaseType(TypeDescriptorClass::Type::Undefined) {CommonInitialization();}
     ArrayClass(const ArrayContentType &r);
 
+    bool operator == (const ArrayClass &Other) const {(void) Other; return false;}
+
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     VariableTypeDescriptorClass const &GetBaseType() const {return BaseType;}
 
@@ -222,6 +228,8 @@ public:
     SparseArrayClass(const SparseArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     SparseArrayClass &operator = (const SparseArrayClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
 
+    bool operator == (const SparseArrayClass &Other) const {(void) Other; return false;}
+
     void PrintDetail(std::ostream &s, int Limit) const;
 };
 
@@ -256,6 +264,9 @@ public:
  //   {
  //       //CommonInitialization();
  //   }
+
+    bool operator == (const MapClass &Other) const {(void) Other; return false;}
+
     typedef std::pair<KeyTypeUnion, Variables::VariableContentClass> MapEntryType;
     typedef std::vector<MapEntryType> MapEntryListType;
     MapClass(const MapEntryListType &Initializer);
@@ -543,6 +554,8 @@ public:
     FunctionDefinitionBaseClass(FunctionDefinitionBaseClass &&src) = default;
   //  FunctionDefinitionBaseClass &operator =(const FunctionDefinitionBaseClass &src) = default;
     FunctionDefinitionBaseClass &operator =(FunctionDefinitionBaseClass &&src) = default;
+
+    bool operator == (const FunctionDefinitionBaseClass &Other) const {(void) Other; return false;}
 
     //static FunctionDefinitionBaseClass MakeEmpty() {return FunctionDefinitionBaseClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
 public:

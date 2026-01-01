@@ -551,6 +551,7 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l)
 
 bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 {
+#if 0
     bool Result = false;
     std::visit(overloaded{
 
@@ -563,6 +564,9 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
                    [&Result](auto &arg1, auto &arg2) {(void)arg1; (void)arg2; (void)Result; } // All other cases: do nothing
     }, l.Data, r.Data);
     return Result;
+#else
+    return l.Data == r.Data;
+#endif
 }
 
 Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &Env) const
