@@ -78,6 +78,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    std::vector<std::string> DoOneTest(std::string Codeblock, std::map<std::string, GlobalVariableClass> Expected);
 public slots:
     void TextChanged();
     void StopButtonClicked();

@@ -251,6 +251,59 @@ std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::stri
         return {Output.str(), CurrentCode->GetErrors()};
 }
 
+std::vector<std::string> MainWindow::DoOneTest (std::string Codeblock, std::map<std::string, GlobalVariableClass> Expected)
+{
+    std::vector<std::string> Errors;
+    std::unique_ptr<driver> drv = std::make_unique<driver>(Env, SystemInterface);
+    drv->SetParserDebugLevel(0);
+    drv->result.clear();
+    try {
+        if (drv->parse(Codeblock.c_str())) {
+            Errors.push_back("Abnormal parsing end");
+            return Errors;
+        }
+    } catch (ErrorBaseClass &e) {
+        std::ostringstream os;
+        os << " at Location: " << drv->location;
+        Errors.push_back(std::string("Exception: ") + e.what() + os.str());
+        return Errors;
+    } catch (std::exception &e) {
+        std::ostringstream os;
+        os << " at Location: " << drv->location;
+        Errors.push_back(std::string("Exception: ") + e.what() + os.str());
+        return Errors;
+    } catch (...) {
+        std::ostringstream os;
+        os << " at Location: " << drv->location;
+        Errors.push_back(std::string("Unknown Exception ") + os.str());
+        return Errors;
+    }
+    drv->Run();
+    for (auto &v: Expected) {
+        std::shared_ptr<VariableClass> V =
+            drv->Variables.GetVariableReferenceForContext(v.first, 0);
+        if (V == nullptr) {
+            Errors.push_back(std::string("Variable '") + v.first + "' not found in generated context");
+        } else {
+            if (V->Type() == v.second.Type()) {
+                if (V->GetValue() == v.second.GetValue()) {
+
+
+                } else {
+                    std::ostringstream os;
+                    os << "Expected: " << v.second.GetValue() << ", got: " << V->GetValue();
+                    Errors.push_back(std::string("Variable '") + v.first + "' has wrong content, " + os.str());
+                }
+            } else {
+                std::ostringstream os;
+                os << "Expected: " << v.second.Type() << ", got: " << V->Type();
+                Errors.push_back(std::string("Variable '") + v.first + "' has wrong type, " + os.str());
+            }
+        }
+    }
+    return Errors;
+}
+
 void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath)
 {
 

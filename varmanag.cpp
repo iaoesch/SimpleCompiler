@@ -200,6 +200,15 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     return VarRef;
 }
 
+std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceForContext(std::string Name, size_t Index)
+{
+    if (Index >= Contexts.size()) {
+        return nullptr;
+    }
+    std::shared_ptr<VariableClass> VarRef = Contexts[Index]->LookupVariable(Name);
+    return VarRef;
+}
+
 void VariableManager::Dump(std::ostream &s)
 {
     s << "Scopes:" << std::endl;
@@ -227,6 +236,15 @@ std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::s
         if (ParentContext != nullptr) {
             return ParentContext->LookupVariable(Name);
         }
+        return nullptr;
+    }
+    return it->second;
+}
+
+std::shared_ptr<VariableClass> VariableContextClass::LookupVariableInThisContextOnly(const std::string Name)
+{
+    auto it = Variables.find(Name);
+    if (it == Variables.end()) {
         return nullptr;
     }
     return it->second;

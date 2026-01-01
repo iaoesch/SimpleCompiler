@@ -54,6 +54,9 @@ public:
     std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false);
     std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
 
+    // For Testpurposes
+    std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name);
+
     void Dump(std::ostream &s);
     const std::string &GetName() {return Name;}
 
@@ -92,6 +95,9 @@ public:
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
 
+   // For Testpurposes
+   size_t GetNumberOfContexts() const {return Contexts.size();}
+   std::shared_ptr<VariableClass> GetVariableReferenceForContext(std::string Name, size_t Index);
 
    void Dump(std::ostream &s);
 };
