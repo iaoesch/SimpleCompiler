@@ -41,8 +41,10 @@
 #define TOSTRING(x) STRINGIFY(x)
 //#define AT __FILE__ ":" TOSTRING(__LINE__)
 
-#define FATAL_ERROR_OBJECT(Message) InternalErrorClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
+#define FATAL_ERROR_OBJECT(Message) FatalErrorClass(Message " in " __FILE__ " at line " TOSTRING(__LINE__))
 #define INTERNAL_ERROR_OBJECT(Message) InternalErrorClass((Message) + std::string(" in ") + __FILE__ + "in Function '" + __func__ + "' at line " + std::to_string(__LINE__))
+#define THROW_TRACED_ERROR (Message, Original) PropagatedErrorClass((Message) + std::string(" in ") + __FILE__ + "in Function '" + __func__ + "' at line " + std::to_string(__LINE__), (Original))
+
 #define SIGNAL_UNIMPLEMENTED() throw (INTERNAL_ERROR_OBJECT("Unimplemented Funcion"))
 
 /* Class Type declaration      */
@@ -66,6 +68,7 @@ class ErrorBaseClass : public std::exception
            // exception interface
        public:
            virtual const char *what() const noexcept override {return "BaseException";}
+           virtual std::unique_ptr<ErrorBaseClass> clone() const  {return nullptr;} // Base not cloneable to avoid memmgt trouble
 };
 
 class FatalErrorClass : public ErrorBaseClass
@@ -81,6 +84,7 @@ private:
 public:
     FatalErrorClass(const char *aWhat) : Message(aWhat) {}
     virtual ~FatalErrorClass(void) override {}
+    virtual std::unique_ptr<ErrorBaseClass> clone() const override {return nullptr;} // FatalErrorClass not cloneable to avoid memmgt trouble
 
 
     // exception interface
@@ -100,7 +104,7 @@ private:
 public:
     InternalErrorClass(const std::string &aWhat) : Message(aWhat) {}
     virtual ~InternalErrorClass(void) override {}
-
+    virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 
     // exception interface
 public:
@@ -120,6 +124,7 @@ private:
 public:
     SyntaxErrorClass(std::string const &aWhat) : Message(aWhat) {}
     virtual ~SyntaxErrorClass(void) override {}
+    virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 
 
     // exception interface
@@ -139,6 +144,7 @@ private:
 public:
     RuntimeErrorClass(std::string const &aWhat) : Message(aWhat) {}
     virtual ~RuntimeErrorClass(void) override {}
+    virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 
     void ExtendMessage(const std::string &NewLine) {Message.append("\n" + NewLine);}
     // exception interface
@@ -146,7 +152,7 @@ public:
     virtual const char *what() const noexcept override {return Message.c_str();}
 };
 
-
+#define BUILD_MESSAGE_ON_CONSTRUCTION
 class PropagatedErrorClass : public ErrorBaseClass
 {
     // Data
@@ -154,16 +160,27 @@ public:
     std::string Message;
 
 private:
+#ifndef BUILD_MESSAGE_ON_CONSTRUCTION
     std::unique_ptr<ErrorBaseClass> ParentError;
+#endif
     // Methods
 public:
+#ifdef BUILD_MESSAGE_ON_CONSTRUCTION
+    PropagatedErrorClass(ErrorBaseClass &ParentError, std::string const &aWhat) : Message(aWhat + "\n Reveived from: " + ParentError.what()) {}
+#else
     PropagatedErrorClass(ErrorBaseClass &ParentError, std::string const &aWhat) : Message(aWhat) {}
+#endif
     virtual ~PropagatedErrorClass(void) override {}
+    virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 
 
     // exception interface
 public:
+#ifdef BUILD_MESSAGE_ON_CONSTRUCTION
     virtual const char *what() const noexcept override {return Message.c_str();}
+#else
+    virtual const char *what() const noexcept override {return (Message + "\n Reveived from: " + ParentError->what()).c_str();}
+#endif
 };
 
 /*****************************************************************************/
