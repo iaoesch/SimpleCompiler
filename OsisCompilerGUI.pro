@@ -29,6 +29,7 @@ SOURCES += \
    internalobjectclass.cpp \
    precompiledfunctionmanagerclass.cpp \
    systeminterfaceclass.cpp \
+   testclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
    variablecontentclass.cpp \
@@ -76,6 +77,7 @@ HEADERS += \
    internalobjectclass.h \
    precompiledfunctionmanagerclass.h \
    systeminterfaceclass.h \
+   testclass.h \
    typedescriptorclass.hpp \
    variableclass.h \
    variablecontentclass.h \

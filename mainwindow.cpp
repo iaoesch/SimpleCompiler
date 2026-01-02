@@ -18,12 +18,14 @@
 #include <QStandardPaths>
 #include <QSettings>
 #include <QCheckBox>
+#include <QTimer>
 
 #include "driver.hh"
 #include "highlighter.h"
 #include "compact.h"
 #include "inputdialogclass.h"
 #include "systeminterfaceclass.h"
+#include "testclass.h"
 
 
 
@@ -81,6 +83,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(Run, &QPushButton::clicked, this, &MainWindow::RunButtonClicked);
     HLayout2->addWidget(Run);
 
+    RunTests = new QPushButton("Run Tests");
+    connect(RunTests, &QPushButton::clicked, this, &MainWindow::RunTestButtonClicked);
+    HLayout2->addWidget(RunTests);
+
     DebugMode = new QCheckBox("Debug");
     HLayout2->addWidget(DebugMode);
 
@@ -89,6 +95,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     SystemInterface = new(SystemInterfaceClass);
     connect(SystemInterface, &SystemInterfaceClass::ShowInputDialog, this, &MainWindow::ShowInputDialog);
+
+    TestTimer = new QTimer;
+    TestTimer->setSingleShot(true);
+    connect(TestTimer, &QTimer::timeout, this, &MainWindow::TestTimeRunOut);
 
 #if 0
     Cross = new QPixmap(30,30);
@@ -173,6 +183,13 @@ void MainWindow::RunButtonClicked()
     }
 }
 
+void MainWindow::RunTestButtonClicked()
+{
+    QtTestEnvironment TestEnv(*this, std::string());
+    TestClass Tests(TestEnv, SystemInterface);
+    Tests.DoAllTests();
+}
+
 void MainWindow::setupEditor()
 {
     QFont font;
@@ -215,6 +232,32 @@ std::istream &QtEnvironment::InputStream()
 bool QtEnvironment::CheckForStop()
 {
     return Parent.CheckForStop();
+}
+
+
+void QtTestEnvironment::ExecutionStarted()
+{
+    Parent.ExecutionStartTest(TimeoutTime);
+}
+
+void QtTestEnvironment::ExecutionStopped()
+{
+    Parent.ExecutionStoppTest();
+}
+
+std::ostream &QtTestEnvironment::OutputStream()
+{
+    return CapturedOutputStream;
+}
+
+std::istream &QtTestEnvironment::InputStream()
+{
+    return TestInputStream;
+}
+
+bool QtTestEnvironment::CheckForStop()
+{
+    return Parent.CheckForTestTimeout();
 }
 
 std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::string Codeblock)
@@ -361,6 +404,29 @@ void MainWindow::ExecutionStopped()
     Stop->setText("Stoped");
     Stop->setDisabled(true);
 
+}
+
+bool MainWindow::CheckForTestTimeout()
+{
+    QApplication::processEvents();
+    return TestTimeoutOccoured;
+  }
+
+void MainWindow::ExecutionStartTest(std::chrono::milliseconds TimeoutTime)
+{
+    TestTimeoutOccoured = false;
+    TestTimer->start(TimeoutTime);
+}
+
+void MainWindow::ExecutionStoppTest()
+{
+    TestTimeoutOccoured = false;
+    TestTimer->stop();
+}
+
+void MainWindow::TestTimeRunOut()
+{
+    TestTimeoutOccoured = true;
 }
 
 void MainWindow::UnMarkDocument()

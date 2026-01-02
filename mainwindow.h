@@ -35,6 +35,29 @@ public:
     virtual void ExecutionStopped() override;
 };
 
+using namespace std::chrono_literals;
+
+class QtTestEnvironment : public Environment {
+
+    MainWindow &Parent;
+    std::ostringstream CapturedOutputStream;
+    std::istringstream TestInputStream;
+    std::chrono::milliseconds TimeoutTime;
+
+public:
+    explicit QtTestEnvironment(MainWindow &Parent, const std::string &TestInput) : Parent(Parent), TestInputStream(TestInput), TimeoutTime(1000ms) {}
+    // Environment interface
+
+    virtual std::ostream &OutputStream() override;
+    virtual std::istream &InputStream() override;
+    virtual bool CheckForStop() override;
+    virtual void ExecutionStarted() override;
+    virtual void ExecutionStopped() override;
+
+    void SetTimeout(std::chrono::milliseconds TimeoutTime_) {TimeoutTime = TimeoutTime_;}
+    std::string GetCapturedOutput() const {return CapturedOutputStream.str();}
+};
+
 
 
 class MainWindow : public QMainWindow
@@ -51,7 +74,10 @@ class MainWindow : public QMainWindow
     QPixmap *Circle;
     QPushButton *Stop;
     QPushButton *Run;
+    QPushButton *RunTests;
     bool Stoprequest;
+
+    QTimer *TestTimer;
 
     QtEnvironment Env;
 
@@ -83,6 +109,7 @@ public slots:
     void TextChanged();
     void StopButtonClicked();
     void RunButtonClicked();
+    void RunTestButtonClicked();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -103,6 +130,15 @@ private:
      void ExecutionStarted() ;
      void ExecutionStopped() ;
 
+     friend class QtTestEnvironment;
+     bool CheckForTestTimeout() ;
+     void ExecutionStartTest(std::chrono::milliseconds TimeoutTime) ;
+     void ExecutionStoppTest() ;
+     bool TestTimeoutOccoured;
+     private slots:
+     void TestTimeRunOut();
+
+private:
      std::tuple<std::string, driver::ErrorListType> ParseBlock(std::string Codeblock);
      void UnMarkDocument();
 };
