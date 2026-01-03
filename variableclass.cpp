@@ -21,6 +21,13 @@ const Variables::VariableContentClass &GlobalVariableClass::GetValue() const
     return Content;
 }
 
+Variables::VariableContentClass const &GlobalVariableClass::GetInitialValue() const
+{
+   // throw INTERNAL_ERROR_OBJECT("Global has no initial value");
+    return Content;
+}
+
+
 
 Variables::VariableContentClass &GlobalVariableClass::GetWriteReferenceToValue()
 {
@@ -30,6 +37,24 @@ Variables::VariableContentClass &GlobalVariableClass::GetWriteReferenceToValue()
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
+    std::cout << "GlbSet:" << v;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Content = v;
+    } else {
+        std::cout << "GlbSetexcp:" << v;
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+
+}
+
+void GlobalVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
+    Initialized = true;
     std::cout << "GlbSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     PrepareForAssignment(v);
@@ -54,6 +79,12 @@ const Variables::VariableContentClass &LocalVariableClass::GetValue() const
     return Parent->GetVariableContentForOffset(Reference);
 }
 
+Variables::VariableContentClass const &LocalVariableClass::GetInitialValue() const
+{
+    return Parent->GetInitialVariableContentForOffset(Reference);
+}
+
+
 Variables::VariableContentClass &LocalVariableClass::GetWriteReferenceToValue()
 {
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
@@ -66,6 +97,22 @@ void LocalVariableClass::SetValue(Variables::VariableContentClass v)
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Parent->SetVariableContentForOffset(Reference, v);
+    } else {
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+
+}
+
+void LocalVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
+    Initialized = true;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Parent->InitializeVariableContentForOffset(Reference, v);
     } else {
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
@@ -103,6 +150,13 @@ const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
     return Content;
 }
 
+Variables::VariableContentClass const &TemporaryVariableClass::GetInitialValue() const
+{
+    throw INTERNAL_ERROR_OBJECT("Temporary has no initial value");
+    return Content;
+}
+
+
 Variables::VariableContentClass &TemporaryVariableClass::GetWriteReferenceToValue()
 {
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
@@ -111,6 +165,23 @@ Variables::VariableContentClass &TemporaryVariableClass::GetWriteReferenceToValu
 
 void TemporaryVariableClass::SetValue(Variables::VariableContentClass v)
 {
+    std::cout << "TmpSet:" << v;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Content = v;
+    } else {
+        std::cout << "TmpSetexcp:" << v;
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+}
+
+void TemporaryVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
+    Initialized = true;
     std::cout << "TmpSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
     PrepareForAssignment(v);
@@ -139,6 +210,13 @@ Variables::VariableContentClass const &ProxyVariableClass::GetValue() const
     return Content;
 }
 
+Variables::VariableContentClass const &ProxyVariableClass::GetInitialValue() const
+{
+    throw INTERNAL_ERROR_OBJECT("Proxy has no initial value");
+    return Content;
+}
+
+
 // *** Proxy
 
 Variables::VariableContentClass &ProxyVariableClass::GetWriteReferenceToValue()
@@ -161,6 +239,24 @@ void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
         throw RuntimeErrorClass(s.str());
     }
 }
+
+void ProxyVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    std::cout << "PxySetInitial:" << v;
+    if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
+    Initialized = true;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable");}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Content = v;
+    } else {
+        std::cout << "PxySetexcp:" << v;
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str());
+    }
+}
+
 
 void ProxyVariableClass::Print(std::ostream &s)
 {

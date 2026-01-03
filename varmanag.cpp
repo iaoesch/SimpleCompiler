@@ -89,26 +89,23 @@ void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBa
 {
     Local = true;
     LocalOffset = 0;
-    LocalStorageTemplates.push_back(LocalStorageType());
-    LocalsParent = Parent;
+    LocalStorageTemplates.push_back({Parent->GetStorageTemplate(), Parent});
+  //  LocalsParent = Parent;
 }
 
-VariableManager::LocalStorageType VariableManager::EndLocal()
+void VariableManager::EndLocal()
 {
-    LocalStorageType Storage;
     if (LocalStorageTemplates.empty()) {
         throw INTERNAL_ERROR_OBJECT("Internal, local stack empty");
     }
-    std::swap(Storage, LocalStorageTemplates.back());
     LocalStorageTemplates.pop_back();
     if (LocalStorageTemplates.empty()) {
         Local = false;
         LocalOffset = 0;
     } else {
         Local = true;
-        LocalOffset = static_cast<decltype(LocalOffset)>(LocalStorageTemplates.back().size());
+        LocalOffset = static_cast<decltype(LocalOffset)>(LocalStorageTemplates.back().LocalStorageTemplates.size());
     }
-    return Storage;
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
@@ -138,9 +135,9 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     std::shared_ptr<VariableClass> Var;
     if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
         std::cout << "creating local <" << Name << ">\n";
-        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalsParent, Storage);
-        LocalStorageTemplates.back().push_back(Variables::VariableContentClass::MakeEmpty(Type));
-        assert(LocalOffset == LocalStorageTemplates.back().size());
+        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalStorageTemplates.back().LocalsParent, Storage);
+        LocalStorageTemplates.back().LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        assert(LocalOffset == LocalStorageTemplates.back().LocalStorageTemplates.size());
     } else {
         std::cout << "creating global <" << Name << ">\n";
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);

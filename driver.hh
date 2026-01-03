@@ -52,8 +52,8 @@ public:
         : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> Define(const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);
+   // std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
+   // std::shared_ptr<Variables::FunctionDefinitionClass> Define(const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);
     void Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc);
     void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, LocationType const &Loc);
     void Set(Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);

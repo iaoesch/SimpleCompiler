@@ -176,7 +176,7 @@ std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::Begi
         throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
     FunctionCallsPending.back().CurrentFunction =
-        VariableHoldingFunction->GetValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
+        VariableHoldingFunction->GetInitialValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
     if (FunctionCallsPending.back().CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
     return FunctionCallsPending.back().CurrentFunction;
 }
@@ -201,7 +201,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFun
     }
     CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::FunctionDefinitionClass>(Name, l);
-    CurrentFunctionInfo.VariableHoldingCurrentFunction->SetValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
+    CurrentFunctionInfo.VariableHoldingCurrentFunction->SetInitialValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
     CurrentFunctionInfo.Name = Name;
     //auto &i = typeid(CurrentFunction);
     return CurrentFunctionInfo.CurrentFunction;
@@ -223,7 +223,7 @@ void FunctionNodeHelper::EndFunctionDefinition(const yy::parser::location_type &
     }
     FunctionsDefinitonsPending.pop_back();
 }
-
+#if 0
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
 {
     (void) l;
@@ -249,6 +249,7 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(c
     return FunctionsDefinitonsPending.back().CurrentFunction;
 
 }
+#endif
 
 void FunctionNodeHelper::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc)
 {

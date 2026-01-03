@@ -642,7 +642,7 @@ class ReturningStatementClass : public StatementClass {
     std::shared_ptr<ExpressionClass> ReturnedExpression;
 
 public:
-    ReturningStatementClass(std::shared_ptr<ExpressionClass> _ReturnedExpression, const std::shared_ptr<WritableValueClass> _Variable, const LocationType &Loc) :
+    ReturningStatementClass(std::shared_ptr<ExpressionClass> _ReturnedExpression, const LocationType &Loc) :
         StatementClass(Loc), ReturnedExpression(_ReturnedExpression) {}
 
     virtual                  ~ReturningStatementClass() override;

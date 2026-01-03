@@ -138,7 +138,7 @@
 %type  <std::shared_ptr<StatementClass>> statement
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
-%type  <std::shared_ptr<StatementClass>> loopstatement ifstatement
+%type  <std::shared_ptr<StatementClass>> loopstatement ifstatement returnstatement
 %type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall
@@ -221,6 +221,7 @@ statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
 | ifstatement ";"       {$$ = $1;}
+| returnstatement ";"   {$$ = $1;}
 | print ";"             {$$ = std::make_shared<PrintStatementClass>($1, @$);}
 | functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1, @$);}
 | error ";"             {$$ = std::make_shared<ErrorStatement>(@$);}
@@ -235,9 +236,14 @@ explist:
 |  explist "," exp  {$$ = $1; $$.push_back($3);}
 ;
 
+returnstatement:
+  "returning" exp {$$ = std::make_shared<ReturningStatementClass>($2, @$);}
+;
+
 loopstatement:
   "repeat" statements "until" "(" condexp ")" {$$ = std::make_shared<RepeatLoopClass>($2, $5, @$);}
 ;
+
 
 ifstatement:
   "if" "(" condexp ")" "then" statements "else" statements "endif" {$$ = std::make_shared<ifClass>($6, $8, $3, @$);}
@@ -424,10 +430,10 @@ functionBodydefinition:
   "endfunction" {
                       /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
                       /*$$ = $<FktDefContainer>3.ptr;*/
-                      auto StorageTemplate = drv.Variables.EndLocal();
+                      /*auto StorageTemplate = */drv.Variables.EndLocal();
                       //drv.Currentfunction.Define($4, $7, std::move(StorageTemplate), @1+@5);
                       drv.Currentfunction.Set($7, @7);
-                      drv.Currentfunction.Set(std::move(StorageTemplate), @1+@5);
+                      /*drv.Currentfunction.Set(std::move(StorageTemplate), @1+@5);*/
                       $$ = drv.Currentfunction.Get(@7); drv.Variables.LeaveContext(2);
                 }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}

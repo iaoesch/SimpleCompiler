@@ -56,6 +56,7 @@ public:
 
     // For Testpurposes
     std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name);
+    size_t GetNumberOfVariables() const {return Variables.size();}
 
     void Dump(std::ostream &s);
     const std::string &GetName() {return Name;}
@@ -68,12 +69,17 @@ class VariableManager
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
     std::vector<std::shared_ptr<VariableContextClass>> Contexts;
     bool Local;
-    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
+//    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
     uint32_t LocalOffset;
 public:
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
 private:
-    std::vector<LocalStorageType> LocalStorageTemplates;
+    struct LocalStorageContextType {
+        LocalStorageType &LocalStorageTemplates;
+        std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
+
+    };
+    std::vector<LocalStorageContextType> LocalStorageTemplates;
 
 
    // Data
@@ -87,7 +93,7 @@ public:
    void CreateNewContext(std::string Name);
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
-   LocalStorageType EndLocal();
+   void EndLocal();
  //  std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
@@ -98,6 +104,7 @@ public:
    // For Testpurposes
    size_t GetNumberOfContexts() const {return Contexts.size();}
    std::shared_ptr<VariableClass> GetVariableReferenceForContext(std::string Name, size_t Index);
+   size_t GetNumberOfVariablesForContext(size_t Index) const {return Contexts[Index]->GetNumberOfVariables();}
 
    void Dump(std::ostream &s);
 };

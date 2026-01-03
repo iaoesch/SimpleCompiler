@@ -33,8 +33,9 @@ void PrecompiledFunctionManagerClass::RegisterFunction(std::string Name, std::sh
     }
     CurrentFunction->SetReturnType(std::make_unique<VariableTypeDescriptorClass>(Fkt->GetReturnType()));
     CurrentFunction->Set(Params, LocationType());
-    auto StorageTemplate = Variables.EndLocal();
-    CurrentFunction->Set(StorageTemplate, LocationType());
+   // auto StorageTemplate = Variables.EndLocal();
+    Variables.EndLocal();
+   // CurrentFunction->Set(StorageTemplate, LocationType());
     Variables.LeaveContext(1);
 
 }

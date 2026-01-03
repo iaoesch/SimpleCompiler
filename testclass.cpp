@@ -6,28 +6,184 @@
 TestClass::TestClass(Environment &Env, SystemInterfaceClass *SystemInterface_)
     : Env(Env), SystemInterface(SystemInterface_)
 {
-
+    BuildAllTests();
 }
 
-void TestClass::DoAllTests()
+std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, int64_t Value)
 {
-    std::string Code = "a:=2;";
-    std::map<std::string, std::shared_ptr<GlobalVariableClass>> Expected;
-    Expected["a"] = std::make_shared<GlobalVariableClass>("a", VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::ReadAndWrite);
-    Expected["a"]->SetValue(Variables::VariableContentClass(2LL));
+   std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::ReadAndWrite);
+   Var->SetValue(Variables::VariableContentClass(Value));
+   return Var;
+}
 
-        std::vector<std::string> Resultes = DoOneTest(Code, Expected);
-    if (Resultes.size() == 0) {
-        std::cout << "\n *** All Tests Passed ***\n";
-    } else {
-        std::cout << "\n ### Tests failed ###\n\n";
-        for (auto &s: Resultes) {
-           std::cout << s << "\n";
+std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, double Value)
+{
+    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::ReadAndWrite);
+    Var->SetValue(Variables::VariableContentClass(Value));
+    return Var;
+}
+
+void TestClass::BuildAllTests()
+{
+    TestVector;
+    std::map<std::string, std::shared_ptr<GlobalVariableClass>> Expected;
+    std::vector<std::string> Unexpected;
+    int Errors = 0;
+
+    Unexpected.push_back("x");
+    std::string Code = "a:=2;";
+    Expected["a"] = MakeVariable("a", 2LL);
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+
+    Code = "a:=5.5;";
+    Expected["a"] = MakeVariable("a", 5.5);
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+
+    Code = "a:=5; \nb:=3; \nc:=a+b;";
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "y:= 17;\n"
+           "function test returning integer (a)"
+           "   x:=b; "
+           "   b:=19; "
+           "   returning a+2; " //  Should end function
+           "   b:=20; "         // Not executed
+           "   returning a+19; "// Not executed
+           "   b:=21; "         // Not executed
+           "endfunction "
+           "z:=test(99);";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 19LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["y"] = MakeVariable("y", 17LL);
+    Expected["z"] = MakeVariable("z", 101LL);
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "x:= 17;\n"
+           "function test returning integer (a)"
+           "   w:=b; "
+           "   x:=w; "
+           "   returning a+2; "
+           "endfunction "
+           "z:=test(99);";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["x"] = MakeVariable("x", 3LL);
+    Expected["z"] = MakeVariable("z", 101LL);
+    Unexpected.clear();
+    Unexpected.push_back("w");
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "x1:= 17;\n"
+           "x2:= 17;\n"
+           "x3:= 17;\n"
+           "x4:= 17;\n"
+           "x5:= 17;\n"
+           "function test2 returning integer (a)\n"
+           "   w:=b; \n"
+           "   function test2sub1 returning integer (a)\n"
+           "      w:=b; \n"
+           "      x:=w; \n"
+           "      returning a+2; \n"
+           "   endfunction \n"
+           "   x:=w; \n"
+           "   x:=test2sub1(a+1000); \n"
+           "   returning a+2; \n"
+           "endfunction \n"
+           "function test1 returning integer (a)\n"
+           "   wt1:=a+1; \n"
+           "   function test1sub2 returning integer (a)\n"
+           "      wt1s2:=a+1; \n"
+           "      x:=w; \n"
+           "      returning a+10; \n"
+           "   endfunction \n"
+           "   function test1sub1 returning integer (a)\n"
+           "      wt1s1s1:=a+1; \n"
+           "      function test1sub1sub1 returning integer (a)\n"
+           "         wt1s1s1:=a+1; \n"
+           "         x:=w; \n"
+           "         x:=test2(a+100); \n"
+           "         x:=test1sub2(a+1000); \n"
+           "         returning a+10000; \n"
+           "      endfunction \n"
+           "      function test1sub1sub2 returning integer (a)\n"
+           "         wt1s1s1:=a+1; \n"
+           "         x:=test1sub1sub1(a+1000); \n"
+           "         returning a+10000; \n"
+           "      endfunction \n"
+           "      w:=b; \n"
+           "      x:=w; \n"
+           "      x:=test1sub1sub2(a+10000); \n"
+           "      returning a+1000; \n"
+           "   endfunction \n"
+           "   x:=w; \n"
+           "   returning a+100; \n"
+           "endfunction \n"
+           "z1:=test1(99);\n"
+           "z2:=test1(99);\n";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["x"] = MakeVariable("x", 3LL);
+    Expected["z"] = MakeVariable("z", 101LL);
+    Unexpected.clear();
+    Unexpected.push_back("w");
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+}
+
+std::vector<std::string> TestClass::DoAllTests()
+{
+    std::vector<std::string> FailedTests;
+    int Errors = 0;
+    for (auto &Test: TestVector) {
+        int Result = DoSingleTest(Test);
+        Errors += Result;
+        if (Result != 0) {
+           FailedTests.push_back(Test.Codeblock);
         }
     }
+    if (Errors == 0) {
+        std::cout << "\n *** All Tests Passed ***\n";
+    } else {
+        std::cout << "\n ### " << Errors << " Tests failed ###\n\n";
+
+    }
+    return FailedTests;
 }
 
-std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, std::map<std::string, std::shared_ptr<GlobalVariableClass>> Expected)
+int TestClass::DoSingleTest(TestDataType const &TestData)
+{
+
+    std::cout << "\n *** Ececuting Test " + TestData.Title + " ***\n";
+    std::vector<std::string> Results = DoOneTest(TestData.Codeblock, TestData.Expected, TestData.Unexpected);
+    if (Results.size() == 0) {
+        std::cout << "\n *** Test Passed ***\n";
+    } else {
+        std::cout << "\n ### Test failed ###\n\n";
+        for (auto &s: Results) {
+            std::cout << s << "\n";
+        }
+    }
+    return Results.empty()?0:1;
+}
+
+std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVariableType Expected, std::vector<std::string> Unexpected)
 {
     std::vector<std::string> Errors;
     std::unique_ptr<driver> drv = std::make_unique<driver>(Env, SystemInterface);
@@ -54,6 +210,10 @@ std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, std::map<s
         Errors.push_back(std::string("Unknown Exception ") + os.str());
         return Errors;
     }
+    if (!drv->GetErrors().empty()) {
+        Errors.push_back(std::string("Syntax error in testcode"));
+        return Errors;
+    }
     drv->Run();
     for (auto &v: Expected) {
         std::shared_ptr<VariableClass> V =
@@ -77,6 +237,14 @@ std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, std::map<s
             }
         }
     }
+    for (auto &v: Unexpected) {
+        std::shared_ptr<VariableClass> V =
+            drv->Variables.GetVariableReferenceForContext(v, 0);
+        if (V != nullptr) {
+            Errors.push_back(std::string("Variable '") + v + "' found in generated context, but should not exist here");
+        }
+    }
+
     return Errors;
 }
 

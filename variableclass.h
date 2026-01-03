@@ -19,18 +19,22 @@ private:
     const std::string Name;
     VariableTypeDescriptorClass MyType;
     const StorageClass Storage;
+protected:
+    bool  Initialized;
 
 protected:
     bool IsWriteable() {return Storage == StorageClass::ReadAndWrite;}
 
 public:
-    VariableClass(const std::string &Name_, VariableTypeDescriptorClass MyType_, StorageClass Storage_) : MyContext(nullptr), Name(Name_), MyType(MyType_), Storage(Storage_) {}
+    VariableClass(const std::string &Name_, VariableTypeDescriptorClass MyType_, StorageClass Storage_) : MyContext(nullptr), Name(Name_), MyType(MyType_), Storage(Storage_), Initialized(false) {}
     virtual ~VariableClass() {}
     void SetContext(VariableContextClass *Context);
     const std::string &GetName()  const {return Name;}
     virtual Variables::VariableContentClass const &GetValue() const = 0;
+    virtual Variables::VariableContentClass const &GetInitialValue() const = 0;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() = 0;
     virtual void        SetValue(Variables::VariableContentClass v) = 0;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) = 0;
     virtual void        Print(std::ostream &s) = 0;
     virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const;
 
@@ -65,8 +69,10 @@ public:
     GlobalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~GlobalVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
     virtual void        Print(std::ostream &s) override;
   //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
@@ -84,8 +90,10 @@ public:
     LocalVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Reference(Reference_), Parent(Parent_) {}
     virtual ~LocalVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
     virtual void        Print(std::ostream &s) override;
   //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
@@ -102,8 +110,10 @@ public:
     TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::ReadAndWrite), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~TemporaryVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
     virtual void        Print(std::ostream &s) override;
     //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
@@ -121,8 +131,10 @@ public:
     ProxyVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, Variables::VariableContentClass &ReferedContent, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), Content(ReferedContent) {}
     virtual ~ProxyVariableClass() override {}
     virtual const Variables::VariableContentClass &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
     virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
     virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
     virtual void        Print(std::ostream &s) override;
     //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
 

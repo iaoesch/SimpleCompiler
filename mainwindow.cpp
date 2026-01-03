@@ -19,6 +19,7 @@
 #include <QSettings>
 #include <QCheckBox>
 #include <QTimer>
+#include <QScrollArea>
 
 #include "driver.hh"
 #include "highlighter.h"
@@ -70,7 +71,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     HLayout1->addWidget(editor);
     Output = new QLabel("some results");
-    HLayout1->addWidget(Output);
+    QScrollArea *Scroller = new QScrollArea();
+    Scroller->setWidget(Output);
+    Scroller->setWidgetResizable(true);
+    HLayout1->addWidget(Scroller);
 
     Stop = new QPushButton("Stopped");
     Stop->setDisabled(true);
@@ -187,7 +191,11 @@ void MainWindow::RunTestButtonClicked()
 {
     QtTestEnvironment TestEnv(*this, std::string());
     TestClass Tests(TestEnv, SystemInterface);
-    Tests.DoAllTests();
+    std::vector<std::string> FailedCodeblocks = Tests.DoAllTests();
+    if (FailedCodeblocks.size() > 0) {
+
+        editor->setText(QString::fromStdString(FailedCodeblocks.back()));
+    }
 }
 
 void MainWindow::setupEditor()
