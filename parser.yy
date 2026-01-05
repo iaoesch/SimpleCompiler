@@ -434,7 +434,9 @@ functionBodydefinition:
                       //drv.Currentfunction.Define($4, $7, std::move(StorageTemplate), @1+@5);
                       drv.Currentfunction.Set($7, @7);
                       /*drv.Currentfunction.Set(std::move(StorageTemplate), @1+@5);*/
-                      $$ = drv.Currentfunction.Get(@7); drv.Variables.LeaveContext(2);
+                      $$ = drv.Currentfunction.Get(@7);
+                      drv.Currentfunction.EndFunctionDefinition(@$);
+                      drv.Variables.LeaveContext(2);
                 }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;

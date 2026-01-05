@@ -102,7 +102,7 @@ void TestClass::BuildAllTests()
            "      returning a+2; \n"
            "   endfunction \n"
            "   x:=w; \n"
-           "   x:=test2sub1(a+1000); \n"
+           "   x:=test2sub1(a+5); \n"
            "   returning a+2; \n"
            "endfunction \n"
            "function test1 returning integer (a)\n"
@@ -110,6 +110,7 @@ void TestClass::BuildAllTests()
            "   function test1sub2 returning integer (a)\n"
            "      wt1s2:=a+1; \n"
            "      x:=w; \n"
+           "      x:=test2(a+10); \n"
            "      returning a+10; \n"
            "   endfunction \n"
            "   function test1sub1 returning integer (a)\n"
@@ -118,7 +119,7 @@ void TestClass::BuildAllTests()
            "         wt1s1s1:=a+1; \n"
            "         x:=w; \n"
            "         x:=test2(a+100); \n"
-           "         x:=test1sub2(a+1000); \n"
+           "         x:=test1sub2(a+200); \n"
            "         returning a+10000; \n"
            "      endfunction \n"
            "      function test1sub1sub2 returning integer (a)\n"
@@ -132,16 +133,17 @@ void TestClass::BuildAllTests()
            "      returning a+1000; \n"
            "   endfunction \n"
            "   x:=w; \n"
+           "   r:=test1sub1(a+100000); \n"
            "   returning a+100; \n"
            "endfunction \n"
-           "z1:=test1(99);\n"
-           "z2:=test1(99);\n";
+           "z1:=test1(1000000);\n"
+           "z2:=test1(2000000);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 8LL);
-    Expected["x"] = MakeVariable("x", 3LL);
-    Expected["z"] = MakeVariable("z", 101LL);
+    Expected["x1"] = MakeVariable("x", 3LL);
+    Expected["z1"] = MakeVariable("z", 101LL);
     Unexpected.clear();
     Unexpected.push_back("w");
     TestVector.push_back({"Assignment", Code, Expected, Unexpected});
@@ -214,7 +216,19 @@ std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVa
         Errors.push_back(std::string("Syntax error in testcode"));
         return Errors;
     }
-    drv->Run();
+    try {
+        drv->Run();
+    } catch (ErrorBaseClass &e) {
+        std::ostringstream os;
+        Errors.push_back(std::string("Runtime Exception: ") + e.what());
+        return Errors;
+    } catch (std::exception &e) {
+        Errors.push_back(std::string("Runtime Exception: ") + e.what());
+        return Errors;
+    } catch (...) {
+        Errors.push_back(std::string("Unknown Exception at runtime "));
+        return Errors;
+    }
     for (auto &v: Expected) {
         std::shared_ptr<VariableClass> V =
             drv->Variables.GetVariableReferenceForContext(v.first, 0);
