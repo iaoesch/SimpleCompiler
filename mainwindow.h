@@ -144,6 +144,7 @@ private:
      private:
      std::tuple<std::string, driver::ErrorListType> ParseBlock(std::string Codeblock);
      void UnMarkDocument();
+     void MarkErrorLine(int Line, const std::string &Message);
 };
 #endif // MAINWINDOW_H
 

@@ -222,7 +222,7 @@ std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std:
         Variables[Name] = Var;
         return Var;
     }
-    throw RuntimeErrorClass("Variable '" + Name + "' allready defined");
+    throw RuntimeErrorClass("Variable '" + Name + "' allready defined", -1);
     return nullptr;
 }
 

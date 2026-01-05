@@ -27,6 +27,7 @@
 /* Class constant declaration  */
 #include <exception>
 #include <string>
+#include <vector>
 #define DEBUG_INFO_ENABLED
 
 // Folowing macro is thought as aide for debugging, it adds
@@ -137,16 +138,20 @@ class RuntimeErrorClass : public ErrorBaseClass
     // Data
 public:
     std::string Message;
+    std::vector<int> Tracing;
 
 private:
 
     // Methods
 public:
-    RuntimeErrorClass(std::string const &aWhat) : Message(aWhat) {}
+    RuntimeErrorClass(std::string const &aWhat, int Line) : Message(aWhat) {}
     virtual ~RuntimeErrorClass(void) override {}
     virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 
-    void ExtendMessage(const std::string &NewLine) {Message.append("\n" + NewLine);}
+   // void ExtendMessage(const std::string &NewLine) {Message.append("\n" + NewLine);}
+    void ExtendMessage(const std::string &NewLine, int Line) {Message.append("\n" + NewLine); if (Line >= 0) {Tracing.push_back(Line);}}
+
+    std::vector<int> GetBackTrace() {return Tracing;}
     // exception interface
 public:
     virtual const char *what() const noexcept override {return Message.c_str();}

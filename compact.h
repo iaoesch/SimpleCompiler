@@ -232,7 +232,7 @@ public:
         } else if (Value.holds_alternative<std::string>()) {
             return Value.GetValue<std::string>();
         } else {
-            throw RuntimeErrorClass("Illegal type in index...");
+            throw RuntimeErrorClass("Illegal type in index...", -1);
         }
     }
 };
@@ -262,7 +262,7 @@ public:
    //( IndexedValueClass(const IndexedValueClass &v, const LocationType &Loc) : ValueClass(Loc), Val(v.Val) {}
     virtual                  ~IndexedValueClass() override {}
     virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;
-    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { (void)ToDerive; throw RuntimeErrorClass("cannot derive indexed expressions...");}
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { (void)ToDerive; throw RuntimeErrorClass("cannot derive indexed expressions...", GetMergedLocation().begin.line);}
     virtual void              Print(std::ostream &s) const override;
     virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<IndexedValueClass>(*this); }
     virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { (void)Env; return shared_from_this(); }

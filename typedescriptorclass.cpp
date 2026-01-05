@@ -227,7 +227,7 @@ ArrayDescriptorClass::ArrayDescriptorClass(std::vector<int64_t> UncheckedDimensi
                 s << n << ",";
             }
             s << "]";
-            throw RuntimeErrorClass("invalid Dimension: " + s.str());
+            throw RuntimeErrorClass("invalid Dimension: " + s.str(), -1);
         }
         Dimensions.push_back(static_cast<DimensionType::value_type>(d));
     }

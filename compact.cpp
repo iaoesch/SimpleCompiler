@@ -666,7 +666,7 @@ StatementResultClass AssignementClass::Execute(Environment &Env) const
     catch (RuntimeErrorClass &e) {
         std::stringstream s;
         s << "at [" << GetLocation() << "]";
-        e.ExtendMessage(s.str());
+        e.ExtendMessage(s.str(), GetLocation().begin.line);
         throw e;
     }
     return {};
@@ -723,7 +723,7 @@ StatementResultClass ReturningStatementClass::Execute(Environment &Env) const
     catch (RuntimeErrorClass &e) {
         std::stringstream s;
         s << "at [" << GetLocation() << "]";
-        e.ExtendMessage(s.str());
+        e.ExtendMessage(s.str(), GetLocation().begin.line);
         throw e;
     }
 }
@@ -1231,7 +1231,7 @@ Variables::ElementSelectorType IndexedValueClass::BuildSelector() const
         } else {
 
             // here we could handle vector n or n*2 for ranges and list
-            throw RuntimeErrorClass("Index other than integer or string not allowed yet");
+            throw RuntimeErrorClass("Index other than integer or string not allowed yet", -1);
         }
     } else {
         throw INTERNAL_ERROR_OBJECT("unknown index type");
@@ -1350,14 +1350,14 @@ Variables::SingleElementSelectorType RangedIndexExpressionClass::GetIndex() cons
     if (FromIndex != nullptr) {
         int64_t t = FromIndex->Evaluate().GetValue<int64_t>();
         if (t < 0) {
-            throw RuntimeErrorClass("Negative Index not allowed");
+            throw RuntimeErrorClass("Negative Index not allowed", -1);
         }
         From = uint64_t(t);
     }
     if (ToIndex != nullptr) {
         int64_t t = ToIndex->Evaluate().GetValue<int64_t>();
         if (t < 0) {
-            throw RuntimeErrorClass("Negative Index not allowed");
+            throw RuntimeErrorClass("Negative Index not allowed", -1);
         }
         To = uint64_t(t);
     }

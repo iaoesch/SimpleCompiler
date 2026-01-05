@@ -182,7 +182,7 @@ VariableContentClass &ListClass::GetIndexedElement(ElementSelectorType Selector,
 {
     (void) CreateIfNeeded; // Creating not existing parts not permitted yet
     if (Selector.size() != 1) {
-        throw RuntimeErrorClass("Dimension missmatch");
+        throw RuntimeErrorClass("Dimension missmatch", -1);
     }
     auto i = Selector[0];
     if (std::holds_alternative<ArrayIndexType>(i)) {
@@ -192,7 +192,7 @@ VariableContentClass &ListClass::GetIndexedElement(ElementSelectorType Selector,
     } else if(std::holds_alternative<IndexRangeType>(i)) {
         throw INTERNAL_ERROR_OBJECT("Ranged indices for list not supported");
     } else if(std::holds_alternative<MapStringIndexType>(i)) {
-        throw RuntimeErrorClass("Key indices for list not supported");
+        throw RuntimeErrorClass("Key indices for list not supported", -1);
     } else {
         // Should not happen...
         throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
@@ -327,7 +327,7 @@ VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector
 {
     (void) CreateIfNeeded; // Creating not existing parts not permitted yet
     if (Selector.size() != Dimensions.size()) {
-        throw RuntimeErrorClass("Dimension missmatch");
+        throw RuntimeErrorClass("Dimension missmatch", -1);
     }
     const ArrayContentType *CurrentElement = &Data;
     for(auto &i: Selector) {
@@ -343,7 +343,7 @@ VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector
         } else if(std::holds_alternative<IndexRangeType>(i)) {
             throw INTERNAL_ERROR_OBJECT("Ranged indices not supported");
         } else if(std::holds_alternative<MapStringIndexType>(i)) {
-            throw RuntimeErrorClass("Key indices for array not supported");
+            throw RuntimeErrorClass("Key indices for array not supported", -1);
         } else {
             // Should not happen...
             throw INTERNAL_ERROR_OBJECT("Unknown selector kind");
@@ -689,7 +689,7 @@ ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSele
 VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
 {
     if (Selector.size() != 1) {
-        throw RuntimeErrorClass("Map allows only onedimensional access");
+        throw RuntimeErrorClass("Map allows only onedimensional access", -1);
     }
     SingleElementSelectorType const &ElementSelector = Selector[0];
     if (std::holds_alternative<MapStringAndIntegerKeyType>(Data)) {
@@ -701,9 +701,9 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
             Key = std::get<MapIntegerIndexType>(ElementSelector);
         } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <Range> not supported for map access");
+            throw RuntimeErrorClass("Keytype <Range> not supported for map access", -1);
         } else {
-            throw RuntimeErrorClass("Keytype <unknown> not supported for map access" + std::to_string(ElementSelector.index()) );
+            throw RuntimeErrorClass("Keytype <unknown> not supported for map access" + std::to_string(ElementSelector.index()), -1);
         }
         std::cout << "Key: union" << ":" << this  << std::endl;
         if (CreateIfNeeded) {
@@ -723,11 +723,11 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
             Key = std::get<MapIntegerIndexType>(ElementSelector);
         } else if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <string> not supported for integer map access");
+            throw RuntimeErrorClass("Keytype <string> not supported for integer map access", -1);
         } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <Range> not supported for integer map access");
+            throw RuntimeErrorClass("Keytype <Range> not supported for integer map access", -1);
         } else {
-            throw RuntimeErrorClass("Keytype <unknown> not supported for integer map access: " + std::to_string(ElementSelector.index()) );
+            throw RuntimeErrorClass("Keytype <unknown> not supported for integer map access: " + std::to_string(ElementSelector.index()), -1);
         }
         std::cout << "Key: " << Key << ":" << this << std::endl;
         if (CreateIfNeeded) {
@@ -744,13 +744,13 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         if (std::holds_alternative<MapStringIndexType>(ElementSelector)) {
             Key = std::get<MapStringIndexType>(ElementSelector);
         } else if (std::holds_alternative<MapIntegerIndexType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <integer> not supported for string map access");
+            throw RuntimeErrorClass("Keytype <integer> not supported for string map access", -1);
         } else if (std::holds_alternative<ArrayIndexType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <arrayindex> not supported for string map access");
+            throw RuntimeErrorClass("Keytype <arrayindex> not supported for string map access", -1);
         } else if (std::holds_alternative<IndexRangeType>(ElementSelector)) {
-            throw RuntimeErrorClass("Keytype <Range> not supported for string map access");
+            throw RuntimeErrorClass("Keytype <Range> not supported for string map access", -1);
         } else {
-            throw RuntimeErrorClass("Keytype <unknown> not supported for string map access" + std::to_string(ElementSelector.index()) );
+            throw RuntimeErrorClass("Keytype <unknown> not supported for string map access" + std::to_string(ElementSelector.index()), -1);
         }
         std::cout << "Key: " << Key << ":" << this << std::endl;
         if (CreateIfNeeded) {

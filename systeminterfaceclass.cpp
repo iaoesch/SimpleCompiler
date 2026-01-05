@@ -28,7 +28,7 @@ Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Ti
                 if (e[0]->holds_alternative<std::string>()) {
                     FieldDescriptor.Label = e[0]->GetValue<std::string>();
                 } else {
-                    throw RuntimeErrorClass("expected string as first entry for Input ");
+                    throw RuntimeErrorClass("expected string as first entry for Input ", -1);
                 }
                 if (e[1]->holds_alternative<TypeDescriptorClass>()) {
                     const TypeDescriptorClass &t = e[1]->GetValue<TypeDescriptorClass>();
@@ -39,10 +39,10 @@ Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Ti
                     } else if (t == TypeDescriptorClass::Type::String) {
                         FieldDescriptor.Type = InputDialogClass::ElementType::String;
                     } else {
-                        throw RuntimeErrorClass("unsupported type for Input ");
+                        throw RuntimeErrorClass("unsupported type for Input ", -1);
                     }
                 } else {
-                    throw RuntimeErrorClass("expected type as second entry for Input ");
+                    throw RuntimeErrorClass("expected type as second entry for Input ", -1);
                 }
                 FieldDescriptor.Default = std::monostate();
                 if (e.size() == 3) {
@@ -57,14 +57,14 @@ Variables::VariableContentClass SystemInterfaceClass::Input(const std::string Ti
                     }
 
                 } else if (e.size() > 3){
-                    throw RuntimeErrorClass("too many (>3) arguments for Input ");
+                    throw RuntimeErrorClass("too many (>3) arguments for Input ", -1);
                 }
             } else {
-                throw RuntimeErrorClass("too few arguments for Input ");
+                throw RuntimeErrorClass("too few arguments for Input ", -1);
             }
             Descriptor.InputFieldDescriptors.push_back(FieldDescriptor);
         } else {
-            throw RuntimeErrorClass("Invalid type for Input (List expected)");
+            throw RuntimeErrorClass("Invalid type for Input (List expected)", -1);
         }
     }
     std::vector<InputDialogClass::ValueType> Result;

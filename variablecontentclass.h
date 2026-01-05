@@ -371,12 +371,12 @@ public:
         } else if(Type == TypeDescriptorClass::Type::Map) {
             return std::get<MapClass>(Data).GetBaseType();
         } else if(Type == TypeDescriptorClass::Type::List) {
-            throw RuntimeErrorClass("No Basetype availlable");
+            throw RuntimeErrorClass("No Basetype availlable", -1);
             //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
         } else {
             std::ostringstream Msg;
             Msg << "No Basetype availlable [" << Type << "]";
-            throw RuntimeErrorClass(Msg.str());
+            throw RuntimeErrorClass(Msg.str(), -1);
         }
 
     }
@@ -388,12 +388,12 @@ public:
         } else if(Type == TypeDescriptorClass::Type::Map) {
             return std::get<MapClass>(Data).GetIndexedElement(Selector);
         } else if(Type == TypeDescriptorClass::Type::List) {
-            throw RuntimeErrorClass("Indexing not possible");
+            throw RuntimeErrorClass("Indexing not possible", -1);
 //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
         } else {
             std::ostringstream Msg;
             Msg << "Indexing not possible [" << Type << "]";
-            throw RuntimeErrorClass(Msg.str());
+            throw RuntimeErrorClass(Msg.str(), -1);
         }
     }
 
@@ -404,12 +404,12 @@ public:
         } else if(Type == TypeDescriptorClass::Type::Map) {
             return std::get<MapClass>(Data).GetOrCreateIndexedElement(Selector);
         } else if(Type == TypeDescriptorClass::Type::List) {
-            throw RuntimeErrorClass("Indexing not possible");
+            throw RuntimeErrorClass("Indexing not possible", -1);
             //            return std::get<ListClass>(Data).GetIndexedElement(Selector);
         } else {
             std::ostringstream Msg;
             Msg << "Indexing not possible [" << Type << "]";
-            throw RuntimeErrorClass(Msg.str());
+            throw RuntimeErrorClass(Msg.str(), -1);
         }
     }
 
@@ -569,7 +569,7 @@ public:
     virtual void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const = 0;
 
     LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
-    void CreateFrame() {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep");} ActiveStorage.push_back(StorageTemplate);}
+    void CreateFrame() {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep", Location.begin.line);} ActiveStorage.push_back(StorageTemplate);}
     void ReleaseFrame() {ActiveStorage.pop_back();}
    // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}

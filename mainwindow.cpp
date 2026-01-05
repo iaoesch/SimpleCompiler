@@ -209,6 +209,13 @@ void MainWindow::RunButtonClicked()
         try {
            CurrentCode->Run();
         }
+        catch(RuntimeErrorClass &e) {
+            std::vector<int> Errorlines = e.GetBackTrace();
+            for (int line: Errorlines) {
+                MarkErrorLine(line, e.what());
+            }
+
+        }
         catch(...) {
         }
         Run->setDisabled(false);
@@ -538,7 +545,29 @@ void MainWindow::MarkRange(yy::location Location, const std::string &Message)
         Cursor.mergeCharFormat(Format);
         editor->setCurrentCharFormat(CurrentFormat);
     }
+}
 
+void MainWindow::MarkErrorLine(int Line, const std::string &Message)
+{
+    QTextDocument *doc = editor->document();
+    QTextCursor Cursor(doc);
+
+
+    if (Line > 1) {
+        if (Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor,
+                                Line) == false) {return;}
+    }
+     Cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+
+    QTextCharFormat Format;
+    Format.setBackground(Qt::red);
+    Format.setToolTip(QString::fromStdString(Message));
+
+    if (Cursor.hasSelection()) {
+        auto CurrentFormat = editor->currentCharFormat();
+        Cursor.mergeCharFormat(Format);
+        editor->setCurrentCharFormat(CurrentFormat);
+    }
 }
 
 void MainWindow::setupFileMenu()
