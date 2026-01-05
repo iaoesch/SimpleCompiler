@@ -210,10 +210,12 @@ void MainWindow::RunButtonClicked()
            CurrentCode->Run();
         }
         catch(RuntimeErrorClass &e) {
+            ChangingInProgress++;
             std::vector<int> Errorlines = e.GetBackTrace();
             for (int line: Errorlines) {
                 MarkErrorLine(line, e.what());
             }
+            ChangingInProgress--;
 
         }
         catch(...) {
@@ -499,6 +501,7 @@ void MainWindow::UnMarkDocument()
     QTextCharFormat Format1;
     Format1.setUnderlineStyle(QTextCharFormat::NoUnderline);
     Format1.setFontUnderline(false);
+    //Format1.setBackground(Qt::white);
     if (Cursor.hasSelection()) {
         auto CurrentFormat = editor->currentCharFormat();
         Cursor.mergeCharFormat(Format1);
@@ -555,12 +558,12 @@ void MainWindow::MarkErrorLine(int Line, const std::string &Message)
 
     if (Line > 1) {
         if (Cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor,
-                                Line) == false) {return;}
+                                Line-1) == false) {return;}
     }
      Cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
 
     QTextCharFormat Format;
-    Format.setBackground(Qt::red);
+     Format.setBackground(QColor(255, 224, 224));
     Format.setToolTip(QString::fromStdString(Message));
 
     if (Cursor.hasSelection()) {
