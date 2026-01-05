@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QTextEdit>
 #include <QSvgWidget>
+#include <QSvgRenderer>
 #include <sstream>
 #include <fstream>
 #include <QApplication>
@@ -53,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QHBoxLayout *HLayout1 = new QHBoxLayout;
     QHBoxLayout *HLayout2 = new QHBoxLayout;
+    QVBoxLayout *VLayout1 = new QVBoxLayout;
     QLabel *TopLabel = new QLabel("L1");
     Splitter->addWidget(TopLabel);
     QWidget *widget = new QWidget();
@@ -64,9 +66,18 @@ MainWindow::MainWindow(QWidget *parent)
 //    VLayout->addLayout(HLayout1);
 //    VLayout->addLayout(HLayout2);
     SvgDisplay = new QSvgWidget();
+    QScrollArea *SVGScroller = new QScrollArea();
+    SVGScroller->setWidget(SvgDisplay);
+    SelectedFunctionForTreeview = new QComboBox();
+    connect(SelectedFunctionForTreeview, &QComboBox::currentTextChanged, this, &MainWindow::SelectedTreeGraphChanged);
+    SVGScroller->setWidgetResizable(false);
+   // VLayout1->addWidget(SelectedFunctionForTreeview);
+   // VLayout1->addWidget(SVGScroller);
+
     QLabel *BottomLabel = new QLabel();
     Splitter->addWidget(BottomLabel);
-    Splitter->addWidget(SvgDisplay);
+    Splitter->addWidget(SelectedFunctionForTreeview);
+    Splitter->addWidget(SVGScroller);
 
 
     HLayout1->addWidget(editor);
@@ -158,7 +169,11 @@ void MainWindow::TextChanged()
 
         QTextEdit* buttonSender = qobject_cast<QTextEdit*>(sender()); // retrieve the button you have clicked
         QString Code = buttonSender->toPlainText();
-        auto[Result, Errors] = ParseBlock(Code.toStdString());
+        //auto[Result, Errors] = ParseBlock(Code.toStdString());
+        std::tuple<std::string, driver::ErrorListType> ResultTuple =
+            ParseBlock(Code.toStdString());
+        std::string Result = std::get<0>(ResultTuple);
+        auto Errors  = std::get<1>(ResultTuple);
         Output->setText(QString::fromStdString(Result));
         UnMarkDocument();
         for (auto const &e: Errors) {
@@ -166,6 +181,15 @@ void MainWindow::TextChanged()
                       << e.Location.end.column << e.Location.end.line << "\n";
             std::cout << "Marking: " << e.Location << std::endl;
            MarkRange(e.Location, e.Message);
+        }
+        if (CurrentCode != nullptr) {
+           auto Functions = CurrentCode->GetListOfDefinedFunctions();
+#if 1
+            SelectedFunctionForTreeview->clear();
+            for (auto const &r: Functions) {
+                SelectedFunctionForTreeview->addItem(QString::fromStdString(r.first));
+            }
+#endif
         }
         ChangingInProgress--;
     }
@@ -182,7 +206,11 @@ void MainWindow::RunButtonClicked()
 
     if (CurrentCode != nullptr) {
         Run->setDisabled(true);
-        CurrentCode->Run();
+        try {
+           CurrentCode->Run();
+        }
+        catch(...) {
+        }
         Run->setDisabled(false);
     }
 }
@@ -195,6 +223,17 @@ void MainWindow::RunTestButtonClicked()
     if (FailedCodeblocks.size() > 0) {
 
         editor->setText(QString::fromStdString(FailedCodeblocks.back()));
+    }
+}
+
+void MainWindow::SelectedTreeGraphChanged(const QString &text)
+{
+    if (CurrentCode != nullptr) {
+        auto Functions = CurrentCode->GetListOfDefinedFunctions();
+        auto it = Functions.find(text.toStdString());
+        if (it != Functions.end()) {
+            TreeToSVG(it->second, "tree.dot", "tree.svg", it->first);
+        }
     }
 }
 
@@ -298,6 +337,7 @@ std::tuple<std::string, driver::ErrorListType> MainWindow::ParseBlock (std::stri
         }
         drv->Variables.Dump(Output);
         TreeToSVG(drv->result, "tree.dot", "tree.svg");
+
         CurrentCode = std::move(drv);
         return {Output.str(), CurrentCode->GetErrors()};
 }
@@ -355,7 +395,7 @@ std::vector<std::string> MainWindow::DoOneTest (std::string Codeblock, std::map<
     return Errors;
 }
 
-void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath)
+void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std::string DotFilePath, std::string SVGFilePath, std::string Name)
 {
 
     //if (Graph.empty()) {
@@ -365,7 +405,7 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
     Drawing << "node [shape = record,height=.1];" << std::endl;
     Drawing << "compound=true" << std::endl;
     int CurrentNodeNumber = GetNextNodeNumber();
-    Drawing << "Node" << CurrentNodeNumber << "[label = \"<f0> |<f1> Start |<f2> \"];" << std::endl;
+    Drawing << "Node" << CurrentNodeNumber << "[label = \"<f0> |<f1> " << Name << " |<f2> \"];" << std::endl;
     int GraphNumber = 0;
     int CurrentGraphNumber = GraphNumber++;
     for (auto &s: Graph) {
@@ -389,6 +429,9 @@ void MainWindow::TreeToSVG(std::list<std::shared_ptr<StatementClass>> Graph, std
     //system("open tree2.png");
 
     SvgDisplay->load(QString::fromStdString(SVGFilePath));
+    QSize Size = SvgDisplay->renderer()->defaultSize();
+    float Scaling = 0.75f;
+    SvgDisplay->resize(Size.width()*Scaling, Size.height()*Scaling);
 
 }
 

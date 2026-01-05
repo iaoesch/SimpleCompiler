@@ -166,6 +166,11 @@ void driver::ReportError(const yy::location &l, const std::string &m)
     Errors.push_back({l, m});
 }
 
+const std::map<std::string, std::list<std::shared_ptr<StatementClass> > > &driver::GetListOfDefinedFunctions()
+{
+    return Currentfunction.GetListOfDefinedFunctions();
+}
+
 std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
     FunctionCallsPending.push_back({});
@@ -189,6 +194,7 @@ void FunctionNodeHelper::EndFunctionCall(const yy::parser::location_type &l)
     }
     FunctionCallsPending.pop_back();
 }
+
 
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l)
@@ -223,6 +229,20 @@ void FunctionNodeHelper::EndFunctionDefinition(const yy::parser::location_type &
     }
     FunctionsDefinitonsPending.pop_back();
 }
+
+std::string FunctionNodeHelper::GetQualifiedName()
+{
+    std::string Name;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<GetQualifiedName()> Not inside function"));
+    }
+    for (auto const &f: FunctionsDefinitonsPending) {
+        Name.append("::");
+        Name.append(f.Name);
+    }
+    return Name;
+}
+
 #if 0
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l)
 {
@@ -264,7 +284,9 @@ void FunctionNodeHelper::Set(const std::list<std::shared_ptr<StatementClass> > &
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
     }
+    std::cout << "Settting " << Statements.size() << "statements for " << FunctionsDefinitonsPending.back().Name << "\n";
     FunctionsDefinitonsPending.back().CurrentFunction->Set(Statements, Loc);
+    KnownFunctions[GetQualifiedName()] = Statements;
 }
 
 void FunctionNodeHelper::Set(Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc)

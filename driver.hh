@@ -26,6 +26,7 @@ class SystemInterfaceClass;
 
 class FunctionNodeHelper {
     VariableManager &Variables;
+    std::map<std::string, std::list<std::shared_ptr<StatementClass>>> KnownFunctions;
 
     struct FunctionDefinitionInfoType {
        std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
@@ -69,6 +70,9 @@ public:
     std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssignBySequence(std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
     void EndFunctionCall(const yy::parser::location_type &l);
+    std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions() const {return KnownFunctions;}
+private:
+    std::string GetQualifiedName();
 };
 
 // Conducting the whole scanning and parsing of Calc++.
@@ -132,5 +136,6 @@ public:
   void Tree(std::string FilePath = "");
   void ReportError(const yy::location& l, const std::string& m);
   ErrorListType GetErrors() {return Errors;}
+  std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions();
 };
 #endif // ! DRIVER_HH

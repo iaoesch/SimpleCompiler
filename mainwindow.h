@@ -3,6 +3,7 @@
 
 #include <QPushButton>
 #include <QToolButton>
+#include <QComboBox>
 #include <QMainWindow>
 #include <QLabel>
 
@@ -75,6 +76,7 @@ class MainWindow : public QMainWindow
     QPushButton *Stop;
     QPushButton *Run;
     QPushButton *RunTests;
+    QComboBox   *SelectedFunctionForTreeview;
     bool Stoprequest;
 
     QTimer *TestTimer;
@@ -123,7 +125,7 @@ private:
     int ChangingInProgress;
 
     void MarkRange(yy::location Location, const std::string &Messge);
-    void TreeToSVG(std::list<std::shared_ptr<StatementClass> > Graph, std::string DotFilePath, std::string SVGFilePath);
+    void TreeToSVG(std::list<std::shared_ptr<StatementClass> > Graph, std::string DotFilePath, std::string SVGFilePath, std::string Name = "Start");
 
     friend class QtEnvironment;
     bool CheckForStop() ;
@@ -138,7 +140,8 @@ private:
      private slots:
      void TestTimeRunOut();
 
-private:
+         void SelectedTreeGraphChanged(const QString &text);
+     private:
      std::tuple<std::string, driver::ErrorListType> ParseBlock(std::string Codeblock);
      void UnMarkDocument();
 };
