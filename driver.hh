@@ -4,6 +4,7 @@
 # include <map>
 #include <list>
 #include "environment.hpp"
+#include "functionnodehelper.h"
 # include "parser.hpp"
 #include "precompiledfunctionmanagerclass.h"
 #include"varmanag.hpp"
@@ -24,56 +25,7 @@ typedef yy::location  LocationType;
 class SystemInterfaceClass;
 
 
-class FunctionNodeHelper {
-    VariableManager &Variables;
-    std::map<std::string, std::list<std::shared_ptr<StatementClass>>> KnownFunctions;
 
-    struct FunctionDefinitionInfoType {
-       std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
-        std::string Name;
-       //std::shared_ptr<VariableClass> ReturnVariable;
-       std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
-       //Variables::VariableContentClass ReturnedValue;
-       std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
-       int NextPositionalParameter;
-    };
-    std::vector<FunctionDefinitionInfoType> FunctionsDefinitonsPending;
-
-    uint32_t AnonymeousElementCounter;
-
-    struct FunctionCallInfoType {
-        std::shared_ptr<Variables::FunctionDefinitionBaseClass> CurrentFunction;
-        int NextPositionalParameter;
-    };
-    std::vector<FunctionCallInfoType> FunctionCallsPending;
-
-
-public:
-    explicit FunctionNodeHelper(VariableManager &Variables)
-        : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
-    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const yy::parser::location_type &l);
-   // std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const yy::parser::location_type &l);
-   // std::shared_ptr<Variables::FunctionDefinitionClass> Define(const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);
-    void Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc);
-    void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, LocationType const &Loc);
-    void Set(Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);
-    std::string GetName();
-    std::shared_ptr<Variables::FunctionDefinitionClass> GetReference();
-    std::shared_ptr<Variables::FunctionDefinitionClass> Get(yy::parser::location_type &l);
-    std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
-    void EndFunctionDefinition(const yy::parser::location_type &l);
-
-    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginFunctionCall(std::string Name, const yy::parser::location_type &l);
-    std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
-    std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
-    std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
-    std::shared_ptr<AssignementClass> MakeAssignBySequence(std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
-    void EndFunctionCall(const yy::parser::location_type &l);
-    std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions() const {return KnownFunctions;}
-private:
-    std::string GetQualifiedName();
-};
 
 // Conducting the whole scanning and parsing of Calc++.
 class driver
@@ -109,6 +61,8 @@ public:
   // Run the parser on file F.  Return 0 on success.
   int parse (const std::string& f);
   int parse (const char *Code);
+
+  std::ostream &GetOutputStream() {return Env.OutputStream();}
   // The name of the file being parsed.
   std::string file;
   // Whether to generate parser debug traces.
