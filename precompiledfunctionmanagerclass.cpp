@@ -14,12 +14,12 @@ void PrecompiledFunctionManagerClass::RegisterFunction(std::string Name, std::sh
     std::shared_ptr<Variables::PredefinedFunctionDefinitionClass> CurrentFunction;
     std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
 
-    std::cout << "%%1%";
+   // std::cout << "%%1%";
     VariableHoldingCurrentFunction = Variables.GetVariableReference(Name);
     if (VariableHoldingCurrentFunction != nullptr) {
         throw(INTERNAL_ERROR_OBJECT("function allready defined"));
     }
-    std::cout << "%%2%";
+   // std::cout << "%%2%";
     VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
     CurrentFunction = std::make_shared<Variables::PredefinedFunctionDefinitionClass>(Name, Fkt, LocationType());
 

@@ -25,6 +25,7 @@ std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, d
 
 void TestClass::BuildAllTests()
 {
+    VariableClass::SetDefaultEnvironment(Env);
     TestVector;
     std::map<std::string, std::shared_ptr<GlobalVariableClass>> Expected;
     std::vector<std::string> Unexpected;
@@ -89,13 +90,13 @@ void TestClass::BuildAllTests()
     Code = "a:=5; \n"
            "b:=3; \n"
            "c:=a+b; \n"
-           "x1:= 17;\n"
-           "x2:= 17;\n"
+           "xt1wt1:= 17;\n"
+           "xt2:= 17;\n"
            "x3:= 17;\n"
            "x4:= 17;\n"
            "x5:= 17;\n"
            "function test2 returning integer (a)\n"
-           "   wt2:=b; \n"
+           "   wt2:=a; \n"
            "   function test2sub1 returning integer (a)\n"
            "      wt2s1:=b; \n"
            "      x:=wt2s1; \n"
@@ -103,6 +104,7 @@ void TestClass::BuildAllTests()
            "   endfunction \n"
            "   x:=wt2; \n"
            "   x:=test2sub1(a+5); \n"
+           "   xt2:=wt2; \n"
            "   returning a+2; \n"
            "endfunction \n"
            "function test1 returning integer (a)\n"
@@ -132,8 +134,9 @@ void TestClass::BuildAllTests()
            "      x:=test1sub1sub2(a+10000); \n"
            "      returning a+1000; \n"
            "   endfunction \n"
-           "   x:=wt1; \n"
+           "   xt1wt1s1:=wt1s1; \n"
            "   r:=test1sub1(a+100000); \n"
+           "   xt1wt1:=wt1; \n"
            "   returning a+r; \n"
            "endfunction \n"
            "z1:=test1(1000000);\n"
@@ -142,7 +145,7 @@ void TestClass::BuildAllTests()
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 8LL);
-    Expected["x1"] = MakeVariable("x", 3LL);
+    Expected["xt1wt1"] = MakeVariable("x", 2000001LL);
     Expected["z1"] = MakeVariable("z", 101LL);
     Unexpected.clear();
     Unexpected.push_back("w");

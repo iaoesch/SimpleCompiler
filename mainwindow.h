@@ -30,6 +30,7 @@ public:
     // Environment interface
 
     virtual std::ostream &OutputStream() override;
+    virtual std::ostream &DebugOutput() override;
     virtual std::istream &InputStream() override;
     virtual bool CheckForStop() override;
     virtual void ExecutionStarted() override;
@@ -42,6 +43,7 @@ class QtTestEnvironment : public Environment {
 
     MainWindow &Parent;
     std::ostringstream CapturedOutputStream;
+    std::ostringstream CapturedDebugOutputStream;
     std::istringstream TestInputStream;
     std::chrono::milliseconds TimeoutTime;
 
@@ -50,6 +52,7 @@ public:
     // Environment interface
 
     virtual std::ostream &OutputStream() override;
+    virtual std::ostream &DebugOutput() override;
     virtual std::istream &InputStream() override;
     virtual bool CheckForStop() override;
     virtual void ExecutionStarted() override;

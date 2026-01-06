@@ -61,6 +61,8 @@
 /*  End Class   : BTError                                                    */
 /*****************************************************************************/
 
+static ErrorEnvironment Errorenv;
+Environment *VariableManager::DefaultEnvironment = &Errorenv;
 
 
 void VariableManager::CreateNewContext(std::string Name)
@@ -134,12 +136,12 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     }
     std::shared_ptr<VariableClass> Var;
     if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
-        std::cout << "creating local <" << Name << ">\n";
+        DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
         Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalStorageTemplates.back().LocalsParent, Storage);
         LocalStorageTemplates.back().LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
         assert(LocalOffset == LocalStorageTemplates.back().LocalStorageTemplates.size());
     } else {
-        std::cout << "creating global <" << Name << ">\n";
+        DefaultEnvironment->DebugOutput() << "creating global <" << Name << ">\n";
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);
     }
     return ContextStack.back()->RegisterVariable(Name, Var, false);
@@ -262,9 +264,9 @@ void VariableContextClass::Dump(std::ostream &s)
     }
     s << "Content:" << std::endl;
     for (auto &i: Variables) {
-        std::cout << i.first << "{ " << std::endl;
+        s << i.first << "{ " << std::endl;
         i.second->Print(s);
-        std::cout << "}" << std::endl;
+        s << "}" << std::endl;
 
     }
 

@@ -50,6 +50,9 @@ class VariableClasse_no_longer_used {
 
 typedef  std::shared_ptr<VariableClass> VariableReferenceType;
 
+void SetNodeDefaultEnvironment(Environment &Env);
+
+
 class ExpressionClass : public std::enable_shared_from_this<ExpressionClass>{
    public:
     ExpressionClass(const LocationType &Loc) : Location(Loc) {}

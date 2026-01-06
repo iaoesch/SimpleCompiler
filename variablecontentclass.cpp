@@ -70,9 +70,9 @@ void FunctionDefinitionBaseClass::Print(std::ostream &s) const
             if (first) {
                 first = false;
             } else {
-                std::cout << ", ";
+                s << ", ";
             }
-            std::cout << r->GetName();
+            s << r->GetName();
         }
         s << ")" << std::endl;
     }
@@ -577,9 +577,9 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
     Env.Tracing(Location, Output.str());
 
     for (auto const &s: Statements) {
-        std::cout << "executing << ";
-        s->Print(std::cout);
-        std::cout << ">>" << std::endl;
+        Env.DebugOutput() << "executing << ";
+        s->Print(Env.DebugOutput());
+        Env.DebugOutput() << ">>" << std::endl;
         auto r = s->Execute(Env);
         if (r) {
             if (std::holds_alternative<std::shared_ptr<Variables::VariableContentClass>>(*r)) {
@@ -587,7 +587,7 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
                 break;
             }
         }
-        std::cout << "executing done" << std::endl;
+        Env.DebugOutput() << "executing done" << std::endl;
     }
     Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
 
@@ -705,7 +705,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         } else {
             throw RuntimeErrorClass("Keytype <unknown> not supported for map access" + std::to_string(ElementSelector.index()), -1);
         }
-        std::cout << "Key: union" << ":" << this  << std::endl;
+    //    Env.DebugOutput() << "Key: union" << ":" << this  << std::endl;
         if (CreateIfNeeded) {
             auto &Element = std::get<MapStringAndIntegerKeyType>(Data)[Key];
             if (Element==nullptr) {
@@ -729,7 +729,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         } else {
             throw RuntimeErrorClass("Keytype <unknown> not supported for integer map access: " + std::to_string(ElementSelector.index()), -1);
         }
-        std::cout << "Key: " << Key << ":" << this << std::endl;
+     //   Env.DebugOutput() << "Key: " << Key << ":" << this << std::endl;
         if (CreateIfNeeded) {
             auto &Element = std::get<MapIntegerKeyType>(Data)[Key];
             if (Element==nullptr) {
@@ -752,7 +752,7 @@ VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, 
         } else {
             throw RuntimeErrorClass("Keytype <unknown> not supported for string map access" + std::to_string(ElementSelector.index()), -1);
         }
-        std::cout << "Key: " << Key << ":" << this << std::endl;
+      //  Env.DebugOutput() << "Key: " << Key << ":" << this << std::endl;
         if (CreateIfNeeded) {
             auto &Element = std::get<MapStringKeyType>(Data)[Key];
             if (Element==nullptr) {

@@ -9,6 +9,10 @@ template <typename T> auto &Type_Id( T const& obj ) { return typeid( obj );}
 
 static int NodeNumber = 1;
 
+static ErrorEnvironment Errorenv;
+static Environment *DefaultEnvironment = &Errorenv;
+void SetNodeDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
+
 int GetNextNodeNumber()
 {
     return NodeNumber++;
@@ -54,14 +58,14 @@ Variables::VariableContentClass ExpressionClass::Evaluate() const
     return Evaluate(DummyEnvironment);
 }
 
-Variables::VariableContentClass            ExpressionClass::Evaluate(Environment &Env) const { (void)Env; std::cout << "\nVirtual Call expression Evaluate(Env)"; return 0.0;};
-std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const { (void)ToDerive; std::cout << "\nVirtual Call expression Derive()"; return NULL;};
-void              ExpressionClass::Print(std::ostream &s) const { (void)s; std::cout << "\nVirtual Call expression print()"; };
-std::shared_ptr<ExpressionClass> ExpressionClass::Clone() const {std::cout << "\nVirtual Call expression Clone()"; return NULL;};
-std::shared_ptr<ExpressionClass> ExpressionClass::Optimize(Environment &Env) { (void)Env; std::cout << "\nVirtual Call expression Optimize(Environment &Env)"; return NULL;};
-bool              ExpressionClass::IsConstant() {std::cout << "\nVirtual Call expression IsConstant()"; return false;};
-bool              ExpressionClass::IsSame(std::shared_ptr<ExpressionClass>Other) { (void)Other; std::cout << "\nVirtual Call expression IsSame()"; return false;};
-void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const { (void)MyNodeNumber;  (void)s; std::cout << "\nVirtual Call expression DrawNode()";};
+Variables::VariableContentClass            ExpressionClass::Evaluate(Environment &Env) const { (void)Env; Env.DebugOutput() << "\nVirtual Call expression Evaluate(Env)"; return 0.0;};
+std::shared_ptr<ExpressionClass> ExpressionClass::Derive(VariableReferenceType ToDerive) const { (void)ToDerive; DefaultEnvironment->DebugOutput() << "\nVirtual Call expression Derive()"; return NULL;};
+void              ExpressionClass::Print(std::ostream &s) const { (void)s; DefaultEnvironment->DebugOutput() << "\nVirtual Call expression print()"; };
+std::shared_ptr<ExpressionClass> ExpressionClass::Clone() const {DefaultEnvironment->DebugOutput() << "\nVirtual Call expression Clone()"; return NULL;};
+std::shared_ptr<ExpressionClass> ExpressionClass::Optimize(Environment &Env) { (void)Env; Env.DebugOutput() << "\nVirtual Call expression Optimize(Environment &Env)"; return NULL;};
+bool              ExpressionClass::IsConstant() {DefaultEnvironment->DebugOutput() << "\nVirtual Call expression IsConstant()"; return false;};
+bool              ExpressionClass::IsSame(std::shared_ptr<ExpressionClass>Other) { (void)Other; DefaultEnvironment->DebugOutput() << "\nVirtual Call expression IsSame()"; return false;};
+void              ExpressionClass::DrawNode(std::ostream &s, int MyNodeNumber) const { (void)MyNodeNumber;  (void)s; DefaultEnvironment->DebugOutput() << "\nVirtual Call expression DrawNode()";};
 
 
 
@@ -587,31 +591,31 @@ const TypeDescriptorClass VariableValueClass::GetType() const
 
 void StatementClass::Print(std::ostream &s[[maybe_unused]]) const
 {
-   std::cout << "\nVirtual Call StatementClass print()";
+   DefaultEnvironment->DebugOutput() << "\nVirtual Call StatementClass print()";
 }
 
 std::shared_ptr<StatementClass> StatementClass::Clone() const
 {
-    std::cout << "\nVirtual Call StatementClass Clone()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call StatementClass Clone()";
     return nullptr;
 }
 
 std::shared_ptr<StatementClass> StatementClass::Optimize(Environment &Env)
 {
     (void)Env;
-    std::cout << "\nVirtual Call StatementClass Optimize(Environment &Env)";
+    Env.DebugOutput() << "\nVirtual Call StatementClass Optimize(Environment &Env)";
     return nullptr;
 }
 
 void StatementClass::DrawNode(std::ostream &s[[maybe_unused]], int MyNodeNumber[[maybe_unused]]) const
 {
-    std::cout << "\nVirtual Call StatementClass DrawNode()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call StatementClass DrawNode()";
 
 }
 
 StatementResultClass StatementClass::Execute(Environment &Env[[maybe_unused]]) const
 {
-    std::cout << "\nVirtual Call StatementClass Execute()";
+    Env.DebugOutput() << "\nVirtual Call StatementClass Execute()";
     return{};
 }
 
@@ -656,7 +660,7 @@ StatementResultClass AssignementClass::Execute(Environment &Env) const
     VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
-        std::cout << "AsgExe:" << Result;
+        Env.DebugOutput() << "AsgExe:" << Result;
         if (Result.Isempty()) {
             ReferedVariable->SetValue(Variables::VariableContentClass(AssignedExpression));
         } else {
@@ -710,7 +714,7 @@ StatementResultClass ReturningStatementClass::Execute(Environment &Env) const
     //VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
     try {
         Variables::VariableContentClass Result = ReturnedExpression->Evaluate(Env);
-        std::cout << "retExe:" << Result;
+        Env.DebugOutput() << "retExe:" << Result;
         if (Result.Isempty()) {
            // ReferedVariable->SetValue(Variables::VariableContentClass(AssignedExpression));
             return std::make_shared<Variables::VariableContentClass>(ReturnedExpression);
@@ -731,43 +735,43 @@ StatementResultClass ReturningStatementClass::Execute(Environment &Env) const
 bool ConditionalExpressionClass::Evaluate(Environment &Env) const
 {
     (void)Env;
-    std::cout << "\nVirtual Call ConditionalExpressionClass Evaluate(Env)";
+    Env.DebugOutput() << "\nVirtual Call ConditionalExpressionClass Evaluate(Env)";
     return false;
 }
 
 void ConditionalExpressionClass::Print(std::ostream &s[[maybe_unused]]) const
 {
-    std::cout << "\nVirtual Call ConditionalExpressionClass print()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call ConditionalExpressionClass print()";
 }
 
 std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Clone() const
 {
-    std::cout << "\nVirtual Call ConditionalExpressionClass Clone()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call ConditionalExpressionClass Clone()";
     return nullptr;
 }
 
 std::shared_ptr<ConditionalExpressionClass> ConditionalExpressionClass::Optimize(Environment &Env)
 {
     (void)Env;
-    std::cout << "\nVirtual Call ConditionalExpressionClass Optimize(Environment &Env)";
+    Env.DebugOutput() << "\nVirtual Call ConditionalExpressionClass Optimize(Environment &Env)";
     return nullptr;
 }
 
 bool ConditionalExpressionClass::IsConstant()
 {
-    std::cout << "\nVirtual Call ConditionalExpressionClass IsConstant()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call ConditionalExpressionClass IsConstant()";
     return false;
 }
 
 bool ConditionalExpressionClass::IsSame(std::shared_ptr<ConditionalExpressionClass> Other[[maybe_unused]])
 {
-    std::cout << "\nVirtual Call ConditionalExpressionClass IsSame()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call ConditionalExpressionClass IsSame()";
     return false;
 }
 
 void ConditionalExpressionClass::DrawNode(std::ostream &s[[maybe_unused]], int MyNodeNumber[[maybe_unused]]) const
 {
-    std::cout << "\nVirtual Call ConditionalExpressionClass DrawNode()";
+    DefaultEnvironment->DebugOutput() << "\nVirtual Call ConditionalExpressionClass DrawNode()";
 
 }
 

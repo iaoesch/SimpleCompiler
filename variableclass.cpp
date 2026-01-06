@@ -5,7 +5,8 @@
 #include "compact.h"
 #include "varmanag.hpp"
 
-
+static ErrorEnvironment Errorenv;
+Environment *VariableClass::DefaultEnvironment = &Errorenv;
 
 
 void VariableClass::SetContext(VariableContextClass *Context)
@@ -37,13 +38,13 @@ Variables::VariableContentClass &GlobalVariableClass::GetWriteReferenceToValue()
 
 void GlobalVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    std::cout << "GlbSet:" << v;
+    DefaultEnvironment->DebugOutput() << "GlbSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "GlbSetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "GlbSetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);
@@ -55,13 +56,13 @@ void GlobalVariableClass::SetInitialValue(Variables::VariableContentClass v)
 {
     if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
     Initialized = true;
-    std::cout << "GlbSet:" << v;
+    DefaultEnvironment->DebugOutput() << "GlbSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "GlbSetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "GlbSetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);
@@ -165,13 +166,13 @@ Variables::VariableContentClass &TemporaryVariableClass::GetWriteReferenceToValu
 
 void TemporaryVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    std::cout << "TmpSet:" << v;
+    DefaultEnvironment->DebugOutput() << "TmpSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "TmpSetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "TmpSetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);
@@ -182,13 +183,13 @@ void TemporaryVariableClass::SetInitialValue(Variables::VariableContentClass v)
 {
     if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
     Initialized = true;
-    std::cout << "TmpSet:" << v;
+    DefaultEnvironment->DebugOutput() << "TmpSet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "TmpSetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "TmpSetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);
@@ -227,13 +228,13 @@ Variables::VariableContentClass &ProxyVariableClass::GetWriteReferenceToValue()
 
 void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
 {
-    std::cout << "PxySet:" << v;
+    DefaultEnvironment->DebugOutput() << "PxySet:" << v;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "PxySetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "PxySetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);
@@ -242,7 +243,7 @@ void ProxyVariableClass::SetValue(Variables::VariableContentClass v)
 
 void ProxyVariableClass::SetInitialValue(Variables::VariableContentClass v)
 {
-    std::cout << "PxySetInitial:" << v;
+    DefaultEnvironment->DebugOutput() << "PxySetInitial:" << v;
     if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
     Initialized = true;
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
@@ -250,7 +251,7 @@ void ProxyVariableClass::SetInitialValue(Variables::VariableContentClass v)
     if (IsAssignable(v)) {
         Content = v;
     } else {
-        std::cout << "PxySetexcp:" << v;
+        DefaultEnvironment->DebugOutput() << "PxySetexcp:" << v;
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
         throw RuntimeErrorClass(s.str(), -1);

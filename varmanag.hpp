@@ -81,10 +81,12 @@ private:
     };
     std::vector<LocalStorageContextType> LocalStorageTemplates;
 
+    static Environment *DefaultEnvironment;
 
    // Data
     std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage);
 public:
+    static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
     VariableManager() : Local(false), LocalOffset(0) {}
 

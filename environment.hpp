@@ -25,6 +25,7 @@ public:
     virtual ~Environment();
     virtual std::ostream &OutputStream();
     virtual std::istream &InputStream();
+    virtual std::ostream &DebugOutput();
     virtual void Tracing(LocationType const &Loc, std::string Statement);
     virtual void ExecutionStarted();
     virtual void ExecutionStopped();
@@ -38,7 +39,21 @@ private:
     void SetOutputStreamColorTo(Color Col);
 };
 
+class ErrorEnvironment : public Environment {
 
+
+    // Environment interface
+public:
+    virtual std::ostream &OutputStream() override;
+    virtual std::istream &InputStream() override;
+    virtual std::ostream &DebugOutput() override;
+    virtual void Tracing(const LocationType &Loc, std::string Statement) override;
+    virtual void ExecutionStarted() override;
+    virtual void ExecutionStopped() override;
+
+private:
+    virtual bool CheckForStop() override;
+};
 
 
 

@@ -14,6 +14,8 @@ class VariableClass
 public:
     enum class StorageClass {ReadAndWrite, ReadOnly, Code};
 
+    static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
+
 private:
     VariableContextClass *MyContext;
     const std::string Name;
@@ -21,6 +23,7 @@ private:
     const StorageClass Storage;
 protected:
     bool  Initialized;
+    static Environment *DefaultEnvironment;
 
 protected:
     bool IsWriteable() {return Storage == StorageClass::ReadAndWrite;}

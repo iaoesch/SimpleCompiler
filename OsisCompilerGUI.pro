@@ -24,6 +24,7 @@ SOURCES += \
    compact.cpp \
    driver.cc \
    environment.cpp \
+   functionnodehelper.cpp \
    highlighter.cpp \
    inputdialogclass.cpp \
    internalobjectclass.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
    compact.h \
    driver.hh \
    environment.hpp \
+   functionnodehelper.h \
    highlighter.h \
    inputdialogclass.h \
    internalobjectclass.h \

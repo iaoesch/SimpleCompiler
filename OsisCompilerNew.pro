@@ -11,6 +11,7 @@ SOURCES += \
    compact.cpp \
    dmdmain.cpp \
    driver.cc \
+   functionnodehelper.cpp \
    inputdialogclass.cpp \
    typedescriptorclass.cpp \
    variableclass.cpp \
@@ -49,6 +50,7 @@ HEADERS += \
    compact.h \
    driver.hh \
    environment.hpp \
+   functionnodehelper.h \
    inputdialogclass.h \
    typedescriptorclass.hpp \
    variableclass.h \

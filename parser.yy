@@ -215,7 +215,7 @@ statements:
 | statements statement   {$1.push_back($2); $$ = $1;}
 ;
 
-/*| statements error ";"  {  drv.halt(); yyerrok; $$ = $1; std::cout << "size = " << $1.size() << std::endl; /* simple error recovery  };*/
+/*| statements error ";"  {  drv.halt(); yyerrok; $$ = $1; drv.GetOutputStream() << "size = " << $1.size() << std::endl; /* simple error recovery  };*/
 
 statement:
   assignment ";"        {$$ = $1;}
@@ -252,28 +252,28 @@ ifstatement:
 assignment:
   assignable ":=" exp {
                             $$ = std::make_shared<AssignementClass>($3, $1, @$);
-                            std::cout << "asg:";
-                       /*     $3->Print(std::cout);
-                            $$->Print(std::cout);
-                            try { std::cout << "eval:" << $3->Evaluate();}
+                            drv.GetOutputStream() << "asg:";
+                       /*     $3->Print(drv.GetOutputStream());
+                            $$->Print(drv.GetOutputStream());
+                            try { drv.GetOutputStream() << "eval:" << $3->Evaluate();}
                             catch (...) {
-                               std::cout << "eval: <Exception>";
+                               drv.GetOutputStream() << "eval: <Exception>";
                             }*/
 
                       }
 | assignable ":=" Anonymeousfunctiondefinition {
                                                  $$ = std::make_shared<AssignementClass>(std::make_shared<ConstantClass>(Variables::VariableContentClass($3), @1), $1, @$);
-                                                 std::cout << "asg:";
-                                                 $3->Print(std::cout);
-                                                 $$->Print(std::cout);
-                                                 /*std::cout << "eval:" << $3->Evaluate();*/
+                                                 drv.GetOutputStream() << "asg:";
+                                                 $3->Print(drv.GetOutputStream());
+                                                 $$->Print(drv.GetOutputStream());
+                                                 /*drv.GetOutputStream() << "eval:" << $3->Evaluate();*/
                                                 }
 
 | assignable ":=" typedefinition {
     $$ = std::make_shared<AssignementClass>(std::make_shared<ConstantClass>($3->ToValueType(), @3), $1, @$);
-    std::cout << "asg:";
-    std::cout << $3;
-    $$->Print(std::cout);
+    drv.GetOutputStream() << "asg:";
+    drv.GetOutputStream() << $3;
+    $$->Print(drv.GetOutputStream());
 
 
 }
@@ -505,12 +505,12 @@ factor
 : unary  {
              std::swap ($$, $1);
              auto exp = $$;
-             exp->Print(std::cout);
+             exp->Print(drv.GetOutputStream());
          }
 ;
 
 unary
-: primary    { std::swap ($$, $1); $$->Print(std::cout); }
+: primary    { std::swap ($$, $1); $$->Print(drv.GetOutputStream()); }
 | "+" unary  { std::swap ($$, $2); }
 | "-" unary  {
                  $$ = std::make_shared<NegationClass>($2, @1);
@@ -522,7 +522,7 @@ unary
 
 primary:
   assignable    { $$ = $1; }
-| literal       { $$ = std::make_shared<ConstantClass>($1, @1); std::cout << "parser: constant " << $1 << "\n";}
+| literal       { $$ = std::make_shared<ConstantClass>($1, @1); drv.GetOutputStream() << "parser: constant " << $1 << "\n";}
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
 ;

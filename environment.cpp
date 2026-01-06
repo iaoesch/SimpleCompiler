@@ -28,8 +28,8 @@ Environment::~Environment()
 }
 
 std::ostream &Environment::OutputStream() {return std::cout;}
-
 std::istream &Environment::InputStream() {return std::cin;}
+std::ostream &Environment::DebugOutput() {return std::cout;}
 
 void Environment::ExecutionStarted()
 {
@@ -80,3 +80,38 @@ void Environment::SetOutputStreamColorTo(Color Col)
 
 
 
+
+std::ostream &ErrorEnvironment::OutputStream()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+std::istream &ErrorEnvironment::InputStream()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+std::ostream &ErrorEnvironment::DebugOutput()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+void ErrorEnvironment::Tracing(const LocationType &Loc, std::string Statement)
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+void ErrorEnvironment::ExecutionStarted()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+void ErrorEnvironment::ExecutionStopped()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}
+
+bool ErrorEnvironment::CheckForStop()
+{
+    throw INTERNAL_ERROR_OBJECT("Using undefined Environment");
+}

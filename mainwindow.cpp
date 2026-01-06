@@ -280,6 +280,11 @@ std::ostream &QtEnvironment::OutputStream()
     return std::cout;
 }
 
+std::ostream &QtEnvironment::DebugOutput()
+{
+    return std::cout;
+}
+
 std::istream &QtEnvironment::InputStream()
 {
     return std::cin;
@@ -304,6 +309,11 @@ void QtTestEnvironment::ExecutionStopped()
 std::ostream &QtTestEnvironment::OutputStream()
 {
     return CapturedOutputStream;
+}
+
+std::ostream &QtTestEnvironment::DebugOutput()
+{
+    return CapturedDebugOutputStream;
 }
 
 std::istream &QtTestEnvironment::InputStream()
