@@ -53,6 +53,41 @@ void TestClass::BuildAllTests()
     Expected["d"] = MakeVariable("d", 15LL);
     TestVector.push_back({"Addition chain", Code, Expected, Unexpected});
 
+    Code = "a:=5; \nb:=3; \nc:=7; \nd:=a+b+c;";
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 7LL);
+    Expected["d"] = MakeVariable("d", 15LL);
+    TestVector.push_back({"Addition chain", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=7; \n"
+           "if (a==b) then\n"
+           "  d:=a;\n"
+           "else\n"
+           "  d:=c;\n"
+           "endif;\n";
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 7LL);
+    Expected["d"] = MakeVariable("d", 7LL);
+    TestVector.push_back({"if", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=5; \n"
+           "c:=7; \n"
+           "if (a==b) then\n"
+           "  d:=a;\n"
+           "else\n"
+           "  d:=c;\n"
+           "endif;\n";
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 5LL);
+    Expected["c"] = MakeVariable("c", 7LL);
+    Expected["d"] = MakeVariable("d", 5LL);
+    TestVector.push_back({"if", Code, Expected, Unexpected});
+
     Code = "a:=5; \n"
            "b:=3; \n"
            "c:=a+b; \n"
@@ -247,6 +282,47 @@ void TestClass::BuildAllTests()
     Expected["x"] = MakeVariable("x", 13LL);
     Expected["y"] = MakeVariable("x", 99LL);
     Expected["z"] = MakeVariable("z", 7132LL);
+    Unexpected.clear();
+    Unexpected.push_back("w");
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "v:= 17;\n"
+           "x:= 17;\n"
+           "y:= 17;\n"
+           "function test returning integer (a)"
+           "   w:=b+10; "
+           "   x:=w; "
+           "      function testlocallocal2 returning integer (b)"
+           "         q:=w; "
+           "         v:=c; "
+           "         w:=99; "
+           "         returning b+3; "
+           "      endfunction "
+           "   function testlocal returning integer (b)"
+           "      function testlocallocal returning integer (b)"
+           "         r:=testlocallocal2(b);"
+           "         returning r+2; "
+           "      endfunction "
+           "      r:=testlocallocal(b);"
+           "      returning r+30; "
+           "   endfunction "
+           "   r:=testlocal(a);"
+           "   y:=w; "
+           "   returning r+100; "
+           "endfunction "
+           "z:=test(7000);";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["v"] = MakeVariable("x", 8LL);
+    Expected["x"] = MakeVariable("x", 13LL);
+    Expected["y"] = MakeVariable("x", 99LL);
+    Expected["z"] = MakeVariable("z", 7135LL);
     Unexpected.clear();
     Unexpected.push_back("w");
     TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
