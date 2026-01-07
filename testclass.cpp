@@ -181,7 +181,76 @@ void TestClass::BuildAllTests()
     Expected["z2"] = MakeVariable("z", 2111260LL + 2111150LL + 1+2+4+8+16+32+32+128+128);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Argument an returnvalue passing", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "v:= 17;\n"
+           "x:= 17;\n"
+           "y:= 17;\n"
+           "function test returning integer (a)"
+           "   w:=b+10; "
+           "   x:=w; "
+           "   function testlocal returning integer (b)"
+           "      q:=w; "
+           "      v:=c; "
+           "      w:=99; "
+           "      returning a+2; "
+           "   endfunction "
+           "   r:=testlocal(a);"
+           "   y:=w; "
+           "   returning r+10; "
+           "endfunction "
+           "z:=test(100);";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["v"] = MakeVariable("x", 8LL);
+    Expected["x"] = MakeVariable("x", 13LL);
+    Expected["y"] = MakeVariable("x", 99LL);
+    Expected["z"] = MakeVariable("z", 112LL);
+    Unexpected.clear();
+    Unexpected.push_back("w");
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+
+    Code = "a:=5; \n"
+           "b:=3; \n"
+           "c:=a+b; \n"
+           "v:= 17;\n"
+           "x:= 17;\n"
+           "y:= 17;\n"
+           "function test returning integer (a)"
+           "   w:=b+10; "
+           "   x:=w; "
+           "   function testlocal returning integer (b)"
+           "      function testlocallocal returning integer (b)"
+           "         q:=w; "
+           "         v:=c; "
+           "         w:=99; "
+           "         returning b+2; "
+           "      endfunction "
+           "      r:=testlocallocal(b);"
+           "      returning r+30; "
+           "   endfunction "
+           "   r:=testlocal(a);"
+           "   y:=w; "
+           "   returning r+100; "
+           "endfunction "
+           "z:=test(7000);";
+    Expected.clear();
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 8LL);
+    Expected["v"] = MakeVariable("x", 8LL);
+    Expected["x"] = MakeVariable("x", 13LL);
+    Expected["y"] = MakeVariable("x", 99LL);
+    Expected["z"] = MakeVariable("z", 7132LL);
+    Unexpected.clear();
+    Unexpected.push_back("w");
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+
 }
 
 std::vector<std::string> TestClass::DoAllTests()
