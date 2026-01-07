@@ -43,7 +43,7 @@ void Environment::ExecutionStopped()
 void Environment::Tracing(const LocationType &Loc, std::string Statement)
 {
     SetOutputStreamColor(Color::Blue);
-    std::cout << "[" << Loc << "]" << Statement << std::endl;
+    OutputStream() << "[" << Loc << "]" << Statement << std::endl;
     RestoreOutputStreamColor();
 }
 

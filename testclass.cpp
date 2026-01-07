@@ -46,6 +46,13 @@ void TestClass::BuildAllTests()
     Expected["c"] = MakeVariable("c", 8LL);
     TestVector.push_back({"Assignment", Code, Expected, Unexpected});
 
+    Code = "a:=5; \nb:=3; \nc:=7; \nd:=a+b;\nd:=d+c;";
+    Expected["a"] = MakeVariable("a", 5LL);
+    Expected["b"] = MakeVariable("b", 3LL);
+    Expected["c"] = MakeVariable("c", 7LL);
+    Expected["d"] = MakeVariable("d", 15LL);
+    TestVector.push_back({"Addition chain", Code, Expected, Unexpected});
+
     Code = "a:=5; \n"
            "b:=3; \n"
            "c:=a+b; \n"
@@ -91,53 +98,64 @@ void TestClass::BuildAllTests()
            "b:=3; \n"
            "c:=a+b; \n"
            "xt1wt1:= 17;\n"
-           "xt2:= 17;\n"
-           "x3:= 17;\n"
+           "xt1wt1s1:= 17;\n"
+           "xt1wt1s1s1:= 17;\n"
+           "xt1wt1s1s2:= 17;\n"
+           "xt2wt2:= 17;\n"
+           "yt2wt2:= 0;\n"
+           "xt2wt2s1:= 17;\n"
+           "xt2wt1s2:= 17;\n"
+           "xt1wt1s2:= 17;\n"
+
            "x4:= 17;\n"
            "x5:= 17;\n"
            "function test2 returning integer (a)\n"
-           "   wt2:=a; \n"
+           "   wt2:=a+6; \n"
            "   function test2sub1 returning integer (a)\n"
-           "      wt2s1:=b; \n"
-           "      x:=wt2s1; \n"
-           "      returning a+2; \n"
+           "      wt2s1:=a + 8; \n"
+           "      xt2wt2s1:=wt2s1; \n"
+           "      returning a+128; \n"
            "   endfunction \n"
            "   x:=wt2; \n"
-           "   x:=test2sub1(a+5); \n"
-           "   xt2:=wt2; \n"
-           "   returning a+2; \n"
+           "   r:=test2sub1(a+50); \n"
+           "   xt2wt2:=wt2; \n"
+           "   yt2wt2:=yt2wt2+wt2; \n"
+           "   returning r+32; \n"
            "endfunction \n"
            "function test1 returning integer (a)\n"
            "   wt1:=a+1; \n"
            "   function test1sub2 returning integer (a)\n"
-           "      wt1s2:=a+1; \n"
+           "      wt1s2:=a+7; \n"
            "      x:=wt1s2; \n"
-           "      x:=test2(a+10); \n"
-           "      returning a+x; \n"
+           "      r:=test2(a+10); \n"
+           "      xt1wt1s2:=wt1s2; \n"
+           "      returning r+16; \n"
            "   endfunction \n"
            "   function test1sub1 returning integer (a)\n"
            "      wt1s1:=a+1; \n"
+           "      q:=a+2; \n"
            "      function test1sub1sub1 returning integer (a)\n"
-           "         wt1s1s1:=a+1; \n"
-           "         x:=wt1s1s1; \n"
-           "         x:=test2(a+100); \n"
-           "         x:=test1sub2(a+200); \n"
-           "         returning a+10000; \n"
+           "         wt1s1s1:=a+4; \n"
+           "         xt1wt1s1s1:=wt1s1s1; \n"
+           "         r1:=test2(a+100); \n"
+           "         r2:=test1sub2(a+200); \n"
+           "         returning r1+r2+8; \n"
            "      endfunction \n"
            "      function test1sub1sub2 returning integer (a)\n"
-           "         wt1s1s1:=a+1; \n"
-           "         x:=test1sub1sub1(a+1000); \n"
-           "         returning a+10000; \n"
+           "         wt1s1s2:=a+3; \n"
+           "         r:=test1sub1sub1(a+1000); \n"
+           "         xt1wt1s1s2:=wt1s1s2; \n"
+           "         returning r+4; \n"
            "      endfunction \n"
-           "      wt1s1:=b; \n"
-           "      x:=wt1s1; \n"
-           "      x:=test1sub1sub2(a+10000); \n"
-           "      returning a+1000; \n"
+           "      wt1s1:=q; \n"
+           "      xt1wt1s1:=wt1s1; \n"
+           "      r:=test1sub1sub2(a+10000); \n"
+           "      returning r+2; \n"
            "   endfunction \n"
-           "   xt1wt1s1:=wt1s1; \n"
+           "   xt1wt1:=999; \n"
            "   r:=test1sub1(a+100000); \n"
            "   xt1wt1:=wt1; \n"
-           "   returning a+r; \n"
+           "   returning r + 1; \n"
            "endfunction \n"
            "z1:=test1(1000000);\n"
            "z2:=test1(2000000);\n";
@@ -145,8 +163,22 @@ void TestClass::BuildAllTests()
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 8LL);
-    Expected["xt1wt1"] = MakeVariable("x", 2000001LL);
-    Expected["z1"] = MakeVariable("z", 101LL);
+    Expected["xt1wt1"]     = MakeVariable("x", 2000001LL);
+    Expected["xt1wt1s1"]   = MakeVariable("x", 2100002LL);
+    Expected["xt1wt1s1s2"] = MakeVariable("x", 2110003LL);
+    Expected["xt1wt1s1s1"] = MakeVariable("x", 2111004LL);
+    //Expected["xt2wt2"]     = MakeVariable("x", 2111106LL);
+    //Expected["yt2wt2"]     = MakeVariable("x", 2111106LL);
+    //Expected["xt2wt2s1"]   = MakeVariable("x", 2111156LL);
+    Expected["xt1wt1s2"]   = MakeVariable("x", 2111207LL);
+    Expected["xt2wt2"]     = MakeVariable("x", 2111216LL);
+    Expected["xt2wt2s1"]   = MakeVariable("x", 2111268LL);
+    Expected["yt2wt2"]     = MakeVariable("x", 1111106LL + 1111216LL + 2111106LL + 2111216LL);
+
+
+
+    Expected["z1"] = MakeVariable("z", 1111260LL + 1111150LL + 1+2+4+8+16+32+32+128+128);
+    Expected["z2"] = MakeVariable("z", 2111260LL + 2111150LL + 1+2+4+8+16+32+32+128+128);
     Unexpected.clear();
     Unexpected.push_back("w");
     TestVector.push_back({"Assignment", Code, Expected, Unexpected});
@@ -175,10 +207,10 @@ std::vector<std::string> TestClass::DoAllTests()
 int TestClass::DoSingleTest(TestDataType const &TestData)
 {
 
-    std::cout << "\n *** Ececuting Test " + TestData.Title + " ***\n";
+    std::cout << "\n *** Ececuting Test " + TestData.Title + " *** ...";
     std::vector<std::string> Results = DoOneTest(TestData.Codeblock, TestData.Expected, TestData.Unexpected);
     if (Results.size() == 0) {
-        std::cout << "\n *** Test Passed ***\n";
+        std::cout << " *** Test Passed ***\n";
     } else {
         std::cout << "\n ### Test failed ###\n\n";
         for (auto &s: Results) {
