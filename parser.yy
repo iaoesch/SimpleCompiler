@@ -91,6 +91,7 @@
   ENDIF    "endif"
   REPEAT  "repeat"
   UNTIL   "until"
+  INTRODUCING "introducing"
   FUNCTION "function"
   ENDFUNCTION "endfunction"
   RETURNING "returning"
@@ -414,29 +415,34 @@ functiondefinition:
 functionBodydefinition:
                           {
                              /*FktDefContainer tmp;*/
-                             auto ptr = drv.Currentfunction.GetReference();
+                             /*auto ptr = drv.Currentfunction.GetReference();*/
                              /*$<FktDefContainer>$ = tmp;*/
-                             drv.Variables.StartLocal(ptr);
-                             drv.Variables.CreateNewContext(drv.Currentfunction.GetName()+"Params");
+                             /*drv.Variables.StartLocal(ptr);*/
+                             /*drv.Variables.CreateNewContext(drv.Currentfunction.GetName()+"Params");*/
+                             drv.Currentfunction.StartParameterDefinition();
                           }
   returntype.opt
   "(" argumentlist ")"    {
-                              drv.Variables.CreateNewContext(drv.Currentfunction.GetName());
-                              //auto ReturnValue = drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
                               drv.Currentfunction.SetReturnType(std::move($2));
                               drv.Currentfunction.Set($4, @4);
+                              drv.Currentfunction.EndParameterDefinition();
+                              drv.Currentfunction.StartCodeDefinition();
+                              /*drv.Variables.CreateNewContext(drv.Currentfunction.GetName());*/
+                              //auto ReturnValue = drv.Variables.CreateVariable($<std::string>0, *$2, 0.0);
                           }
   statements
   "endfunction" {
                       /**$<FktDefContainer>3 = Variables::FunctionDefinitionClass($5, $8);*/
                       /*$$ = $<FktDefContainer>3.ptr;*/
-                      /*auto StorageTemplate = */drv.Variables.EndLocal();
+                      /*auto StorageTemplate = */
+                      /*drv.Variables.EndLocal();*/
                       //drv.Currentfunction.Define($4, $7, std::move(StorageTemplate), @1+@5);
                       drv.Currentfunction.Set($7, @7);
+                      drv.Currentfunction.EndCodeDefinition();
                       /*drv.Currentfunction.Set(std::move(StorageTemplate), @1+@5);*/
                       $$ = drv.Currentfunction.Get(@7);
                       drv.Currentfunction.EndFunctionDefinition(@$);
-                      drv.Variables.LeaveContext(2);
+                      /*drv.Variables.LeaveContext(2);*/
                 }
 | error "endfunction" {$$ = std::make_shared<Variables::FunctionDefinitionClass>(Variables::FunctionDefinitionClass::MakeEmpty());}
 ;

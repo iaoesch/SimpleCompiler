@@ -74,6 +74,7 @@ blank [ \t]
 
 "repeat"      return yy::parser::make_REPEAT (loc);
 "until"      return yy::parser::make_UNTIL (loc);
+"introducing"   return yy::parser::make_INTRODUCING (loc);
 "function"      return yy::parser::make_FUNCTION (loc);
 "returning"      return yy::parser::make_RETURNING (loc);
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);

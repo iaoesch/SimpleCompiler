@@ -54,6 +54,26 @@ public:
         : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(std::string Name, const LocationType &l);
     std::shared_ptr<Variables::FunctionDefinitionClass> BeginFunctionDefinition(const LocationType &l);
+    void StartParameterDefinition() {
+        if (FunctionsDefinitonsPending.empty()) {
+            throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+        }
+        Variables.StartLocal(FunctionsDefinitonsPending.back().CurrentFunction);
+        Variables.CreateNewContext(FunctionsDefinitonsPending.back().Name + "Params");
+    }
+
+    void EndParameterDefinition() {}
+
+    void StartCodeDefinition() {
+        if (FunctionsDefinitonsPending.empty()) {
+            throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+        }
+        Variables.CreateNewContext(FunctionsDefinitonsPending.back().Name);
+    }
+
+    void EndCodeDefinition() {
+        Variables.EndLocal();
+    }
     // std::shared_ptr<Variables::FunctionDefinitionClass> Define(Variables::FunctionDefinitionClass &&f, const LocationType &l);
     // std::shared_ptr<Variables::FunctionDefinitionClass> Define(const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, Variables::FunctionDefinitionClass::LocalStorageType StorageTemplate, LocationType const &Loc);
     void Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc);

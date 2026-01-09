@@ -58,6 +58,7 @@ void FunctionNodeHelper::EndFunctionDefinition(const yy::parser::location_type &
         throw(INTERNAL_ERROR_OBJECT("<EndFunctionDefinition()> Not inside function"));
     }
     FunctionsDefinitonsPending.pop_back();
+    Variables.LeaveContext(2);
 }
 
 std::string FunctionNodeHelper::GetQualifiedName()
