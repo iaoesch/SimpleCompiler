@@ -55,7 +55,7 @@ driver::parse (const std::string &f)
 int driver::parse(const char *Code)
 {
     Errors.clear();
-    std::string DummyFileName;
+    static std::string DummyFileName = "Edit";
     location.initialize (&DummyFileName);
     scan_begin (Code);
     yy::parser parser (*this);
