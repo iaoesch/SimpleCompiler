@@ -95,6 +95,9 @@
   FUNCTION "function"
   ENDFUNCTION "endfunction"
   RETURNING "returning"
+  SEND "send"
+  WITH "with"
+  TO "to"
 
   AS "as"
   TYPEOF "typeof"
@@ -142,11 +145,11 @@
 %type  <std::shared_ptr<StatementClass>> loopstatement ifstatement returnstatement
 %type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
-%type  <std::shared_ptr<FunctionCallClass>> functioncall
+%type  <std::shared_ptr<FunctionCallClass>> functioncall sendmessage
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
 %type  <std::vector<std::shared_ptr<VariableClass>>> argumentlist
 %type  <std::shared_ptr<StatementClass>> Positionalparameter Namedparameter
-%type  <std::list<std::shared_ptr<StatementClass>>> parameterlist Positionalparameterlist Namedparameterlist
+%type  <std::list<std::shared_ptr<StatementClass>>> parameterlist Positionalparameterlist Namedparameterlist messageparameterlist
 %type  <std::shared_ptr<WritableValueClass>> assignable
 %type  <Variables::VariableContentClass> literal mapliteral
 %type  <Variables::VariableContentClass> numericliteral
@@ -218,6 +221,8 @@ statements:
 
 /*| statements error ";"  {  drv.halt(); yyerrok; $$ = $1; drv.GetOutputStream() << "size = " << $1.size() << std::endl; /* simple error recovery  };*/
 
+
+
 statement:
   assignment ";"        {$$ = $1;}
 | loopstatement ";"     {$$ = $1;}
@@ -225,6 +230,7 @@ statement:
 | returnstatement ";"   {$$ = $1;}
 | print ";"             {$$ = std::make_shared<PrintStatementClass>($1, @$);}
 | functioncall ";"      {$$ = std::make_shared<FunctionCallStatementClass>($1, @$);}
+| sendmessage ";"       {$$ = std::make_shared<FunctionCallStatementClass>($1, @$);}
 | error ";"             {$$ = std::make_shared<ErrorStatement>(@$);}
 ;
 
@@ -356,6 +362,21 @@ exp_or_star:
    exp   {$$ = $1;}
 |  "*"   {$$ = std::make_shared<ConstantClass>(Variables::VariableContentClass(-1LL), @1);}
 ;
+
+sendmessage:
+  "send"
+  "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.BeginFunctionCall($2, @2);}
+  "with"
+  messageparameterlist
+  "to"
+  "*" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
+;
+
+messageparameterlist:
+  %empty                    {$$ = std::list<std::shared_ptr<StatementClass>>();}
+| Namedparameterlist        {$$ = $1;}
+;
+
 
 functioncall:
   "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.BeginFunctionCall($1, @1);}
