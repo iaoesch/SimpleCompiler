@@ -36,10 +36,15 @@ public:
 };
 
 class VariableContentClass;
-
+class ObjectClass;
 
 class ClassClass {
-   // std::vector<std::unique_ptr<VariableContentClass>> Data;
+public:
+    typedef std::map<std::string, std::shared_ptr<VariableClass>> ObjectDataType;
+private:
+    ObjectDataType ObjectAttributesTemplate;
+    std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
+    std::vector<ClassClass *> Parents;
 public:
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
@@ -47,17 +52,49 @@ public:
     bool operator == (const ClassClass &Other) const {(void) Other; return false;}
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
+    std::shared_ptr<VariableClass> GetVariableTemplateReference(std::string Name);
+    struct MethodCallHelperClass{std::shared_ptr<VariableClass> Method; std::shared_ptr<ClassClass> Role;};
+    MethodCallHelperClass GetMethodeReference(std::string Name);
+
+    std::shared_ptr<VariableClass> GetParentVariableReference(std::string Name, ObjectClass *obj);
+
 };
 
 class ObjectClass {
-    // std::vector<std::unique_ptr<VariableContentClass>> Data;
+    typedef ClassClass::ObjectDataType ObjectDataType;
+    typedef std::map<std::shared_ptr<ClassClass>, ObjectDataType> AttributeType;
+    AttributeType Attributes;
+    std::shared_ptr<ClassClass> MyClass;
+    std::vector<AttributeType::iterator> MyCurrentAttributeSet;
+    //ObjectClass *Parent;
 public:
-    ObjectClass(const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ObjectClass(std::shared_ptr<ClassClass> MyClass_, AttributeType Attributes_) : Attributes(Attributes_), MyClass(MyClass_) { MyCurrentAttributeSet.push_back(Attributes.find(MyClass_));}
+    ObjectClass(const ObjectClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     bool operator == (const ObjectClass &Other) const {(void) Other; return false;}
+
+    void SetNewRole(std::shared_ptr<ClassClass> Role) {
+        AttributeType::iterator it = Attributes.find(Role);
+        if (it == Attributes.end()) {
+            throw INTERNAL_ERROR_OBJECT("Try to access unavaillable basecless");
+        }
+        MyCurrentAttributeSet.push_back(it);
+    }
+    void RestoreLastRole() {
+        if (MyCurrentAttributeSet.empty()) {
+            throw INTERNAL_ERROR_OBJECT("Try to restore unavaillable previous role");
+        }
+        MyCurrentAttributeSet.pop_back();
+    }
+    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
+    ClassClass::MethodCallHelperClass GetMethodeReference(std::string Name) {
+        return MyClass->GetMethodeReference(Name);
+    }
+
+
 };
 
 class StackClass {
@@ -283,6 +320,7 @@ public:
     VariableContentClass &GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded = false) const;
 
 };
+
 
 class FunctionDefinitionBaseClass;
 
@@ -599,6 +637,7 @@ public:
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
+    int GetParameterIndexByName(std::string Name);
 };
 #if 1
 class FunctionDefinitionClass : public FunctionDefinitionBaseClass {

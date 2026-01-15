@@ -872,10 +872,81 @@ void ClassClass::PrintDetail(std::ostream &s, int Limit) const
     s << "Not implemented yet";
 }
 
+std::shared_ptr<VariableClass> ClassClass::GetParentVariableReference(std::string Name, ObjectClass *obj) {
+    if (Parents.empty()) {
+        return nullptr;
+    } else {
+        // for multiple inheritance, look in all parents
+        // (What if found in multiple parents? -> error)
+        std::shared_ptr<VariableClass> v;
+        for (auto &p: Parents) {
+            obj->SetNewRole(p);
+            std::shared_ptr<VariableClass> t = obj->GetVariableReference(Name);
+            obj->RestoreLastRole();
+            if (t != nullptr) {
+                if (v != nullptr) {
+                    throw RuntimeErrorClass("ambigious attribute access: " + Name, -1);
+                } else {
+                    v = t;
+                }
+            }
+        }
+        return v;
+    }
+}
+
+ClassClass::MethodCallHelperClass ClassClass::GetMethodeReference(std::string Name) {
+    auto it = ClassData.find(Name);
+    if (it != ClassData.end()) {
+        return {ProxyVariableClass(it->second), this};
+    }
+    if (Parents.empty()) {
+        return {nullptr, nullptr};
+    } else {
+        // for multiple inheritance, look in all parents
+        // (What if found in multiple parents? -> error)
+        MethodCallHelperClass m;
+        for (auto &p: Parents) {
+            MethodCallHelperClass t = p->GetMethodeReference(Name);
+            if (t.Method != nullptr) {
+                if (m.Method != nullptr) {
+                    throw RuntimeErrorClass("ambigious attribute access: " + Name, -1);
+                } else {
+                    m = t;
+                }
+            }
+        }
+        return m;
+    }
+}
+
 void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void) Limit;
     s << "Not implemented yet";
+}
+
+std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Name) {
+    auto it = MyCurrentAttributeSet.back()->second.find(Name);
+    if (it != MyCurrentAttributeSet.back()->second.end()) {
+        return it->second;
+    } else {
+        // Create Attribute on the fly, if possible
+        std::shared_ptr<ClassClass> MyCurrentRole = MyCurrentAttributeSet.back()->first;
+        std::shared_ptr<VariableClass> Template = MyCurrentRole->GetVariableTemplateReference(Name);
+        if (Template != nullptr) {
+            std::shared_ptr<VariableClass> v = std::make_shared<GlobalVariableClass>(Template);
+            MyCurrentAttributeSet.back()->second[Name] = v;
+            return v;
+        }
+        // Look for class members of this name (also finds methods)
+        std::shared_ptr<VariableClass> v = MyCurrentRole->GetVariableReference(Name);
+        if (v != nullptr) {
+            return v;
+        }
+        // If not found, look into parent
+        return MyCurrentRole->GetParentVariableReference(Name, this);
+    }
 }
 
 } // namespace Variables

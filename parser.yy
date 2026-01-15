@@ -79,7 +79,9 @@
   LBRACE   "{"
   RBRACE   "}"
   KOMMA   ","
+  DOT      "."
   SEMICOLON  ";"
+  COLON      ":"
   TRIPPLEDOT  "..."
   SHIFTLEFT  "<<"
   SHIFTRIGHT  ">>"
@@ -98,6 +100,8 @@
   SEND "send"
   WITH "with"
   TO "to"
+  METHOD "method"
+  TAKING "taking"
 
   AS "as"
   TYPEOF "typeof"
@@ -320,6 +324,7 @@ referement:
 
 definition:
   functiondefinition {}
+  methodedefinition {}
 |  variabledefinition ";" {}
 ;
 
@@ -370,6 +375,12 @@ sendmessage:
   messageparameterlist
   "to"
   "*" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
+|  "send"
+   "identifier" <FunctionDefinitionClassSharedPtr>{$$ = drv.Currentfunction.BeginFunctionCall($2, @2);}
+   "with"
+   messageparameterlist
+   "to"
+   "identifier" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
 ;
 
 messageparameterlist:
@@ -410,6 +421,23 @@ Namedparameter:
    "identifier" "->" exp  {$$ = drv.Currentfunction.MakeRef($1, $3, @1+@2);}
 |  "identifier" ":=" exp  {$$ = drv.Currentfunction.MakeAssign($1, $3, @1+@2);};
 
+
+  /* method print taking a, b, c returning int of class Output:
+        x;
+        y;
+        endmethod;
+  */
+
+methodedefinition:
+   "method" "identifier" "taking"
+   argumentlist
+   returntype.opt
+   "of"
+   "class"
+   "identifier" ":"
+   statements
+   "endmethod"
+;
 
 Anonymeousfunctiondefinition:
   "function" {

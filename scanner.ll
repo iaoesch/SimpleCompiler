@@ -59,7 +59,9 @@ blank [ \t]
 "<"      return yy::parser::make_LESSTHAN (loc);
 ">"      return yy::parser::make_MORETHAN (loc);
 ";"      return yy::parser::make_SEMICOLON (loc);
+":"      return yy::parser::make_COLON (loc);
 ","      return yy::parser::make_KOMMA (loc);
+"."      return yy::parser::make_DOT (loc);
 "->"     return yy::parser::make_ARROWRIGHT (loc);
 "<-"     return yy::parser::make_ARROWLEFT (loc);
 "..."     return yy::parser::make_TRIPPLEDOT (loc);
@@ -82,6 +84,11 @@ blank [ \t]
 "send"      return yy::parser::make_SEND (loc);
 "with"      return yy::parser::make_WITH (loc);
 "to"      return yy::parser::make_TO (loc);
+
+"method"      return yy::parser::make_METHOD (loc);
+"taking"      return yy::parser::make_TAKING (loc);
+  //"returning"      return yy::parser::make_RETURNING (loc);
+  //"of"      return yy::parser::make_OF (loc);
 
 "as"      return yy::parser::make_AS (loc);
 "typeof"      return yy::parser::make_TYPEOF (loc);
