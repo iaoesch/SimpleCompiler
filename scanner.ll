@@ -87,8 +87,8 @@ blank [ \t]
 
 "method"      return yy::parser::make_METHOD (loc);
 "taking"      return yy::parser::make_TAKING (loc);
-  //"returning"      return yy::parser::make_RETURNING (loc);
-  //"of"      return yy::parser::make_OF (loc);
+  /*"returning"      return yy::parser::make_RETURNING (loc); */
+  /*"of"      return yy::parser::make_OF (loc); */
 
 "as"      return yy::parser::make_AS (loc);
 "typeof"      return yy::parser::make_TYPEOF (loc);

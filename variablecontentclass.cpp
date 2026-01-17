@@ -117,6 +117,7 @@ std::shared_ptr<VariableClass> FunctionDefinitionBaseClass::GetParameterByName(s
     }
 }
 
+
 std::shared_ptr<VariableClass> FunctionDefinitionBaseClass::GetParameterByIndex(int i)
 {
     size_t index = static_cast<size_t>(i);
@@ -124,6 +125,16 @@ std::shared_ptr<VariableClass> FunctionDefinitionBaseClass::GetParameterByIndex(
        return nullptr;
     } else {
         return Parameters[index];
+    }
+}
+
+int FunctionDefinitionBaseClass::GetParameterIndexByName(std::string Name)
+{
+    auto Var = std::find_if(Parameters.begin(), Parameters.end(), [Name](auto const &v){return v->GetName() == Name;});
+    if (Var == Parameters.end()) {
+        return -1;
+    } else {
+        return Var - Parameters.begin();
     }
 }
 

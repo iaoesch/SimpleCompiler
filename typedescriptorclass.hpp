@@ -371,6 +371,10 @@ inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type
     return t == td.MyType;
 }
 
+inline bool operator != (TypeDescriptorClass const&td, TypeDescriptorClass::Type t)
+{
+    return ! (td == t);
+}
 
 inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
 {
@@ -411,5 +415,11 @@ inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const
     // At this point we should have sorted out all unmatching pairs
     return true;
 }
+
+inline bool operator != (TypeDescriptorClass const&t1, TypeDescriptorClass const&t2)
+{
+    return !(t1 == t2);
+}
+
 
 #endif // TYPEDESCRIPTORCLASS_HPP

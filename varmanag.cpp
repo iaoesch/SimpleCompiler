@@ -65,12 +65,12 @@ static ErrorEnvironment Errorenv;
 Environment *VariableManager::DefaultEnvironment = &Errorenv;
 
 
-void VariableManager::CreateNewContext(std::string Name)
+void VariableManager::CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode)
 {
     if (ContextStack.empty()) {
         ContextStack.push_back(std::make_shared<VariableContextClass>(Name));
     } else {
-        ContextStack.push_back(ContextStack.back()->CreateSubContext(Name));
+        ContextStack.push_back(ContextStack.back()->CreateSubContext(Name, ParentVisibilityMode == HideParent));
     }
     Contexts.push_back(ContextStack.back());
 }
@@ -232,7 +232,7 @@ std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::s
 {
     auto it = Variables.find(Name);
     if (it == Variables.end()) {
-        if (ParentContext != nullptr) {
+        if ((ParentIsHidden == false) && (ParentContext != nullptr)) {
             return ParentContext->LookupVariable(Name);
         }
         return nullptr;

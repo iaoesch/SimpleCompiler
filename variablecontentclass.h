@@ -38,13 +38,35 @@ public:
 class VariableContentClass;
 class ObjectClass;
 
+class AttributeBuilder {
+public:
+    typedef std::map<std::string, std::shared_ptr<VariableClass>> AttributeListType;
+private:
+    AttributeListType ClassAttributes;
+    AttributeListType ObjectAttributes;
+public:
+    bool AddClassAttribute(std::string Name, std::shared_ptr<VariableClass> ClassAttribute)
+    {
+       auto const&[it, Success] = ClassAttributes.insert({Name, ClassAttribute});
+       return Success;
+    }
+    bool AddObjectAttribute(std::string Name, std::shared_ptr<VariableClass> Attribute)
+    {
+        auto const&[it, Success] = ObjectAttributes.insert({Name, Attribute});
+        return Success;
+    }
+    AttributeListType const &GetClassAttributes() {return ClassAttributes;}
+    AttributeListType const &GetObjectAttributes() {return ObjectAttributes;}
+};
+
 class ClassClass {
 public:
-    typedef std::map<std::string, std::shared_ptr<VariableClass>> ObjectDataType;
+    typedef AttributeBuilder::AttributeListType ObjectDataType;
 private:
     ObjectDataType ObjectAttributesTemplate;
     std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
-    std::vector<ClassClass *> Parents;
+    std::vector<std::shared_ptr<ClassClass>> Parents;
+    bool Frozen;
 public:
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}

@@ -45,11 +45,15 @@ class VariableContextClass {
     VariableContextClass *ParentContext;
     std::vector<std::shared_ptr<VariableContextClass>> Children;
     const std::string Name;
+    bool ParentIsHidden;
 
 public:
 
-    VariableContextClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr) : ParentContext(Parent_), Name(Name_) {}
-    std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name) {Children.push_back(std::make_shared<VariableContextClass>(Name, this)); return Children.back();}
+    VariableContextClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : ParentContext(Parent_), Name(Name_), ParentIsHidden(HideParent) {}
+//    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
+//    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
+public:
+    std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name, bool HideParent = false) {Children.push_back(std::make_shared<VariableContextClass>(Name, this, HideParent)); return Children.back();}
 
     std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false);
     std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
@@ -72,6 +76,7 @@ class VariableManager
 //    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
     uint32_t LocalOffset;
 public:
+    enum ParentVisibility {ParentVisible, HideParent};
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
 private:
     struct LocalStorageContextType {
@@ -92,7 +97,7 @@ public:
 
     void clear() {Local = false; LocalOffset = 0; ContextStack.clear(); Contexts.clear();}
 
-   void CreateNewContext(std::string Name);
+   void CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
    void EndLocal();

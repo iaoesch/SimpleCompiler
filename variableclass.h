@@ -105,6 +105,51 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
 
+class LateBindingVariableClass : public VariableClass
+{
+    uint32_t Reference;
+    std::string ReferenceName;
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod;
+
+public:
+    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), ReferenceName(Name_) {}
+    virtual ~LateBindingVariableClass() override {}
+    virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
+    virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+    //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    bool BindToMethod(std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod_);
+
+private:
+    virtual const ValueTypeDescriptorClass &GetContainedType() const override;
+};
+class StaticClassMemberVariableClass : public VariableClass
+{
+    uint32_t Reference;
+    std::string ReferenceName;
+    std::shared_ptr<Variables::ClassClass> MyClass;
+
+public:
+    StaticClassMemberVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), ReferenceName(Name_) {}
+    virtual ~StaticClassMemberVariableClass() override {}
+    virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
+    virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+    //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    bool BindToMethod(std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod_);
+
+private:
+    virtual const ValueTypeDescriptorClass &GetContainedType() const override;
+};
+
 class TemporaryVariableClass : public VariableClass
 {
     Variables::VariableContentClass Content;

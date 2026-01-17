@@ -25,6 +25,8 @@ class FunctionDefinitionBaseClass;
 class VariableClass;
 class VariableTypeDescriptorClass;
 
+
+
 class FunctionNodeHelper {
     VariableManager &Variables;
     std::map<std::string, std::list<std::shared_ptr<StatementClass>>> KnownFunctions;

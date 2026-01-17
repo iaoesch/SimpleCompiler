@@ -3,6 +3,7 @@
 # include <string>
 # include <map>
 #include <list>
+#include "classnodehelper.h"
 #include "environment.hpp"
 #include "functionnodehelper.h"
 # include "parser.hpp"
@@ -38,6 +39,7 @@ public:
   // std::map<std::string, int> variables;
   VariableManager Variables;
   FunctionNodeHelper Currentfunction;
+  ClassNodeHelper CurrentClass;
   PrecompiledFunctionManagerClass PrecompiledManager;
   SystemInterfaceClass *SystemInterface;
 

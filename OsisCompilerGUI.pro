@@ -21,6 +21,7 @@ SOURCES += \
    ParserManual.cpp \
    Untitled1.cpp \
    calc++.cc \
+   classnodehelper.cpp \
    compact.cpp \
    driver.cc \
    environment.cpp \
@@ -70,6 +71,7 @@ HEADERS += \
    Errclass.hpp \
    ParserManual.hpp \
    PredefinedFunctionHelper.hpp \
+   classnodehelper.h \
    compact.h \
    driver.hh \
    environment.hpp \
