@@ -91,7 +91,7 @@ void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBa
 {
     Local = true;
     LocalOffset = 0;
-    LocalStorageTemplates.push_back({Parent->GetStorageTemplate(), Parent});
+    LocalStorageTemplates.push_back(LocalStorageContextType(FktTemplate{Parent->GetStorageTemplate(), Parent}));
   //  LocalsParent = Parent;
 }
 
@@ -106,8 +106,21 @@ void VariableManager::EndLocal()
         LocalOffset = 0;
     } else {
         Local = true;
-        LocalOffset = static_cast<decltype(LocalOffset)>(LocalStorageTemplates.back().LocalStorageTemplates.size());
+        LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
     }
+}
+
+void VariableManager::StartClass(std::shared_ptr<Variables::ClassClass> Parent)
+{
+    Local = true;
+    LocalOffset = 0;
+    LocalStorageTemplates.push_back(LocalStorageContextType(ClassTemplate{Parent->GetClassStorageTemplate(), Parent->GetStorageTemplate(), Parent}));
+    //  LocalsParent = Parent;
+}
+
+void VariableManager::EndClass()
+{
+    EndLocal();
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
@@ -137,9 +150,9 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     std::shared_ptr<VariableClass> Var;
     if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
         DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
-        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, LocalStorageTemplates.back().LocalsParent, Storage);
-        LocalStorageTemplates.back().LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
-        assert(LocalOffset == LocalStorageTemplates.back().LocalStorageTemplates.size());
+        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageTemplates.back()).LocalsParent, Storage);
+        std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        assert(LocalOffset == std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
     } else {
         DefaultEnvironment->DebugOutput() << "creating global <" << Name << ">\n";
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);
@@ -197,6 +210,22 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
 #endif
     }
     return VarRef;
+}
+
+std::shared_ptr<VariableClass> VariableManager::CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType)
+{
+    if (ContextStack.empty()) {
+        throw INTERNAL_ERROR_OBJECT("No valid context");
+        return nullptr;
+    }
+    std::shared_ptr<VariableClass> VarRef = GetVariableReference(Name);
+    if (VarRef == nullptr) {
+        VarRef = CreateVariable(Name, RequiredType, 0.0);
+        return VarRef;
+    } else {
+        // Could not create Variable, exists allready
+        return nullptr;
+    }
 }
 
 std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceForContext(std::string Name, size_t Index)

@@ -18,10 +18,11 @@ bool ClassNodeHelper::SetBaseClass(std::string Name)
     if (PendingClassDefinitions.back().BaseClass != nullptr) {
         throw INTERNAL_ERROR_OBJECT("SetBaseClass without allready set baseclass");
     }
-    if (BaseClass->GetValue().holds_alternative<Variables::ClassClass>() == false) {
+    if (BaseClass->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>() == false) {
         throw SyntaxErrorClass("Identifier '" + Name + "' holds not a class");
     }
-    PendingClassDefinitions.back().BaseClass = BaseClass->GetValue().GetValue<Variables::ClassClass>();
+    PendingClassDefinitions.back().BaseClass = BaseClass->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    return true;
 }
 
 bool ClassNodeHelper::AddClassAttribute(std::string Name, std::shared_ptr<VariableClass> ClassAttribute)

@@ -347,13 +347,13 @@ attributes:
 ;
 
 attributelist:
-   singleattribute {}
-|  attributelist singleattribute {}
+   singleattribute
+|  attributelist singleattribute
 ;
 
 singleattribute:
-   variabledefinition ";" {}
-|  "static" variabledefinition ";" {}
+   variabledefinition ";" {drv.CurrentClass.AddObjectAttribute($1);}
+|  "static" variabledefinition ";" {drv.CurrentClass.AddClassAttribute($2);}
 ;
 
 keytype:

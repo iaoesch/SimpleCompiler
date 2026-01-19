@@ -79,11 +79,25 @@ public:
     enum ParentVisibility {ParentVisible, HideParent};
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
 private:
-    struct LocalStorageContextType {
+    struct LocalFunctionStorageContextType {
+    //    LocalFunctionStorageContextType(LocalFunctionStorageContextType &&) = default;
+    //    LocalFunctionStorageContextType(LocalFunctionStorageContextType const &) = default;
         LocalStorageType &LocalStorageTemplates;
         std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
 
     };
+    struct LocalClassStorageContextType {
+   //     LocalClassStorageContextType(LocalClassStorageContextType &&) = default;
+   //     LocalClassStorageContextType(LocalClassStorageContextType const &) = default;
+        LocalStorageType &LocalClassAttributeStorageTemplates;
+        LocalStorageType &LocalAttrubiteStorageTemplates;
+        std::shared_ptr<Variables::ClassClass> LocalsParent;
+    };
+
+    // Some shortcuts for easier use
+    typedef LocalFunctionStorageContextType FktTemplate;
+    typedef LocalClassStorageContextType ClassTemplate;
+    typedef std::variant<FktTemplate, ClassTemplate> LocalStorageContextType;
     std::vector<LocalStorageContextType> LocalStorageTemplates;
 
     static Environment *DefaultEnvironment;
@@ -101,12 +115,15 @@ public:
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
    void EndLocal();
+   void StartClass(std::shared_ptr<Variables::ClassClass> Parent);
+   void EndClass();
  //  std::shared_ptr<VariableClass> GetOrCreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
+   std::shared_ptr<VariableClass> CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType);
 
    // For Testpurposes
    size_t GetNumberOfContexts() const {return Contexts.size();}
