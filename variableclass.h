@@ -108,6 +108,7 @@ private:
 class LateBindingVariableClass : public VariableClass
 {
     uint32_t Reference;
+    static const uint32_t ThisOffset = 0;
     std::string ReferenceName;
     std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod;
 
@@ -127,6 +128,7 @@ public:
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
+
 class StaticClassMemberVariableClass : public VariableClass
 {
     uint32_t Reference;

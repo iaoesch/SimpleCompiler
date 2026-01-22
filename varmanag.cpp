@@ -91,6 +91,7 @@ void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBa
 {
     Local = true;
     LocalOffset = 0;
+    LocalClassOffset = 0;
     LocalStorageTemplates.push_back(LocalStorageContextType(FktTemplate{Parent->GetStorageTemplate(), Parent}));
   //  LocalsParent = Parent;
 }
@@ -104,23 +105,38 @@ void VariableManager::EndLocal()
     if (LocalStorageTemplates.empty()) {
         Local = false;
         LocalOffset = 0;
+        LocalClassOffset = 0;
     } else {
         Local = true;
         LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
+        LocalClassOffset = 0;
     }
 }
 
 void VariableManager::StartClass(std::shared_ptr<Variables::ClassClass> Parent)
 {
     Local = true;
-    LocalOffset = 0;
+    LocalClassOffset = Parent->GetClassStorageTemplateFirstOffset();
+    LocalOffset = Parent->GetStorageTemplateFirstOffset();
     LocalStorageTemplates.push_back(LocalStorageContextType(ClassTemplate{Parent->GetClassStorageTemplate(), Parent->GetStorageTemplate(), Parent}));
     //  LocalsParent = Parent;
 }
 
 void VariableManager::EndClass()
 {
-    EndLocal();
+    if (LocalStorageTemplates.empty()) {
+        throw INTERNAL_ERROR_OBJECT("Internal, local stack empty");
+    }
+    LocalStorageTemplates.pop_back();
+    if (LocalStorageTemplates.empty()) {
+        Local = false;
+        LocalOffset = 0;
+        LocalClassOffset = 0;
+    } else {
+        Local = true;
+        LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalAttrubiteStorageTemplates.size());
+        LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalClassAttributeStorageTemplates.size());
+    }
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)

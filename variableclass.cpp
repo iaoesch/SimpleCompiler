@@ -145,6 +145,60 @@ const ValueTypeDescriptorClass &LocalVariableClass::GetContainedType() const
     return Parent->GetVariableContentForOffset(Reference).getType();
 }
 
+const Variables::VariableContentClass &LateBindingVariableClass::GetValue() const
+{
+    Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
+    const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+    return r.GetVariableContentForOffset(Reference);
+}
+
+Variables::VariableContentClass const &LateBindingVariableClass::GetInitialValue() const
+{
+    throw INTERNAL_ERROR_OBJECT("Atributes have no initial value");
+}
+
+
+Variables::VariableContentClass &LateBindingVariableClass::GetWriteReferenceToValue()
+{
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
+    Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
+    const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+    return r.GetVariableContentWriteReferenceForOffset(Reference);
+}
+
+void LateBindingVariableClass::SetValue(Variables::VariableContentClass v)
+{
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
+        const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+        return r.SetVariableContentForOffset(Reference, v);
+    } else {
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str(), -1);
+    }
+
+}
+
+void LateBindingVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    if (Initialized) { throw INTERNAL_ERROR_OBJECT("Variable initialiced twice");}
+    Initialized = true;
+    if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
+    PrepareForAssignment(v);
+    if (IsAssignable(v)) {
+        Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
+        const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+        return r.InitializeVariableContentForOffset(Reference, v);
+    } else {
+        std::stringstream s;
+        s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
+        throw RuntimeErrorClass(s.str(), -1);
+    }
+
+}
 
 const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
 {

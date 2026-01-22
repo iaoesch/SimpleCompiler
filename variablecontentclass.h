@@ -68,18 +68,30 @@ private:
     ObjectDataType ObjectAttributesTemplate;
     std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
     std::vector<std::shared_ptr<ClassClass>> Parents;
-    bool Frozen;
+    uint32_t StorageTemplateFirstOffset;
+    uint32_t ClassStorageTemplateFirstOffset;
     LocalStorageType StorageTemplate;
     LocalStorageType ClassStorageTemplate;
+    bool Frozen;
 
 public:
+    ClassClass(std::shared_ptr<ClassClass> Parent)
+        : Parents{Parent},
+          StorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetStorageTemplateSize()),
+          ClassStorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetClassStorageTemplateSize()) {}
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
     bool operator == (const ClassClass &Other) const {(void) Other; return false;}
 
+    LocalStorageType FullObjectGetStorageTemplate();
     LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
     LocalStorageType &GetClassStorageTemplate() {return ClassStorageTemplate;}
+    uint32_t GetClassStorageTemplateFirstOffset() {return StorageTemplateFirstOffset;}
+    uint32_t GetStorageTemplateFirstOffset() {return ClassStorageTemplateFirstOffset;}
+    uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
+    uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetStorageTemplate().size();}
+
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     std::shared_ptr<VariableClass> GetVariableTemplateReference(std::string Name);
@@ -122,6 +134,27 @@ public:
     std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
     ClassClass::MethodCallHelperClass GetMethodeReference(std::string Name) {
         return MyClass->GetMethodeReference(Name);
+    }
+    VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
+    {
+        if (ActiveStorage.empty()) {
+            throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
+        }
+        return ActiveStorage.back().at(Offset);
+    }
+
+    VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
+    {
+        return StorageTemplate.at(Offset);
+    }
+    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }return ActiveStorage.back().at(Offset);}
+    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {if (ActiveStorage.empty())
+        {
+            throw INTERNAL_ERROR_OBJECT("Invalid Frame access for " + Name);
+        }ActiveStorage.back().at(Offset) = v;}
+
+    void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
+        StorageTemplate.at(Offset) = v;
     }
 
 
@@ -693,6 +726,28 @@ public:
     VariableContentClass Execute(Environment &Env) const override;// = 0;
 };
 #endif
+class MethodDefinitionClass : public FunctionDefinitionClass {
+private:
+    std::list<std::shared_ptr<StatementClass>> Statements;
+    std::shared_ptr<Variables::ClassClass> MyClass;
+    MethodDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, std::shared_ptr<Variables::ObjectClass> MyObject, LocationType const &Loc);
+    MethodDefinitionClass(const std::string &Name_, LocationType const &Loc);
+    MethodDefinitionClass(MethodDefinitionClass &&src) = default;
+    //   FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
+    MethodDefinitionClass &operator =(MethodDefinitionClass &&src) = default;
+
+    static MethodDefinitionClass MakeEmpty() {return MethodDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
+public:
+    //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
+    //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);
+    using FunctionDefinitionBaseClass::Set;
+    void Set(const std::list<std::shared_ptr<StatementClass> > &Statements, const LocationType &Loc);
+    void              Print(std::ostream &s) const override;
+    void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const override;
+
+    VariableContentClass Execute(Environment &Env) const override;// = 0;
+};
+
 class Callable {
 public:
     virtual VariableContentClass Execute(FunctionDefinitionBaseClass::LocalStorageType &Parameters) = 0;

@@ -75,6 +75,7 @@ class VariableManager
     bool Local;
 //    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
     uint32_t LocalOffset;
+    uint32_t LocalClassOffset;
 public:
     enum ParentVisibility {ParentVisible, HideParent};
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
