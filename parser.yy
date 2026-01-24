@@ -324,7 +324,7 @@ referement:
 
 definition:
   functiondefinition {}
-  methodedefinition {}
+|  methodedefinition {}
 |  variabledefinition ";" {}
 ;
 

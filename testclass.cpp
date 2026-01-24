@@ -92,15 +92,15 @@ void TestClass::BuildAllTests()
            "b:=3; \n"
            "c:=a+b; \n"
            "y:= 17;\n"
-           "function test returning integer (a)"
-           "   x:=b; "
-           "   b:=19; "
-           "   returning a+2; " //  Should end function
-           "   b:=20; "         // Not executed
-           "   returning a+19; "// Not executed
-           "   b:=21; "         // Not executed
-           "endfunction "
-           "z:=test(99);";
+           "function test returning integer (a)\n"
+           "   x:=b; \n"
+           "   b:=19;\n "
+           "   returning a+2; \n" //  Should end function
+           "   b:=20;\n "         // Not executed
+           "   returning a+19; \n"// Not executed
+           "   b:=21; \n"         // Not executed
+           "endfunction \n"
+           "z:=test(99);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 19LL);
@@ -113,12 +113,12 @@ void TestClass::BuildAllTests()
            "b:=3; \n"
            "c:=a+b; \n"
            "x:= 17;\n"
-           "function test returning integer (a)"
-           "   w:=b; "
-           "   x:=w; "
-           "   returning a+2; "
-           "endfunction "
-           "z:=test(99);";
+           "function test returning integer (a)\n"
+           "   w:=b; \n"
+           "   x:=w; \n"
+           "   returning a+2; \n"
+           "endfunction \n"
+           "z:=test(99);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
@@ -224,20 +224,20 @@ void TestClass::BuildAllTests()
            "v:= 17;\n"
            "x:= 17;\n"
            "y:= 17;\n"
-           "function test returning integer (a)"
-           "   w:=b+10; "
-           "   x:=w; "
-           "   function testlocal returning integer (b)"
-           "      q:=w; "
-           "      v:=c; "
-           "      w:=99; "
-           "      returning a+2; "
-           "   endfunction "
-           "   r:=testlocal(a);"
-           "   y:=w; "
-           "   returning r+10; "
-           "endfunction "
-           "z:=test(100);";
+           "function test returning integer (a)\n"
+           "   w:=b+10; \n"
+           "   x:=w; \n"
+           "   function testlocal returning integer (b)\n"
+           "      q:=w; \n"
+           "      v:=c; \n"
+           "      w:=99; \n"
+           "      returning a+2; \n"
+           "   endfunction \n"
+           "   r:=testlocal(a);\n"
+           "   y:=w; \n"
+           "   returning r+10; \n"
+           "endfunction \n"
+           "z:=test(100);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
@@ -256,24 +256,24 @@ void TestClass::BuildAllTests()
            "v:= 17;\n"
            "x:= 17;\n"
            "y:= 17;\n"
-           "function test returning integer (a)"
-           "   w:=b+10; "
-           "   x:=w; "
-           "   function testlocal returning integer (b)"
-           "      function testlocallocal returning integer (b)"
-           "         q:=w; "
-           "         v:=c; "
-           "         w:=99; "
-           "         returning b+2; "
-           "      endfunction "
-           "      r:=testlocallocal(b);"
-           "      returning r+30; "
-           "   endfunction "
-           "   r:=testlocal(a);"
-           "   y:=w; "
-           "   returning r+100; "
-           "endfunction "
-           "z:=test(7000);";
+           "function test returning integer (a)\n"
+           "   w:=b+10; \n"
+           "   x:=w; \n"
+           "   function testlocal returning integer (b)\n"
+           "      function testlocallocal returning integer (b)\n"
+           "         q:=w; \n"
+           "         v:=c; \n"
+           "         w:=99; \n"
+           "         returning b+2; \n"
+           "      endfunction \n"
+           "      r:=testlocallocal(b);\n"
+           "      returning r+30; \n"
+           "   endfunction \n"
+           "   r:=testlocal(a);\n"
+           "   y:=w; \n"
+           "   returning r+100; \n"
+           "endfunction \n"
+           "z:=test(7000);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
@@ -293,28 +293,28 @@ void TestClass::BuildAllTests()
            "v:= 17;\n"
            "x:= 17;\n"
            "y:= 17;\n"
-           "function test returning integer (a)"
-           "   w:=b+10; "
-           "   x:=w; "
-           "      function testlocallocal2 returning integer (b)"
-           "         q:=w; "
-           "         v:=c; "
-           "         w:=99; "
-           "         returning b+3; "
-           "      endfunction "
-           "   function testlocal returning integer (b)"
-           "      function testlocallocal returning integer (b)"
-           "         r:=testlocallocal2(b);"
-           "         returning r+2; "
-           "      endfunction "
-           "      r:=testlocallocal(b);"
-           "      returning r+30; "
-           "   endfunction "
-           "   r:=testlocal(a);"
-           "   y:=w; "
-           "   returning r+100; "
-           "endfunction "
-           "z:=test(7000);";
+           "function test returning integer (a)\n"
+           "   w:=b+10; \n"
+           "   x:=w; \n"
+           "      function testlocallocal2 returning integer (b)\n"
+           "         q:=w; \n"
+           "         v:=c; \n"
+           "         w:=99; \n"
+           "         returning b+3; \n"
+           "      endfunction \n"
+           "   function testlocal returning integer (b)\n"
+           "      function testlocallocal returning integer (b)\n"
+           "         r:=testlocallocal2(b);\n"
+           "         returning r+2; \n"
+           "      endfunction \n"
+           "      r:=testlocallocal(b);\n"
+           "      returning r+30; \n"
+           "   endfunction \n"
+           "   r:=testlocal(a);\n"
+           "   y:=w; \n"
+           "   returning r+100; \n"
+           "endfunction \n"
+           "z:=test(7000);\n";
     Expected.clear();
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
