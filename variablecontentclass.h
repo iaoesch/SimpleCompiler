@@ -59,7 +59,7 @@ public:
     AttributeListType const &GetObjectAttributes() {return ObjectAttributes;}
 };
 
-class ClassClass {
+class ClassClass : public std::enable_shared_from_this<ClassClass> {
 public:
     typedef AttributeBuilder::AttributeListType ObjectDataType;
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
@@ -84,7 +84,7 @@ public:
     void PrintDetail(std::ostream &s, int Limit) const;
     bool operator == (const ClassClass &Other) const {(void) Other; return false;}
 
-    LocalStorageType FullObjectGetStorageTemplate();
+    //LocalStorageType FullObjectGetStorageTemplate();
     LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
     LocalStorageType &GetClassStorageTemplate() {return ClassStorageTemplate;}
     uint32_t GetClassStorageTemplateFirstOffset() {return StorageTemplateFirstOffset;}
@@ -92,6 +92,10 @@ public:
     uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
     uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetStorageTemplate().size();}
 
+    VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
+    {
+        return StorageTemplate.at(Offset);
+    }
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     std::shared_ptr<VariableClass> GetVariableTemplateReference(std::string Name);
@@ -99,25 +103,29 @@ public:
     MethodCallHelperClass GetMethodeReference(std::string Name);
 
     std::shared_ptr<VariableClass> GetParentVariableReference(std::string Name, ObjectClass *obj);
+    std::shared_ptr<ObjectClass> CreateInstance();
 
 };
 
+
 class ObjectClass {
-    typedef ClassClass::ObjectDataType ObjectDataType;
-    typedef std::map<std::shared_ptr<ClassClass>, ObjectDataType> AttributeType;
-    AttributeType Attributes;
+    typedef ClassClass::LocalStorageType LocalStorageType;
+    //typedef ClassClass::ObjectDataType ObjectDataType;
+    //typedef std::map<std::shared_ptr<ClassClass>, ObjectDataType> AttributeType;
+    //AttributeType Attributes;
+    LocalStorageType AttributeStorage;
     std::shared_ptr<ClassClass> MyClass;
-    std::vector<AttributeType::iterator> MyCurrentAttributeSet;
+    //std::vector<AttributeType::iterator> MyCurrentAttributeSet;
     //ObjectClass *Parent;
 public:
-    ObjectClass(std::shared_ptr<ClassClass> MyClass_, AttributeType Attributes_) : Attributes(Attributes_), MyClass(MyClass_) { MyCurrentAttributeSet.push_back(Attributes.find(MyClass_));}
+    ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetStorageTemplate()), MyClass(MyClass_) {}
     ObjectClass(const ObjectClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     bool operator == (const ObjectClass &Other) const {(void) Other; return false;}
-
+#if 0
     void SetNewRole(std::shared_ptr<ClassClass> Role) {
         AttributeType::iterator it = Attributes.find(Role);
         if (it == Attributes.end()) {
@@ -131,34 +139,40 @@ public:
         }
         MyCurrentAttributeSet.pop_back();
     }
+#endif
     std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
     ClassClass::MethodCallHelperClass GetMethodeReference(std::string Name) {
         return MyClass->GetMethodeReference(Name);
     }
     VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
     {
-        if (ActiveStorage.empty()) {
-            throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
-        }
-        return ActiveStorage.back().at(Offset);
+        return AttributeStorage.at(Offset);
     }
 
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
     {
-        return StorageTemplate.at(Offset);
+        return MyClass->GetInitialVariableContentForOffset(Offset);
     }
-    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }return ActiveStorage.back().at(Offset);}
-    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {if (ActiveStorage.empty())
-        {
-            throw INTERNAL_ERROR_OBJECT("Invalid Frame access for " + Name);
-        }ActiveStorage.back().at(Offset) = v;}
+
+    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset)
+    {
+        return AttributeStorage.at(Offset);
+    }
+
+    void SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v);
 
     void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
-        StorageTemplate.at(Offset) = v;
+        throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
     }
 
 
 };
+
+inline std::shared_ptr<ObjectClass> ClassClass::CreateInstance()
+{
+    return std::make_shared<ObjectClass>(shared_from_this());
+}
+
 
 class StackClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
@@ -773,6 +787,11 @@ public:
 
     VariableContentClass Execute(Environment &Env) const override;// = 0;
 };
+
+inline void ObjectClass::SetVariableContentForOffset(uint32_t Offset, const VariableContentClass &v)
+{
+        AttributeStorage.at(Offset) = v;
+}
 
 }
 

@@ -2,6 +2,35 @@
 #include "classnodehelper.h"
 #include "Errclass.hpp"
 #include "varmanag.hpp"
+#include "variablecontentclass.h"
+
+void ClassNodeHelper::StartClassDefinition(std::string ClassName)
+{
+    PendingClassDefinitions.push_back(ClassName);
+    std::shared_ptr<VariableClass> NewClass = Variables.CreateClass(ClassName, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Class),0.0);;
+    if (NewClass == nullptr) {
+        throw SyntaxErrorClass("Class '" + ClassName + "' not created");
+    }
+    PendingClassDefinitions.back().NewClass = NewClass;
+}
+
+void ClassNodeHelper::EndClassDefinition()
+{
+    if (PendingClassDefinitions.empty()) {
+        throw INTERNAL_ERROR_OBJECT("EndClassDefinition without pending classdefinition");
+    }
+    PendingClassDefinitions.pop_back();
+    Variables.LeaveContext();
+}
+
+void ClassNodeHelper::StartMemberDefinition()
+{
+    if (PendingClassDefinitions.empty()) {
+        throw INTERNAL_ERROR_OBJECT("StartMemberDefinition without pending classdefinition");
+    }
+    Variables.StartClass(PendingClassDefinitions.back().NewClassContent);
+    Variables.CreateNewContext(PendingClassDefinitions.back().Name + "Params");
+}
 
 bool ClassNodeHelper::SetBaseClass(std::string Name)
 {
@@ -22,6 +51,9 @@ bool ClassNodeHelper::SetBaseClass(std::string Name)
         throw SyntaxErrorClass("Identifier '" + Name + "' holds not a class");
     }
     PendingClassDefinitions.back().BaseClass = BaseClass->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    std::shared_ptr<Variables::ClassClass> NewClassContent = std::make_shared<Variables::ClassClass>(PendingClassDefinitions.back().BaseClass);
+    PendingClassDefinitions.back().NewClassContent = NewClassContent;
+    PendingClassDefinitions.back().NewClass->SetInitialValue(Variables::VariableContentClass(NewClassContent));
     return true;
 }
 

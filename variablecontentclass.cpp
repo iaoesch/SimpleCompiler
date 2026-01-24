@@ -882,14 +882,14 @@ void ClassClass::PrintDetail(std::ostream &s, int Limit) const
     (void) Limit;
     s << "Not implemented yet";
 }
-
+/*
 ClassClass::LocalStorageType ClassClass::FullObjectGetStorageTemplate()
 {
     LocalStorageType FullTemplate(Parents.empty()?LocalStorageType():Parents[0]->FullObjectGetStorageTemplate());
     FullTemplate.insert(FullTemplate.end(), StorageTemplate.begin(), StorageTemplate.end());
     return FullTemplate;
 }
-
+*/
 std::shared_ptr<VariableClass> ClassClass::GetParentVariableReference(std::string Name, ObjectClass *obj) {
     if (Parents.empty()) {
         return nullptr;

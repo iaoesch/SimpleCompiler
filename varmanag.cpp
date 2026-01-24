@@ -108,8 +108,15 @@ void VariableManager::EndLocal()
         LocalClassOffset = 0;
     } else {
         Local = true;
-        LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
-        LocalClassOffset = 0;
+        if (std::holds_alternative<FktTemplate>(LocalStorageTemplates.back())) {
+           LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
+           LocalClassOffset = 0;
+        } else if (std::holds_alternative<ClassTemplate>(LocalStorageTemplates.back())) {
+            LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalAttrubiteStorageTemplates.size());
+            LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalClassAttributeStorageTemplates.size());
+        } else {
+            throw INTERNAL_ERROR_OBJECT("Internal, local stack unknown type");
+        }
     }
 }
 
@@ -137,6 +144,12 @@ void VariableManager::EndClass()
         LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalAttrubiteStorageTemplates.size());
         LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalClassAttributeStorageTemplates.size());
     }
+}
+
+std::shared_ptr<VariableClass> VariableManager::CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
+{
+    (void) Value;
+    return CreateSymbol(Name, Type, VariableClass::StorageClass::ReadAndWrite);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)

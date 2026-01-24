@@ -333,7 +333,7 @@ variabledefinition:
 | "identifier" "as" typedefinition "=" exp
 | "identifier" "as" "class"
 | "identifier" "as" "class" "from" "identifier"
-| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt  attributes "endclass"
+| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt  attributes "endclass" {drv.CurrentClass.CreateClass();}
 ;
 
 baseclass.opt:

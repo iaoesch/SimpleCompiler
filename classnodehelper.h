@@ -38,8 +38,10 @@ private:
         ClassNodeDescriptor(std::string Name) : Name(std::move(Name)) {}
         std::string Name;
         std::shared_ptr<Variables::ClassClass> BaseClass;
+        std::shared_ptr<Variables::ClassClass> NewClassContent;
         AttributeListType ClassAttributes;
         AttributeListType ObjectAttributes;
+        std::shared_ptr<VariableClass> NewClass;
 
     };
     VariableManager &Variables;
@@ -47,8 +49,12 @@ private:
     std::vector<ClassNodeDescriptor> PendingClassDefinitions;
 
 public:
-    void StartClassDefinition(std::string ClassName) {PendingClassDefinitions.push_back(ClassName);}
-    void EndClassDefinition()  {PendingClassDefinitions.pop_back();}
+    void StartClassDefinition(std::string ClassName);
+    void EndClassDefinition();
+    void StartMemberDefinition();
+
+    void EndMemberDefinition() {}
+
 private:
 public:
     bool SetBaseClass(std::string Name);

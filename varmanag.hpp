@@ -122,6 +122,7 @@ public:
    std::shared_ptr<VariableClass> CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
    std::shared_ptr<VariableClass> CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType);

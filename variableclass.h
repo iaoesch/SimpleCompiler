@@ -12,7 +12,7 @@
 class VariableClass
 {
 public:
-    enum class StorageClass {ReadAndWrite, ReadOnly, Code};
+    enum class StorageClass {RW = 0, RO = 1, Code = 8, Global = 16, Static = 32, Class = 64};
 
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
@@ -64,6 +64,12 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const = 0;
 };
 
+VariableClass::StorageClass operator &(VariableClass::StorageClass e1, VariableClass::StorageClass e2)
+{
+    return VariableClass::StorageClass(e1 & e2);
+}
+
+
 class GlobalVariableClass : public VariableClass
 {
     Variables::VariableContentClass Content;
@@ -83,6 +89,7 @@ public:
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
+
 
 class LocalVariableClass : public VariableClass
 {
