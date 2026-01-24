@@ -5,10 +5,11 @@
 #include "systeminterfaceclass.h"
 
 driver::driver (Environment &Env_, SystemInterfaceClass *SystemInterface_)
-    : Env(Env_), Currentfunction(Variables), PrecompiledManager(Variables), SystemInterface(SystemInterface_), trace_parsing (false), trace_scanning (false)
+    : Env(Env_), Currentfunction(Variables), CurrentClass(Variables), PrecompiledManager(Variables), SystemInterface(SystemInterface_), trace_parsing (false), trace_scanning (false)
 {
 //  variables["one"] = 1;
 //  variables["two"] = 2;
+
    SetNodeDefaultEnvironment(Env);
    VariableClass::SetDefaultEnvironment(Env);
    VariableManager::SetDefaultEnvironment(Env);

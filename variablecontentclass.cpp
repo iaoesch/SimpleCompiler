@@ -186,7 +186,7 @@ ProxyVariableClass ListClass::GetOrCreateIndexedElement(std::string BaseName, El
 }
 ProxyVariableClass ListClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Dynamic), GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Dynamic), GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
 }
 
 VariableContentClass &ListClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -331,7 +331,7 @@ std::string ElementSelectorType::ToText() const
 
 ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
 }
 
 VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -461,7 +461,7 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const ListClass &arg) { s << "[list:"; arg.PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const ArrayClass &arg) { s << "[Array "; arg.PrintDetail(s, Limit); s << "]";  },
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
-                       [&s, Limit](const std::shared_ptr<ClassClass> &arg) { s << "[Class:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s, Limit](const std::shared_ptr<ClassClass> &arg) { s << "[Class:"; arg->PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const ObjectClass &arg) { s << "[Object:"; arg.PrintDetail(s, Limit); s << "]"; },
                        [&s](const std::shared_ptr<InternalObjectClass> &arg) { s << "[Internal: "; arg->PrintDetail(s); s << "]";},
                        [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
@@ -694,7 +694,7 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
 
 ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::ReadAndWrite);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
 }
 
 VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -890,6 +890,7 @@ ClassClass::LocalStorageType ClassClass::FullObjectGetStorageTemplate()
     return FullTemplate;
 }
 */
+#if 0
 std::shared_ptr<VariableClass> ClassClass::GetParentVariableReference(std::string Name, ObjectClass *obj) {
     if (Parents.empty()) {
         return nullptr;
@@ -937,6 +938,7 @@ ClassClass::MethodCallHelperClass ClassClass::GetMethodeReference(std::string Na
         return m;
     }
 }
+#endif
 
 void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
 {
@@ -944,6 +946,7 @@ void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
     s << "Not implemented yet";
 }
 
+#if 0
 std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Name) {
     auto it = MyCurrentAttributeSet.back()->second.find(Name);
     if (it != MyCurrentAttributeSet.back()->second.end()) {
@@ -966,5 +969,5 @@ std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Nam
         return MyCurrentRole->GetParentVariableReference(Name, this);
     }
 }
-
+#endif
 } // namespace Variables

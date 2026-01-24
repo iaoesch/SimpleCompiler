@@ -12,7 +12,7 @@
 class VariableClass
 {
 public:
-    enum class StorageClass {RW = 0, RO = 1, Code = 8, Global = 16, Static = 32, Class = 64};
+    enum class StorageClass {None = 0, RW = 1, RO = 2, Code = 8, Global = 16, Static = 32, Class = 64};
 
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
@@ -26,7 +26,7 @@ protected:
     static Environment *DefaultEnvironment;
 
 protected:
-    bool IsWriteable() {return Storage == StorageClass::ReadAndWrite;}
+    bool IsWriteable();
 
 public:
     VariableClass(const std::string &Name_, VariableTypeDescriptorClass MyType_, StorageClass Storage_) : MyContext(nullptr), Name(Name_), MyType(MyType_), Storage(Storage_), Initialized(false) {}
@@ -66,8 +66,14 @@ private:
 
 VariableClass::StorageClass operator &(VariableClass::StorageClass e1, VariableClass::StorageClass e2)
 {
-    return VariableClass::StorageClass(e1 & e2);
+    return VariableClass::StorageClass(int(e1) & int(e2));
 }
+
+inline bool VariableClass::IsWriteable()
+{
+    return (Storage & StorageClass::RW) == StorageClass::RW;
+}
+
 
 
 class GlobalVariableClass : public VariableClass
@@ -164,7 +170,7 @@ class TemporaryVariableClass : public VariableClass
     Variables::VariableContentClass Content;
 
 public:
-    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::ReadAndWrite), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
+    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::RW), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~TemporaryVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;

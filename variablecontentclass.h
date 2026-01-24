@@ -154,7 +154,7 @@ public:
         return MyClass->GetInitialVariableContentForOffset(Offset);
     }
 
-    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset)
+    VariableContentClass &GetVariableContentWriteReferenceForOffset(uint32_t Offset)
     {
         return AttributeStorage.at(Offset);
     }
@@ -453,7 +453,7 @@ public:
     VariableContentClass(Variables::ArrayClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ListClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
-    VariableContentClass(std::shared_ptr<ClassClass> Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(std::shared_ptr<ClassClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Class)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ObjectClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<InternalObjectClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Internal)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
@@ -530,6 +530,14 @@ public:
 
     template <class T>
         const T &GetValue() const try {
+        return std::get<T>(Data);
+    }
+    catch (...) {
+        throw INTERNAL_ERROR_OBJECT("Expected type not availlable");
+    }
+
+    template <class T>
+    T &GetWriteReference() try {
         return std::get<T>(Data);
     }
     catch (...) {
@@ -750,7 +758,7 @@ private:
     //   FunctionDefinitionClass &operator =(const FunctionDefinitionClass &src) = default;
     MethodDefinitionClass &operator =(MethodDefinitionClass &&src) = default;
 
-    static MethodDefinitionClass MakeEmpty() {return MethodDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), LocationType());}
+    static MethodDefinitionClass MakeEmpty() {return MethodDefinitionClass("<EmptyFkt>", std::vector<std::shared_ptr<VariableClass> >(), std::list<std::shared_ptr<StatementClass> >(), LocalStorageType(), std::shared_ptr<Variables::ObjectClass>(), LocationType());}
 public:
     //  FunctionDefinitionClass(const FunctionDefinitionClass &s);
     //  FunctionDefinitionClass &operator = (const FunctionDefinitionClass &s);

@@ -53,6 +53,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         case Type::Bool:
         case Type::String:
         case Type::Type:
+        case Type::Class:
         case Type::List:
         case Type::Map:
         case Type::Expression:
@@ -104,20 +105,6 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         }
         break;
             
-        case Type::Class:
-        {
-            const ClassDescriptorClass &cd1 = std::get<ClassDescriptorClass>(t1.Descriptor);
-            const ClassDescriptorClass &cd2 = std::get<ClassDescriptorClass>(t2.Descriptor);
-            if (cd1 == cd2) {
-                return t1;
-            } else if (cd1.IsDerivedFrom(cd2)) {
-                return t2;
-            } else if (cd2.IsDerivedFrom(cd1)) {
-                return t1;
-            } else {
-                return TypeDescriptorClass(Type::Undefined);
-            }
-        }
 
         case Type::Object:
         {

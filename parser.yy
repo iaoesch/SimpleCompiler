@@ -173,7 +173,7 @@
 %type  <KeyTypeUnion> key
 %type  <MapEntryType> mapentry
 %type  <MapEntryListType> mapentries
-%type  <AttributeBuilder>
+
 
 
 
@@ -333,7 +333,7 @@ variabledefinition:
 | "identifier" "as" typedefinition "=" exp
 | "identifier" "as" "class"
 | "identifier" "as" "class" "from" "identifier"
-| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt  attributes "endclass" {drv.CurrentClass.CreateClass();}
+| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt  attributes "endclass" {drv.CurrentClass.EndClassDefinition();}
 ;
 
 baseclass.opt:
@@ -352,8 +352,8 @@ attributelist:
 ;
 
 singleattribute:
-   variabledefinition ";" {drv.CurrentClass.AddObjectAttribute($1);}
-|  "static" variabledefinition ";" {drv.CurrentClass.AddClassAttribute($2);}
+   variabledefinition ";"
+|  "static" variabledefinition ";"
 ;
 
 keytype:
@@ -400,7 +400,7 @@ sendmessage:
   "*" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
 
 |  "send"
-   "identifier" <FunctionDefinitionClassSharedPtr>{drv.Currentfunction.BeginMethodeCall($2, @2);}
+   "identifier" <FunctionDefinitionClassSharedPtr>{drv.Currentfunction.BeginMethodCall($2, @2);}
    "with"
    messageparameterlist
    "to"

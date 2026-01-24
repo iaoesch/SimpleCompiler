@@ -11,14 +11,14 @@ TestClass::TestClass(Environment &Env, SystemInterfaceClass *SystemInterface_)
 
 std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, int64_t Value)
 {
-   std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::ReadAndWrite);
+   std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW);
    Var->SetValue(Variables::VariableContentClass(Value));
    return Var;
 }
 
 std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, double Value)
 {
-    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::ReadAndWrite);
+    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW);
     Var->SetValue(Variables::VariableContentClass(Value));
     return Var;
 }

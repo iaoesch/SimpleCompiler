@@ -149,7 +149,7 @@ void VariableManager::EndClass()
 std::shared_ptr<VariableClass> VariableManager::CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     (void) Value;
-    return CreateSymbol(Name, Type, VariableClass::StorageClass::ReadAndWrite);
+    return CreateSymbol(Name, Type, VariableClass::StorageClass::RW);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
@@ -161,13 +161,13 @@ std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name,
 std::shared_ptr<VariableClass> VariableManager::CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     (void) Value;
-    return CreateSymbol(Name, Type, VariableClass::StorageClass::ReadOnly);
+    return CreateSymbol(Name, Type, VariableClass::StorageClass::RO);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     (void) Value;
-    return CreateSymbol(Name, Type, VariableClass::StorageClass::ReadAndWrite);
+    return CreateSymbol(Name, Type, VariableClass::StorageClass::RW);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage)
@@ -176,8 +176,16 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
         throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
-    std::shared_ptr<VariableClass> Var;
-    if (Local && (Storage == VariableClass::StorageClass::ReadAndWrite)) {
+    std::shared_ptr<VariableClass> Var = ContextStack.back()->LookupVariable(Name);
+    if (Var != nullptr) {
+        if (ContextStack.back()->LookupVariableInThisContextOnly(Name) != nullptr) {
+            throw SyntaxErrorClass("Variable '" + Name + "' Allready defined");
+        } else {
+            DefaultEnvironment->OutputStream() << "Warning, '" << Name << "shadows another variable\n";
+        }
+    }
+
+    if (Local && ((Storage & VariableClass::StorageClass::RW) == VariableClass::StorageClass::RW)) {
         DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
         Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageTemplates.back()).LocalsParent, Storage);
         std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
@@ -240,7 +248,7 @@ std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceCreateIfNotF
     }
     return VarRef;
 }
-
+#if 0
 std::shared_ptr<VariableClass> VariableManager::CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType)
 {
     if (ContextStack.empty()) {
@@ -256,6 +264,7 @@ std::shared_ptr<VariableClass> VariableManager::CreateVariableAndGetReference(st
         return nullptr;
     }
 }
+#endif
 
 std::shared_ptr<VariableClass> VariableManager::GetVariableReferenceForContext(std::string Name, size_t Index)
 {

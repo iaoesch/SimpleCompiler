@@ -162,7 +162,7 @@ Variables::VariableContentClass &LateBindingVariableClass::GetWriteReferenceToVa
 {
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-    const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+    Variables::ObjectClass &r = v.GetWriteReference<Variables::ObjectClass>();
     return r.GetVariableContentWriteReferenceForOffset(Reference);
 }
 
@@ -172,7 +172,7 @@ void LateBindingVariableClass::SetValue(Variables::VariableContentClass v)
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-        const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+        Variables::ObjectClass &r = v.GetWriteReference<Variables::ObjectClass>();
         return r.SetVariableContentForOffset(Reference, v);
     } else {
         std::stringstream s;
@@ -190,7 +190,7 @@ void LateBindingVariableClass::SetInitialValue(Variables::VariableContentClass v
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-        const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
+        Variables::ObjectClass &r = v.GetWriteReference<Variables::ObjectClass>();
         return r.InitializeVariableContentForOffset(Reference, v);
     } else {
         std::stringstream s;

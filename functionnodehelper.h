@@ -87,12 +87,14 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
     void EndFunctionDefinition(const LocationType &l);
     
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginMethodCall(std::string Name, const LocationType &l);
     std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginFunctionCall(std::string Name, const LocationType &l);
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
     std::shared_ptr<ReferementClass> MakeRefBySequence(std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssignBySequence(std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);
     void EndFunctionCall(const LocationType &l);
+    void EndMethodCall(const LocationType &l);
     std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions() const {return KnownFunctions;}
 private:
     std::string GetQualifiedName();
