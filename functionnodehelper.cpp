@@ -136,6 +136,11 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetRetur
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
+std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginMethodCall(std::string Name, const LocationType &l)
+{
+
+}
+
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
 {
     (void) Loc;

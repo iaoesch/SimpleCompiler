@@ -200,6 +200,19 @@ void LateBindingVariableClass::SetInitialValue(Variables::VariableContentClass v
 
 }
 
+void LateBindingVariableClass::Print(std::ostream &s)
+{
+    s << "<" << GetName() << ":" << Type() << ": Late binding>";
+
+}
+
+const ValueTypeDescriptorClass &LateBindingVariableClass::GetContainedType() const
+{
+    return ValueTypeDescriptorClass(ValueTypeDescriptorClass::Type::Undefined);
+  //  return Parent->GetVariableContentForOffset(Reference).getType();
+}
+
+
 const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
 {
     return Content;

@@ -64,7 +64,7 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const = 0;
 };
 
-VariableClass::StorageClass operator &(VariableClass::StorageClass e1, VariableClass::StorageClass e2)
+inline VariableClass::StorageClass operator &(VariableClass::StorageClass e1, VariableClass::StorageClass e2)
 {
     return VariableClass::StorageClass(int(e1) & int(e2));
 }
