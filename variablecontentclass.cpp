@@ -186,7 +186,7 @@ ProxyVariableClass ListClass::GetOrCreateIndexedElement(std::string BaseName, El
 }
 ProxyVariableClass ListClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Dynamic), GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Dynamic), GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
 }
 
 VariableContentClass &ListClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -331,7 +331,7 @@ std::string ElementSelectorType::ToText() const
 
 ProxyVariableClass ArrayClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
 }
 
 VariableContentClass &ArrayClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -562,17 +562,18 @@ bool operator <(const VariableContentClass &r, const VariableContentClass &l)
 
 bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
 {
-#if 0
+#if 1
     bool Result = false;
     std::visit(overloaded{
 
-        [&Result](int64_t arg1, int64_t arg2) { Result = arg1 == arg2; },
-        [&Result](double arg1, double arg2)   { Result = arg1 == arg2; },
-        [&Result](std::string arg1, std::string arg2)   { Result = arg1 == arg2; },
+        [&Result](std::shared_ptr<ClassClass> arg1, std::shared_ptr<ClassClass> arg2) { if((arg1 != nullptr)&&(arg2 != nullptr)) {Result = *arg1 == *arg2;} else {Result = arg1 == arg2;} },
+        //[&Result](int64_t arg1, int64_t arg2) { Result = arg1 == arg2; },
+        //[&Result](double arg1, double arg2)   { Result = arg1 == arg2; },
+        //[&Result](std::string arg1, std::string arg2)   { Result = arg1 == arg2; },
         //[&Result](auto arg1, decltype(arg1) arg2)   { Result = arg1 == arg2; },
-        //[&Result]<class T>(T arg1, T arg2)   { Result = arg1 == arg2; },
+        [&Result]<class T>(T arg1, T arg2)   { Result = arg1 == arg2; },
 
-                   [&Result](auto &arg1, auto &arg2) {(void)arg1; (void)arg2; (void)Result; } // All other cases: do nothing
+        [&Result](auto &arg1, auto &arg2) {(void)arg1; (void)arg2; Result = false; } // All other cases: uses == of object
     }, l.Data, r.Data);
     return Result;
 #else
@@ -694,7 +695,7 @@ void MapClass::PrintDetail(std::ostream &s, int Limit) const
 
 ProxyVariableClass MapClass::GetIndexedElement(std::string BaseName, ElementSelectorType Selector, bool CreateIfNeeded) const
 {
-    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW);
+    return ProxyVariableClass("@" + BaseName + Selector.ToText(), BaseType, GetIndexedElement(Selector, CreateIfNeeded), VariableClass::StorageClass::RW  | VariableClass::StorageClass::Local);
 }
 
 VariableContentClass &MapClass::GetIndexedElement(ElementSelectorType Selector, bool CreateIfNeeded) const
@@ -880,7 +881,79 @@ ProxyVariableClass MapClass::GetOrCreateIndexedElement(std::string BaseName, Ele
 void ClassClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void) Limit;
-    s << "Not implemented yet";
+    s << "class parent: \n";
+    for (auto &p: Parents) {
+        Limit--;
+        if (Limit < 0) break;
+        if (p == nullptr) {
+            s << "<none>";
+        } else {
+            p->PrintDetail(s, Limit);
+        }
+    }
+    s << "\nclass nonstatic members: \n";
+    for (int i = 0; i < ObjectMemberReference.size(); i++) {
+        Limit--;
+        if (Limit < 0) break;
+
+        ObjectMemberReference.at(i)->Print(s);
+        s << " = ";
+        ObjectStorageInitialValues.at(i).PrintDetail(s, Limit);
+    }
+    s << "\nclass static members: \n";
+    for (auto &a: this->ClassStorageTemplate) {
+        Limit--;
+        if (Limit < 0) break;
+
+        a.PrintDetail(s, Limit);
+    }
+    s << "\nend class\n";
+}
+
+bool ClassClass::operator == (const ClassClass &Other) const
+{
+    if (Parents.size() != Other.Parents.size()) {
+        return false;
+    }
+    for(int i = 0; i < Parents.size(); i++) {
+        if ((Parents[i] != nullptr) && (Other.Parents[i]==nullptr)) {
+            return false;
+        }
+        if ((Parents[i] == nullptr) && (Other.Parents[i]!=nullptr)) {
+            return false;
+        }
+
+        if ((Parents[i] != nullptr) && (Other.Parents[i]!=nullptr)) {
+           if (!(*(Parents[i]) == *(Other.Parents[i]))) {
+               return false;
+           }
+        }
+    }
+    if (ObjectStorageInitialValues != Other.ObjectStorageInitialValues) {
+        return false;
+    }
+    if (ObjectMemberReference.size() != Other.ObjectMemberReference.size()) {
+        return false;
+    }
+    for(int i = 0; i < ObjectMemberReference.size(); i++) {
+        if ((ObjectMemberReference[i] != nullptr) && (Other.ObjectMemberReference[i]==nullptr)) {
+            return false;
+        }
+        if ((ObjectMemberReference[i] == nullptr) && (Other.ObjectMemberReference[i]!=nullptr)) {
+            return false;
+        }
+
+        if ((ObjectMemberReference[i] != nullptr) && (Other.ObjectMemberReference[i]!=nullptr)) {
+            if (!(*(ObjectMemberReference[i]) == *(Other.ObjectMemberReference[i]))) {
+                return false;
+            }
+        }
+    }
+
+    if (ClassStorageTemplate != Other.ClassStorageTemplate) {
+        return false;
+    }
+    return true;
 }
 /*
 ClassClass::LocalStorageType ClassClass::FullObjectGetStorageTemplate()

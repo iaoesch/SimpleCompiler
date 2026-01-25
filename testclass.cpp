@@ -11,15 +11,27 @@ TestClass::TestClass(Environment &Env, SystemInterfaceClass *SystemInterface_)
 
 std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, int64_t Value)
 {
-   std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW);
+   std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
    Var->SetValue(Variables::VariableContentClass(Value));
    return Var;
 }
 
 std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, double Value)
 {
-    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW);
+    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
     Var->SetValue(Variables::VariableContentClass(Value));
+    return Var;
+}
+
+std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value)
+{
+    std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
+    std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(nullptr);
+    for (auto &r: Value) {
+        NewClass->GetObjectStorageInitialValues().push_back(r);
+        NewClass->GetObjectVariableReferences().push_back(std::make_shared<LateBindingVariableClass>("Hans", r.getType(), 1, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
+    }
+    Var->SetValue(Variables::VariableContentClass(NewClass));
     return Var;
 }
 
@@ -327,6 +339,16 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("w");
     TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
 
+    Code = "class TestClass \n"
+           "a as integer; \n"
+           "endclass; \n";
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Unexpected.clear();
+    TestVector.push_back({"class definition", Code, Expected, Unexpected});
+
+
 }
 
 std::vector<std::string> TestClass::DoAllTests()
@@ -421,12 +443,16 @@ std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVa
 
                 } else {
                     std::ostringstream os;
-                    os << "Expected: " << v.second->GetValue() << ", got: " << V->GetValue();
+                    os << "Expected content: " << v.second->GetValue() << ", got: " << V->GetValue();
+                    os << "\nExpected detail:\n ";
+                    v.second->GetValue().PrintDetail(os, 100);
+                    os << "\ngotten detail:\n ";
+                    V->GetValue().PrintDetail(os, 100);
                     Errors.push_back(std::string("Variable '") + v.first + "' has wrong content, " + os.str());
                 }
             } else {
                 std::ostringstream os;
-                os << "Expected: " << v.second->Type() << ", got: " << V->Type();
+                os << "Expected type: " << v.second->Type() << ", got: " << V->Type();
                 Errors.push_back(std::string("Variable '") + v.first + "' has wrong type, " + os.str());
             }
         }

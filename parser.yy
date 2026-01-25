@@ -100,6 +100,10 @@
   SEND "send"
   WITH "with"
   TO "to"
+  CLASS "class"
+  ENDCLASS "endclass"
+  BASED    "based"
+  ON      "on"
   METHOD "method"
   TAKING "taking"
 
@@ -333,11 +337,11 @@ variabledefinition:
 | "identifier" "as" typedefinition "=" exp
 | "identifier" "as" "class"
 | "identifier" "as" "class" "from" "identifier"
-| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt  attributes "endclass" {drv.CurrentClass.EndClassDefinition();}
+| "class" "identifier" {drv.CurrentClass.StartClassDefinition($2);} baseclass.opt {drv.CurrentClass.StartMemberDefinition();} attributes "endclass" {drv.CurrentClass.EndMemberDefinition(); drv.CurrentClass.EndClassDefinition();}
 ;
 
 baseclass.opt:
-   %empty
+   %empty                    {drv.CurrentClass.SetBaseClass("");}
 |  "based" "on" "identifier" {drv.CurrentClass.SetBaseClass($3);}
 ;
 

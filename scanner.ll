@@ -85,6 +85,11 @@ blank [ \t]
 "with"      return yy::parser::make_WITH (loc);
 "to"      return yy::parser::make_TO (loc);
 
+"class"       return yy::parser::make_CLASS (loc);
+"endclass"    return yy::parser::make_ENDCLASS (loc);
+"based"       return yy::parser::make_BASED (loc);
+"on"          return yy::parser::make_ON (loc);
+
 "method"      return yy::parser::make_METHOD (loc);
 "taking"      return yy::parser::make_TAKING (loc);
   /*"returning"      return yy::parser::make_RETURNING (loc); */

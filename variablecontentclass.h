@@ -17,6 +17,7 @@
 //#include "varmanag.hpp"
 class ProxyVariableClass;
 class InternalObjectClass;
+class LateBindingVariableClass;
 
 
 
@@ -61,17 +62,19 @@ public:
 
 class ClassClass : public std::enable_shared_from_this<ClassClass> {
 public:
-    typedef AttributeBuilder::AttributeListType ObjectDataType;
-    typedef std::vector<Variables::VariableContentClass> LocalStorageType;
+  //  typedef AttributeBuilder::AttributeListType ObjectDataType;
+    typedef std::vector<Variables::VariableContentClass> MemberStorageType;
+    typedef std::vector<std::shared_ptr<LateBindingVariableClass>> ObjectMemberVariableType;
 
 private:
-    ObjectDataType ObjectAttributesTemplate;
+//    ObjectDataType ObjectAttributesTemplate;
     std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
     std::vector<std::shared_ptr<ClassClass>> Parents;
     uint32_t StorageTemplateFirstOffset;
     uint32_t ClassStorageTemplateFirstOffset;
-    LocalStorageType StorageTemplate;
-    LocalStorageType ClassStorageTemplate;
+    MemberStorageType ObjectStorageInitialValues;
+    MemberStorageType ClassStorageTemplate;
+    ObjectMemberVariableType ObjectMemberReference;
     bool Frozen;
 
 public:
@@ -82,19 +85,20 @@ public:
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
-    bool operator == (const ClassClass &Other) const {(void) Other; return false;}
+    bool operator == (const ClassClass &Other) const;
 
     //LocalStorageType FullObjectGetStorageTemplate();
-    LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
-    LocalStorageType &GetClassStorageTemplate() {return ClassStorageTemplate;}
+    MemberStorageType &GetObjectStorageInitialValues() {return ObjectStorageInitialValues;}
+    ObjectMemberVariableType &GetObjectVariableReferences() {return ObjectMemberReference;}
+    MemberStorageType &GetClassStorageTemplate() {return ClassStorageTemplate;}
     uint32_t GetClassStorageTemplateFirstOffset() {return StorageTemplateFirstOffset;}
     uint32_t GetStorageTemplateFirstOffset() {return ClassStorageTemplateFirstOffset;}
     uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
-    uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetStorageTemplate().size();}
+    uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetObjectVariableReferences().size();}
 
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
     {
-        return StorageTemplate.at(Offset);
+        return ObjectStorageInitialValues.at(Offset);
     }
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
@@ -109,7 +113,7 @@ public:
 
 
 class ObjectClass {
-    typedef ClassClass::LocalStorageType LocalStorageType;
+    typedef ClassClass::MemberStorageType LocalStorageType;
     //typedef ClassClass::ObjectDataType ObjectDataType;
     //typedef std::map<std::shared_ptr<ClassClass>, ObjectDataType> AttributeType;
     //AttributeType Attributes;
@@ -118,7 +122,7 @@ class ObjectClass {
     //std::vector<AttributeType::iterator> MyCurrentAttributeSet;
     //ObjectClass *Parent;
 public:
-    ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetStorageTemplate()), MyClass(MyClass_) {}
+    ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
     ObjectClass(const ObjectClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;

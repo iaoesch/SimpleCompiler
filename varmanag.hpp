@@ -72,6 +72,7 @@ class VariableManager
 {
     std::vector<std::shared_ptr<VariableContextClass>> ContextStack;
     std::vector<std::shared_ptr<VariableContextClass>> Contexts;
+    VariableClass::StorageClass DefaultStorage;
     bool Local;
 //    std::shared_ptr<Variables::FunctionDefinitionBaseClass> LocalsParent;
     uint32_t LocalOffset;
@@ -79,6 +80,7 @@ class VariableManager
 public:
     enum ParentVisibility {ParentVisible, HideParent};
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
+    typedef std::vector<std::shared_ptr<LateBindingVariableClass>> ObjectMemberVariableType;
 private:
     struct LocalFunctionStorageContextType {
     //    LocalFunctionStorageContextType(LocalFunctionStorageContextType &&) = default;
@@ -92,6 +94,7 @@ private:
    //     LocalClassStorageContextType(LocalClassStorageContextType const &) = default;
         LocalStorageType &LocalClassAttributeStorageTemplates;
         LocalStorageType &LocalAttrubiteStorageTemplates;
+        ObjectMemberVariableType &LocalVariableTemplates;
         std::shared_ptr<Variables::ClassClass> LocalsParent;
     };
 
@@ -99,7 +102,12 @@ private:
     typedef LocalFunctionStorageContextType FktTemplate;
     typedef LocalClassStorageContextType ClassTemplate;
     typedef std::variant<FktTemplate, ClassTemplate> LocalStorageContextType;
-    std::vector<LocalStorageContextType> LocalStorageTemplates;
+    class LocalStorageInfoClass {
+    public:
+        LocalStorageContextType LocalStorageTemplates;
+        VariableClass::StorageClass DefaultStorage;
+    };
+    std::vector<LocalStorageInfoClass> LocalStorageInfoStack;
 
     static Environment *DefaultEnvironment;
 
@@ -108,7 +116,7 @@ private:
 public:
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
-    VariableManager() : Local(false), LocalOffset(0) {}
+    VariableManager() : DefaultStorage(VariableClass::StorageClass::Global|VariableClass::StorageClass::RW), Local(false), LocalOffset(0) {}
 
     void clear() {Local = false; LocalOffset = 0; ContextStack.clear(); Contexts.clear();}
 
@@ -125,7 +133,7 @@ public:
    std::shared_ptr<VariableClass> CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
-   std::shared_ptr<VariableClass> CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType);
+ //  std::shared_ptr<VariableClass> CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType);
 
    // For Testpurposes
    size_t GetNumberOfContexts() const {return Contexts.size();}
@@ -133,6 +141,7 @@ public:
    size_t GetNumberOfVariablesForContext(size_t Index) const {return Contexts[Index]->GetNumberOfVariables();}
 
    void Dump(std::ostream &s);
+   std::shared_ptr<VariableClass> CreateMember(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
 };
 
 

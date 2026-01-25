@@ -92,28 +92,31 @@ void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBa
     Local = true;
     LocalOffset = 0;
     LocalClassOffset = 0;
-    LocalStorageTemplates.push_back(LocalStorageContextType(FktTemplate{Parent->GetStorageTemplate(), Parent}));
+    LocalStorageInfoStack.push_back({LocalStorageContextType(FktTemplate{Parent->GetStorageTemplate(), Parent}), DefaultStorage});
+    DefaultStorage = VariableClass::StorageClass::Local | VariableClass::StorageClass::RW;
   //  LocalsParent = Parent;
 }
 
 void VariableManager::EndLocal()
 {
-    if (LocalStorageTemplates.empty()) {
+    if (LocalStorageInfoStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("Internal, local stack empty");
     }
-    LocalStorageTemplates.pop_back();
-    if (LocalStorageTemplates.empty()) {
+    LocalStorageInfoStack.pop_back();
+    if (LocalStorageInfoStack.empty()) {
         Local = false;
         LocalOffset = 0;
         LocalClassOffset = 0;
+        DefaultStorage = VariableClass::StorageClass::Global | VariableClass::StorageClass::RW;
     } else {
         Local = true;
-        if (std::holds_alternative<FktTemplate>(LocalStorageTemplates.back())) {
-           LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
+        DefaultStorage = LocalStorageInfoStack.back().DefaultStorage;
+        if (std::holds_alternative<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates)) {
+           LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.size());
            LocalClassOffset = 0;
-        } else if (std::holds_alternative<ClassTemplate>(LocalStorageTemplates.back())) {
-            LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalAttrubiteStorageTemplates.size());
-            LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalClassAttributeStorageTemplates.size());
+        } else if (std::holds_alternative<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates)) {
+            LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalAttrubiteStorageTemplates.size());
+            LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalClassAttributeStorageTemplates.size());
         } else {
             throw INTERNAL_ERROR_OBJECT("Internal, local stack unknown type");
         }
@@ -125,31 +128,41 @@ void VariableManager::StartClass(std::shared_ptr<Variables::ClassClass> Parent)
     Local = true;
     LocalClassOffset = Parent->GetClassStorageTemplateFirstOffset();
     LocalOffset = Parent->GetStorageTemplateFirstOffset();
-    LocalStorageTemplates.push_back(LocalStorageContextType(ClassTemplate{Parent->GetClassStorageTemplate(), Parent->GetStorageTemplate(), Parent}));
+    LocalStorageInfoStack.push_back({LocalStorageContextType(ClassTemplate{Parent->GetClassStorageTemplate(), Parent->GetObjectStorageInitialValues(), Parent->GetObjectVariableReferences(), Parent}), DefaultStorage});
+    DefaultStorage = VariableClass::StorageClass::Class | VariableClass::StorageClass::RW;
     //  LocalsParent = Parent;
 }
 
 void VariableManager::EndClass()
 {
-    if (LocalStorageTemplates.empty()) {
+    if (LocalStorageInfoStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("Internal, local stack empty");
     }
-    LocalStorageTemplates.pop_back();
-    if (LocalStorageTemplates.empty()) {
+    LocalStorageInfoStack.pop_back();
+    if (LocalStorageInfoStack.empty()) {
         Local = false;
         LocalOffset = 0;
         LocalClassOffset = 0;
+        DefaultStorage = VariableClass::StorageClass::Global | VariableClass::StorageClass::RW;
     } else {
         Local = true;
-        LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalAttrubiteStorageTemplates.size());
-        LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageTemplates.back()).LocalClassAttributeStorageTemplates.size());
+        DefaultStorage = LocalStorageInfoStack.back().DefaultStorage;
+        if (std::holds_alternative<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates)) {
+            LocalOffset = static_cast<decltype(LocalOffset)>(std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.size());
+            LocalClassOffset = 0;
+        } else if (std::holds_alternative<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates)) {
+            LocalOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalAttrubiteStorageTemplates.size());
+            LocalClassOffset = static_cast<decltype(LocalOffset)>(std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalClassAttributeStorageTemplates.size());
+        } else {
+            throw INTERNAL_ERROR_OBJECT("Internal, local stack unknown type");
+        }
     }
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     (void) Value;
-    return CreateSymbol(Name, Type, VariableClass::StorageClass::RW);
+    return CreateSymbol(Name, Type, DefaultStorage);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
@@ -167,7 +180,13 @@ std::shared_ptr<VariableClass> VariableManager::CreateConstant(std::string Name,
 std::shared_ptr<VariableClass> VariableManager::CreateVariable(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
 {
     (void) Value;
-    return CreateSymbol(Name, Type, VariableClass::StorageClass::RW);
+    return CreateSymbol(Name, Type, DefaultStorage);
+}
+
+std::shared_ptr<VariableClass> VariableManager::CreateMember(std::string Name, const VariableTypeDescriptorClass &Type, double Value)
+{
+    (void) Value;
+    return CreateSymbol(Name, Type, VariableClass::StorageClass::RW | VariableClass::StorageClass::Class);
 }
 
 std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage)
@@ -184,12 +203,19 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
             DefaultEnvironment->OutputStream() << "Warning, '" << Name << "shadows another variable\n";
         }
     }
-
-    if (Local && ((Storage & VariableClass::StorageClass::RW) == VariableClass::StorageClass::RW)) {
+    typedef VariableClass::StorageClass StorageClass;
+    if (Local && (Storage == (StorageClass::RW | StorageClass::Local))) {
         DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
-        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageTemplates.back()).LocalsParent, Storage);
-        std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
-        assert(LocalOffset == std::get<FktTemplate>(LocalStorageTemplates.back()).LocalStorageTemplates.size());
+        Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent, Storage);
+        std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        assert(LocalOffset == std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.size());
+    } else if (Local && (Storage == (StorageClass::RW | StorageClass::Class))) {
+        DefaultEnvironment->DebugOutput() << "creating member " << Name << ">\n";
+        auto tmp = std::make_shared<LateBindingVariableClass>(Name, Type, LocalOffset++, /*std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent,*/ Storage);
+        Var = tmp;
+        std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalAttrubiteStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalVariableTemplates.push_back(tmp);
+        assert(LocalOffset == std::get<ClassTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalAttrubiteStorageTemplates.size());
     } else {
         DefaultEnvironment->DebugOutput() << "creating global <" << Name << ">\n";
         Var = std::make_shared<GlobalVariableClass>(Name, Type, Storage);

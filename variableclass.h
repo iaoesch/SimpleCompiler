@@ -12,7 +12,7 @@
 class VariableClass
 {
 public:
-    enum class StorageClass {None = 0, RW = 1, RO = 2, Code = 8, Global = 16, Static = 32, Class = 64};
+    enum class StorageClass {None = 0, RW = 1, RO = 2, Code = 8, Local = 16, Global = 32, Static = 64, Class = 128};
 
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
@@ -64,9 +64,19 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const = 0;
 };
 
-inline VariableClass::StorageClass operator &(VariableClass::StorageClass e1, VariableClass::StorageClass e2)
+inline VariableClass::StorageClass operator & (VariableClass::StorageClass e1, VariableClass::StorageClass e2)
 {
     return VariableClass::StorageClass(int(e1) & int(e2));
+}
+
+inline VariableClass::StorageClass operator | (VariableClass::StorageClass e1, VariableClass::StorageClass e2)
+{
+    return VariableClass::StorageClass(int(e1) | int(e2));
+}
+
+inline bool IsStorageType (VariableClass::StorageClass e1, VariableClass::StorageClass e2)
+{
+    return (e1 & e2) == e2;
 }
 
 inline bool VariableClass::IsWriteable()
@@ -126,7 +136,7 @@ class LateBindingVariableClass : public VariableClass
     std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod;
 
 public:
-    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), ReferenceName(Name_) {}
+    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), ReferenceName(Name_) {}
     virtual ~LateBindingVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;
@@ -135,6 +145,10 @@ public:
     virtual void        SetInitialValue(Variables::VariableContentClass v) override;
     virtual void        Print(std::ostream &s) override;
     //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    bool operator == (LateBindingVariableClass const& other) const {
+        return Type() == other.Type();
+    }
 
     bool BindToMethod(std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod_);
 
@@ -170,7 +184,7 @@ class TemporaryVariableClass : public VariableClass
     Variables::VariableContentClass Content;
 
 public:
-    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::RW), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
+    TemporaryVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_) : VariableClass(Name_, Type_, StorageClass::RW|StorageClass::Local), Content(Variables::VariableContentClass::MakeEmpty(Type_)) {}
     virtual ~TemporaryVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;

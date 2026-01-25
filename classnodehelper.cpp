@@ -37,20 +37,26 @@ bool ClassNodeHelper::SetBaseClass(std::string Name)
     if (PendingClassDefinitions.empty()) {
         throw INTERNAL_ERROR_OBJECT("SetBaseClass without pending classdefinition");
     }
-    std::shared_ptr<VariableClass> BaseClass = Variables.GetVariableReference(Name);
-    if (BaseClass == nullptr) {
-        throw SyntaxErrorClass("Baseclass '" + Name + "' not found");
+    if (Name != "") {
+        std::shared_ptr<VariableClass> BaseClass = Variables.GetVariableReference(Name);
+        if (BaseClass == nullptr) {
+            throw SyntaxErrorClass("Baseclass '" + Name + "' not found");
+        }
+        if (BaseClass->ContaindedType() != TypeDescriptorClass::Type::Class) {
+            throw SyntaxErrorClass("Identifier '" + Name + "' refers not a class");
+        }
+        if (PendingClassDefinitions.back().BaseClass != nullptr) {
+            throw INTERNAL_ERROR_OBJECT("SetBaseClass with allready set baseclass");
+        }
+        if (BaseClass->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>() == false) {
+            throw SyntaxErrorClass("Identifier '" + Name + "' holds not a class");
+        }
+        PendingClassDefinitions.back().BaseClass = BaseClass->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    } else {
+        if (PendingClassDefinitions.back().BaseClass != nullptr) {
+            throw INTERNAL_ERROR_OBJECT("SetBaseClass with allready set baseclass");
+        }
     }
-    if (BaseClass->ContaindedType() != TypeDescriptorClass::Type::Class) {
-        throw SyntaxErrorClass("Identifier '" + Name + "' refers not a class");
-    }
-    if (PendingClassDefinitions.back().BaseClass != nullptr) {
-        throw INTERNAL_ERROR_OBJECT("SetBaseClass without allready set baseclass");
-    }
-    if (BaseClass->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>() == false) {
-        throw SyntaxErrorClass("Identifier '" + Name + "' holds not a class");
-    }
-    PendingClassDefinitions.back().BaseClass = BaseClass->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
     std::shared_ptr<Variables::ClassClass> NewClassContent = std::make_shared<Variables::ClassClass>(PendingClassDefinitions.back().BaseClass);
     PendingClassDefinitions.back().NewClassContent = NewClassContent;
     PendingClassDefinitions.back().NewClass->SetInitialValue(Variables::VariableContentClass(NewClassContent));
