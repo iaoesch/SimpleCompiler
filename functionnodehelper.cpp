@@ -1,5 +1,6 @@
 
 #include "functionnodehelper.h"
+#include "typedescriptorclass.hpp"
 #include "varmanag.hpp"
 #include "parser.hpp"
 #include "compact.h"
@@ -7,17 +8,17 @@
 
 std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
-    FunctionCallsPending.push_back({});
-    FunctionCallsPending.back().NextPositionalParameter = -1;
+    FunctionCallsPending.push_back(FunctionCallInfoType{});
+    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = -1;
     std::shared_ptr<VariableClass> VariableHoldingFunction =
         Variables.GetVariableReference(Name);
     if (VariableHoldingFunction == nullptr) {
         throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
     }
-    FunctionCallsPending.back().CurrentFunction =
+    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction =
         VariableHoldingFunction->GetInitialValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
-    if (FunctionCallsPending.back().CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
-    return FunctionCallsPending.back().CurrentFunction;
+    if (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
+    return std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction;
 }
 
 void FunctionNodeHelper::EndFunctionCall(const yy::parser::location_type &l)
@@ -162,12 +163,12 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::stri
         throw(INTERNAL_ERROR_OBJECT("<MakeAssign()> Not inside functioncall"));
     }
     
-    if ((FunctionCallsPending.back().NextPositionalParameter >= 0) && (FunctionCallsPending.back().NextPositionalParameter < 0xFFFF)) {
+    if ((std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter >= 0) && (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter < 0xFFFF)) {
         throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
     }
     // set marker for positionalmode
-    FunctionCallsPending.back().NextPositionalParameter = 0xFFFF;
-    std::shared_ptr<VariableClass> Var = FunctionCallsPending.back().CurrentFunction->GetParameterByName(Assignee);
+    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = 0xFFFF;
+    std::shared_ptr<VariableClass> Var = std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction->GetParameterByName(Assignee);
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("Parameter not found");
     }
@@ -180,18 +181,90 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<MakeAssign()> Not inside functioncall"));
     }
-    if (FunctionCallsPending.back().NextPositionalParameter >= 0xFFFF) {
+    if (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter >= 0xFFFF) {
         throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
     }
-    if (FunctionCallsPending.back().NextPositionalParameter < 0) {
-        FunctionCallsPending.back().NextPositionalParameter = 0;
+    if (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter < 0) {
+        std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = 0;
     }
     // set marker for positionalmode
-    std::shared_ptr<VariableClass> Var = FunctionCallsPending.back().CurrentFunction->GetParameterByIndex(FunctionCallsPending.back().NextPositionalParameter);
+    std::shared_ptr<VariableClass> Var = std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction->GetParameterByIndex(std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter);
     if (Var == nullptr) {
-        throw INTERNAL_ERROR_OBJECT ("Parameter [" + std::to_string(FunctionCallsPending.back().NextPositionalParameter) + "] not found");
+        throw INTERNAL_ERROR_OBJECT ("Parameter [" + std::to_string(std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter) + "] not found");
     }
-    FunctionCallsPending.back().NextPositionalParameter++;
+    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter++;
     auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
     return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
+}
+
+void FunctionNodeHelper::BeginMethodCallForObject(std::string ObjectName, const LocationType &Loc)
+{
+    FunctionCallsPending.push_back(MethodCallInfoType{});
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = -1;
+
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ObjectName);
+    if (Var == nullptr) {
+        throw SyntaxErrorClass("Object '" + ObjectName + "' not found");
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Object) {
+        throw SyntaxErrorClass("'" + ObjectName + "' is not an object, cannot send messages to it");
+    }
+    VariableTypeDescriptorClass Type = Var->Type();
+    ObjectDescriptorClass const ObjectDescriptor = Type.GetTypeDetails<ObjectDescriptorClass>();
+    std::shared_ptr<const Variables::ClassClass> UsedClass = ObjectDescriptor.GetClass();
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject = Var;
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass = UsedClass;
+
+#ifdef nonsense //, works only at runtime...
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ObjectName);
+    if (Var == nullptr) {
+        throw SyntaxErrorClass("Object '" + ObjectName + "' not found");
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Object) {
+        throw SyntaxErrorClass("'" + ObjectName + "' is not an object, cannot send messages to it");
+    }
+    if (Var->GetValue().holds_alternative<Variables::ObjectClass>()) {
+
+    } else {
+            throw SyntaxErrorClass("'" + ObjectName + "' does not contain an valid object");
+    }
+#endif
+}
+
+void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const LocationType &Loc)
+{
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
+    }
+    std::shared_ptr<const Variables::ClassClass> UsedClass = std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass;
+    std::shared_ptr<Variables::MethodDefinitionClass> Method = UsedClass->GetMethod(MethodName);
+    if (Method == nullptr) {
+        throw(yy::parser::syntax_error(Loc, "Function: Method not found in Class '" + UsedClass->GetName() + "' (or its parent(s)"));
+    }
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
+}
+
+void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::vector<std::shared_ptr<AssignementClass> > &&Assignements, const LocationType &Loc)
+{
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
+    }
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
+}
+
+std::shared_ptr<MethodCallClass> FunctionNodeHelper::FinishMethodCall(const LocationType &Loc)
+{
+    ------------
+                   std::shared_ptr<VariableClass> VariableHoldingFunction =
+        Variables.GetVariableReference(Name);
+    if (VariableHoldingFunction == nullptr) {
+        throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
+    }
+    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction =
+        VariableHoldingFunction->GetInitialValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
+    if (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
+    return std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction;
+
+    --------
+
 }

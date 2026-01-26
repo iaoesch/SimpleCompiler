@@ -409,6 +409,13 @@ sendmessage:
    messageparameterlist
    "to"
    "identifier" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
+
+|  "tell"
+   "identifier" {drv.Currentfunction.BeginMethodCallForObject($2, @2);}
+   "to"
+   "identifier" {drv.Currentfunction.SetCalledMethodForObject($4, @4);}
+   "with"
+   messageparameterlist {drv.Currentfunction.SetParameterAssignListForCalledMethod($6, @6); $$ = drv.Currentfunction.FinishMethodCall(@$);}
 ;
 
 messageparameterlist:

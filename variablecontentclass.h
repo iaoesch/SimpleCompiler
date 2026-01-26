@@ -23,6 +23,8 @@ class LateBindingVariableClass;
 
 namespace Variables {
 
+class MethodDefinitionClass;
+
 using DimensionType = ArrayDescriptorClass::DimensionType;
 using ArrayIndexType = DimensionType::value_type;
 using MapStringIndexType  = std::string;
@@ -63,12 +65,16 @@ public:
 class ClassClass : public std::enable_shared_from_this<ClassClass> {
 public:
   //  typedef AttributeBuilder::AttributeListType ObjectDataType;
+
     typedef std::vector<Variables::VariableContentClass> MemberStorageType;
     typedef std::vector<std::shared_ptr<LateBindingVariableClass>> ObjectMemberVariableType;
 
 private:
 //    ObjectDataType ObjectAttributesTemplate;
     std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
+    std::map<std::string, std::shared_ptr<MethodDefinitionClass>> Methodes;
+    const std::string Name;
+
     std::vector<std::shared_ptr<ClassClass>> Parents;
     uint32_t StorageTemplateFirstOffset;
     uint32_t ClassStorageTemplateFirstOffset;
@@ -78,13 +84,15 @@ private:
     bool Frozen;
 
 public:
-    ClassClass(std::shared_ptr<ClassClass> Parent)
-        : Parents{Parent},
+    ClassClass(std::string Name_, std::shared_ptr<ClassClass> Parent)
+        : Name(Name_),
+          Parents{Parent},
           StorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetStorageTemplateSize()),
           ClassStorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetClassStorageTemplateSize()) {}
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
+    const std::string &GetName() const {return Name;}
     bool operator == (const ClassClass &Other) const;
 
     //LocalStorageType FullObjectGetStorageTemplate();
@@ -95,6 +103,7 @@ public:
     uint32_t GetStorageTemplateFirstOffset() {return ClassStorageTemplateFirstOffset;}
     uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
     uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetObjectVariableReferences().size();}
+    std::shared_ptr<MethodDefinitionClass> GetMethod(std::string Name) const;
 
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
     {

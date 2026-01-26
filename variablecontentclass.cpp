@@ -576,6 +576,8 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
         [&Result](auto &arg1, auto &arg2) {(void)arg1; (void)arg2; Result = false; } // All other cases: uses == of object
     }, l.Data, r.Data);
     return Result;
+
+
 #else
     return l.Data == r.Data;
 #endif
@@ -1043,4 +1045,28 @@ std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Nam
     }
 }
 #endif
+
+std::shared_ptr<MethodDefinitionClass>
+ClassClass::GetMethod(std::string Name) const {
+    auto it = Methodes.find("Name");
+    if (it != Methodes.end()) {
+        return it->second;
+    } else {
+        std::shared_ptr<MethodDefinitionClass> FoundMethod = nullptr;
+        for (auto &p: Parents) {
+            std::shared_ptr<MethodDefinitionClass> tmp = p->GetMethod(Name);
+            if (FoundMethod != nullptr) {
+                if (tmp != nullptr) {
+                   throw SyntaxErrorClass("Ambigiuos methododcall for multiple baseswith same method");
+                }
+            } else {
+               FoundMethod = tmp;
+            }
+        }
+        return FoundMethod;
+    }
+}
+
+
+
 } // namespace Variables

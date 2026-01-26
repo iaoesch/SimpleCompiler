@@ -11,7 +11,10 @@
 class ExpressionClass;
 class StatementClass;
 class VariableClass;
-class ClassClass;
+namespace Variables {
+
+   class ClassClass;
+}
 
 
 class VariableContextClass;
@@ -52,10 +55,10 @@ public:
 #endif
 
 class ObjectDescriptorClass  {
-    std::shared_ptr<ClassClass> MyClass;
+    std::shared_ptr<Variables::ClassClass> MyClass;
 
 public:
-    ObjectDescriptorClass(std::shared_ptr<ClassClass> MyClass_) : MyClass(MyClass_) {}
+    ObjectDescriptorClass(std::shared_ptr<Variables::ClassClass> MyClass_) : MyClass(MyClass_) {}
     ObjectDescriptorClass(const ObjectDescriptorClass &s) = default;
     ObjectDescriptorClass &operator=(const ObjectDescriptorClass &s) = default;
     bool operator ==(const ObjectDescriptorClass &s) const
@@ -71,6 +74,7 @@ public:
     bool IsDerivedFrom(const ObjectDescriptorClass &s) const {
        // return MyClass->IsDerivedFrom(*s.MyClass);
     }
+    std::shared_ptr<const Variables::ClassClass> GetClass() const { return MyClass;}
 };
 
 class StackDescriptorClass  {
@@ -157,6 +161,16 @@ public:
     };
 
     bool IsKindOf(Type t) const {return MyType == t;}
+    template<class T>
+    const T &GetTypeDetails()
+    {
+        try {
+            return std::get<T>(Descriptor);
+        }
+        catch (...){
+            throw(INTERNAL_ERROR_OBJECT(std::string("Try to acces nonexistent Descriptor '") + typeid(T).name()));
+        }
+    }
     
 protected:
     TypeDescriptorClass(const ValueTypeDescriptor &Descriptor)
