@@ -1057,13 +1057,13 @@ void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) const
 {
     if (Env.DoEvaluateFunctions) {
-    TheFunction->CreateFrame();
-    for (auto const &s: Assignements) {
-        s->Execute(Env);
-    }
-    auto Result = TheFunction->Execute(Env);
-    TheFunction->ReleaseFrame();
-    return Result;
+        TheFunction->CreateFrame();
+        for (auto const &s: Assignements) {
+            s->Execute(Env);
+        }
+        auto Result = TheFunction->Execute(Env);
+        TheFunction->ReleaseFrame();
+        return Result;
     } else {
         return Variables::VariableContentClass::MakeUndefined();
     }

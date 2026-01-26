@@ -162,7 +162,7 @@ public:
 
     bool IsKindOf(Type t) const {return MyType == t;}
     template<class T>
-    const T &GetTypeDetails()
+    const T &GetTypeDetails() const
     {
         try {
             return std::get<T>(Descriptor);

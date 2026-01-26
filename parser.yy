@@ -413,9 +413,9 @@ sendmessage:
 |  "tell"
    "identifier" {drv.Currentfunction.BeginMethodCallForObject($2, @2);}
    "to"
-   "identifier" {drv.Currentfunction.SetCalledMethodForObject($4, @4);}
+   "identifier" {drv.Currentfunction.SetCalledMethodForObject($5, @5);}
    "with"
-   messageparameterlist {drv.Currentfunction.SetParameterAssignListForCalledMethod($6, @6); $$ = drv.Currentfunction.FinishMethodCall(@$);}
+   messageparameterlist {drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($8), @8); $$ = drv.Currentfunction.FinishMethodCall(@$);}
 ;
 
 messageparameterlist:

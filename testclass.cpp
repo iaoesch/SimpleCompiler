@@ -26,7 +26,7 @@ std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, d
 std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value)
 {
     std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
-    std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(nullptr);
+    std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(Name, nullptr);
     for (auto &r: Value) {
         NewClass->GetObjectStorageInitialValues().push_back(r);
         NewClass->GetObjectVariableReferences().push_back(std::make_shared<LateBindingVariableClass>("Hans", r.getType(), 1, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));

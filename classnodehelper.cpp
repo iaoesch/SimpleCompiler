@@ -57,7 +57,7 @@ bool ClassNodeHelper::SetBaseClass(std::string Name)
             throw INTERNAL_ERROR_OBJECT("SetBaseClass with allready set baseclass");
         }
     }
-    std::shared_ptr<Variables::ClassClass> NewClassContent = std::make_shared<Variables::ClassClass>(PendingClassDefinitions.back().BaseClass);
+    std::shared_ptr<Variables::ClassClass> NewClassContent = std::make_shared<Variables::ClassClass>(PendingClassDefinitions.back().Name, PendingClassDefinitions.back().BaseClass);
     PendingClassDefinitions.back().NewClassContent = NewClassContent;
     PendingClassDefinitions.back().NewClass->SetInitialValue(Variables::VariableContentClass(NewClassContent));
     return true;

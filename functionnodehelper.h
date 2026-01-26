@@ -18,6 +18,7 @@ class StatementClass;
 class ReferementClass;
 class AssignementClass;
 class MethodCallClass;
+class FunctionCallClass;
 
 namespace Variables {
 class FunctionDefinitionClass;
@@ -54,7 +55,8 @@ class FunctionNodeHelper {
         int NextPositionalParameter;
         std::shared_ptr<const Variables::ClassClass> UsedClass;
         std::shared_ptr<VariableClass> UsedObject;
-        std::vector<std::shared_ptr<AssignementClass>> Assignements;
+        std::list<std::shared_ptr<StatementClass>> Assignements;
+        std::shared_ptr<AssignementClass> ThisAssignement;
     };
     typedef std::variant<FunctionCallInfoType, MethodCallInfoType> CallInfoType;
     std::vector<CallInfoType> FunctionCallsPending;
@@ -107,8 +109,8 @@ public:
     std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions() const {return KnownFunctions;}
     void BeginMethodCallForObject(std::string ObjectName, const LocationType &Loc);
     void SetCalledMethodForObject(std::string ObjectName, const LocationType &Loc);
-    void SetParameterAssignListForCalledMethod(std::vector<std::shared_ptr<AssignementClass>> &&Assignements, const LocationType &Loc);
-    std::shared_ptr<MethodCallClass> FinishMethodCall(const LocationType &Loc);
+    void SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> > &&Assignements, const LocationType &Loc);
+    std::shared_ptr<FunctionCallClass> FinishMethodCall(const LocationType &Loc);
 private:
     std::string GetQualifiedName();
 };

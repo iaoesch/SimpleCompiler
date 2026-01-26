@@ -6,6 +6,7 @@
 #include "compact.h"
 
 
+
 std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginFunctionCall(std::string Name, const yy::parser::location_type &l)
 {
     FunctionCallsPending.push_back(FunctionCallInfoType{});
@@ -242,29 +243,48 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
         throw(yy::parser::syntax_error(Loc, "Function: Method not found in Class '" + UsedClass->GetName() + "' (or its parent(s)"));
     }
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
+
+    // make assignement for this (first parameter)
+    std::shared_ptr<VariableClass> Var = Method->GetParameterByIndex(0);
+    if (Var == nullptr) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer not found");
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Object) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
+    }
+    if (Var->Type().GetTypeDetails<ObjectDescriptorClass>().GetClass() != UsedClass) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
+    }
+    auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+    auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
+    std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }
 
-void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::vector<std::shared_ptr<AssignementClass> > &&Assignements, const LocationType &Loc)
+void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> > &&Assignements, const LocationType &Loc)
 {
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
     }
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_back(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
 }
 
-std::shared_ptr<MethodCallClass> FunctionNodeHelper::FinishMethodCall(const LocationType &Loc)
+std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const LocationType &Loc)
 {
-    ------------
-                   std::shared_ptr<VariableClass> VariableHoldingFunction =
-        Variables.GetVariableReference(Name);
-    if (VariableHoldingFunction == nullptr) {
-        throw(yy::parser::syntax_error(l, "Function: Symbol not found"));
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<FinishMethodCall()> Not inside functioncall"));
     }
-    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction =
-        VariableHoldingFunction->GetInitialValue().GetValue<std::shared_ptr<Variables::FunctionDefinitionBaseClass>>();
-    if (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction == nullptr) {throw INTERNAL_ERROR_OBJECT("Not a function object");}
-    return std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction;
+    //FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionBaseClass> f, std::list<std::shared_ptr<StatementClass>> a, const LocationType &Loc) : ValueClass(Loc), TheFunction(f), Assignements(a) {}
 
-    --------
+    FunctionCallClass f(
+        std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod,
+        std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
+        Loc);
+
+    return std::make_shared<FunctionCallClass>(
+               std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod,
+               std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
+               Loc);
 
 }
