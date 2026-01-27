@@ -39,33 +39,114 @@ namespace Variables {
     class VariableContentClass;
 }
 
-
 class VariableContextClass {
+    protected:
+        VariableContextClass *ParentContext;
+        std::vector<std::shared_ptr<VariableContextClass>> Children;
+        const std::string Name;
+        bool ParentIsHidden;
+
+    public:
+
+        VariableContextClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : ParentContext(Parent_), Name(Name_), ParentIsHidden(HideParent) {}
+        //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
+        //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
+    public:
+        std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name, bool HideParent = false);
+
+        virtual std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) = 0;
+        virtual std::shared_ptr<VariableClass> LookupVariable(const std::string Name) = 0;
+
+        // For Testpurposes
+        virtual std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name) = 0;
+        virtual size_t GetNumberOfVariables() const = 0;
+
+        virtual void Dump(std::ostream &s) = 0;
+        const std::string &GetName() {return Name;}
+};
+
+class VariableContextManageClass : public VariableContextClass {
     std::map<std::string, std::shared_ptr<VariableClass>> Variables;
-    VariableContextClass *ParentContext;
-    std::vector<std::shared_ptr<VariableContextClass>> Children;
-    const std::string Name;
-    bool ParentIsHidden;
 
 public:
 
-    VariableContextClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : ParentContext(Parent_), Name(Name_), ParentIsHidden(HideParent) {}
+    VariableContextManageClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent) {}
 //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
 //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
 public:
-    std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name, bool HideParent = false) {Children.push_back(std::make_shared<VariableContextClass>(Name, this, HideParent)); return Children.back();}
+   // std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name_, bool HideParent = false) {Children.push_back(std::make_shared<VariableContextManageClass>(Name_, this, HideParent)); return Children.back();}
 
-    std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false);
-    std::shared_ptr<VariableClass> LookupVariable(const std::string Name);
+    std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) override;
+    std::shared_ptr<VariableClass> LookupVariable(const std::string Name) override;
 
     // For Testpurposes
-    std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name);
-    size_t GetNumberOfVariables() const {return Variables.size();}
+    std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name) override;
+    size_t GetNumberOfVariables() const override {return Variables.size();}
 
-    void Dump(std::ostream &s);
-    const std::string &GetName() {return Name;}
+    void Dump(std::ostream &s) override;
+};
+
+inline std::shared_ptr<VariableContextClass> VariableContextClass::CreateSubContext(const std::string &Name, bool HideParent) {Children.push_back(std::make_shared<VariableContextManageClass>(Name, this, HideParent)); return Children.back();}
+
+class VariableContextProxyClass  : public VariableContextClass {
+    VariableContextClass *TheRealContext;
+    bool ReadOnly;
+
+public:
+
+    VariableContextProxyClass(const std::string &Name_, VariableContextManageClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent), TheRealContext(nullptr), ReadOnly(true) {}
+    //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
+    //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
+public:
+    void SetReferedContext(VariableContextClass *Ref) {TheRealContext = Ref;}
+    std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) override
+    {
+        if ((TheRealContext != nullptr) && (ReadOnly == false)) {
+            return TheRealContext->RegisterVariable(Name, Var, OverwriteAllowed);
+        } else {
+            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+        }
+    }
+    std::shared_ptr<VariableClass> LookupVariable(const std::string Name) override
+    {
+        if (TheRealContext != nullptr) {
+            return TheRealContext->LookupVariable(Name);
+        } else {
+            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+        }
+    }
+
+    // For Testpurposes
+    std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name) override
+    {
+        if (TheRealContext != nullptr) {
+            return TheRealContext->LookupVariableInThisContextOnly(Name);
+        } else {
+            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+        }
+    }
+    size_t GetNumberOfVariables() const override
+    {
+        if (TheRealContext != nullptr) {
+            return TheRealContext->GetNumberOfVariables();
+        } else {
+            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+        }
+    }
+
+    void Dump(std::ostream &s) override
+    {
+        s << "Proxy context '" << Name << "' for: ";
+        if (TheRealContext != nullptr) {
+            return TheRealContext->Dump(s);
+        } else {
+            s << "<nullptr>\n";
+           // throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+        }
+    }
 
 };
+
 
 /* Class definition            */
 class VariableManager

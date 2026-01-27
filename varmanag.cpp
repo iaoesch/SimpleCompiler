@@ -68,7 +68,7 @@ Environment *VariableManager::DefaultEnvironment = &Errorenv;
 void VariableManager::CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode)
 {
     if (ContextStack.empty()) {
-        ContextStack.push_back(std::make_shared<VariableContextClass>(Name));
+        ContextStack.push_back(std::make_shared<VariableContextManageClass>(Name));
     } else {
         ContextStack.push_back(ContextStack.back()->CreateSubContext(Name, ParentVisibilityMode == HideParent));
     }
@@ -309,7 +309,7 @@ void VariableManager::Dump(std::ostream &s)
     }
 }
 
-std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed)
+std::shared_ptr<VariableClass> VariableContextManageClass::RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed)
 {
     auto it = Variables.find(Name);
     if (it == Variables.end() || OverwriteAllowed) {
@@ -321,7 +321,7 @@ std::shared_ptr<VariableClass> VariableContextClass::RegisterVariable(const std:
     return nullptr;
 }
 
-std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::string Name)
+std::shared_ptr<VariableClass> VariableContextManageClass::LookupVariable(const std::string Name)
 {
     auto it = Variables.find(Name);
     if (it == Variables.end()) {
@@ -333,7 +333,7 @@ std::shared_ptr<VariableClass> VariableContextClass::LookupVariable(const std::s
     return it->second;
 }
 
-std::shared_ptr<VariableClass> VariableContextClass::LookupVariableInThisContextOnly(const std::string Name)
+std::shared_ptr<VariableClass> VariableContextManageClass::LookupVariableInThisContextOnly(const std::string Name)
 {
     auto it = Variables.find(Name);
     if (it == Variables.end()) {
@@ -342,7 +342,7 @@ std::shared_ptr<VariableClass> VariableContextClass::LookupVariableInThisContext
     return it->second;
 }
 
-void VariableContextClass::Dump(std::ostream &s)
+void VariableContextManageClass::Dump(std::ostream &s)
 {
     s << "Context <" << Name << ">" << std::endl;
     s << "Parent: <" << ((ParentContext != nullptr) ? ParentContext->Name : std::string(" --- ")) << ">" << std::endl;
