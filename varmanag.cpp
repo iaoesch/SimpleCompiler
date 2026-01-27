@@ -344,14 +344,14 @@ std::shared_ptr<VariableClass> VariableContextManageClass::LookupVariableInThisC
 
 void VariableContextManageClass::Dump(std::ostream &s)
 {
-    s << "Context <" << Name << ">" << std::endl;
-    s << "Parent: <" << ((ParentContext != nullptr) ? ParentContext->Name : std::string(" --- ")) << ">" << std::endl;
+    s << "Context <" << GetName() << ">" << std::endl;
+    s << "Parent: <" << ((ParentContext != nullptr) ? ParentContext->GetName() : std::string(" --- ")) << ">" << std::endl;
     s << "Children:";
     if (Children.empty()) {
         s << " None " << std::endl;
     } else {
         for (auto &c: Children) {
-            s << c->Name << ",";
+            s << c->GetName() << ",";
         }
         s << std::endl;
     }
