@@ -17,7 +17,7 @@ namespace Variables {
 }
 
 
-class VariableContextClass;
+class VariableContextManageClass;
 
 class StackDescriptorClass;
 class ArrayDescriptorClass;

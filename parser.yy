@@ -464,14 +464,27 @@ Namedparameter:
   */
 
 methodedefinition:
-   "method" "identifier" "taking"
+   "method" "identifier" "taking"   {
+                                      drv.Currentfunction.BeginMethodDefinition($2, @2);
+                                      drv.Currentfunction.StartParameterDefinition();
+                                    }
    argumentlist
    returntype.opt
    "of"
    "class"
-   "identifier" ":"
+   "identifier" ":" {
+                       drv.Currentfunction.SetReturnType(std::move($6));
+                       drv.Currentfunction.Set($5, @5);
+                       drv.Currentfunction.EndParameterDefinition();
+                       drv.Currentfunction.SetClassContext($9);
+                       drv.Currentfunction.StartCodeDefinition();
+                    }
    statements
-   "endmethod"
+   "endmethod"      {
+                       drv.Currentfunction.Set($12, @12);
+                       drv.Currentfunction.EndCodeDefinition();
+                       $$ = drv.Currentfunction.EndMethodDefinition(@$);
+                    }
 ;
 
 Anonymeousfunctiondefinition:

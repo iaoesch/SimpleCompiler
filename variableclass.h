@@ -17,7 +17,7 @@ public:
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
 private:
-    VariableContextClass *MyContext;
+    VariableContextManageClass *MyContext;
     const std::string Name;
     VariableTypeDescriptorClass MyType;
     const StorageClass Storage;
@@ -31,7 +31,7 @@ protected:
 public:
     VariableClass(const std::string &Name_, VariableTypeDescriptorClass MyType_, StorageClass Storage_) : MyContext(nullptr), Name(Name_), MyType(MyType_), Storage(Storage_), Initialized(false) {}
     virtual ~VariableClass() {}
-    void SetContext(VariableContextClass *Context);
+    void SetContext(VariableContextManageClass *Context);
     const std::string &GetName()  const {return Name;}
     virtual Variables::VariableContentClass const &GetValue() const = 0;
     virtual Variables::VariableContentClass const &GetInitialValue() const = 0;

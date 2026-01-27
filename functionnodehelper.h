@@ -98,7 +98,7 @@ public:
     std::shared_ptr<Variables::FunctionDefinitionClass> SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType);
     void EndFunctionDefinition(const LocationType &l);
     
-    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginMethodCall(std::string Name, const LocationType &l);
+    void BeginMethodDefinition(std::string Name, const LocationType &l);
     std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginFunctionCall(std::string Name, const LocationType &l);
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);

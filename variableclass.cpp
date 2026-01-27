@@ -9,7 +9,7 @@ static ErrorEnvironment Errorenv;
 Environment *VariableClass::DefaultEnvironment = &Errorenv;
 
 
-void VariableClass::SetContext(VariableContextClass *Context)
+void VariableClass::SetContext(VariableContextManageClass *Context)
 {
     if (MyContext != nullptr) {
         throw INTERNAL_ERROR_OBJECT("Changing context of variable is not allowed");

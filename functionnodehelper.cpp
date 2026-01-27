@@ -138,9 +138,18 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetRetur
     return FunctionsDefinitonsPending.back().CurrentFunction;
 }
 
-std::shared_ptr<Variables::FunctionDefinitionBaseClass> FunctionNodeHelper::BeginMethodCall(std::string Name, const LocationType &l)
+void FunctionNodeHelper::BeginMethodDefinition(std::string Name, const LocationType &l)
 {
-
+    FunctionsDefinitonsPending.push_back({});
+    FunctionDefinitionInfoType &CurrentFunctionInfo = this->FunctionsDefinitonsPending.back();
+    CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.GetVariableReference(Name);
+    if (CurrentFunctionInfo.VariableHoldingCurrentFunction != nullptr) {
+        throw(yy::parser::syntax_error(l, "function allready defined"));
+    }
+  //  CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
+    CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::MethodDefinitionClass>(Name, l);
+  //  CurrentFunctionInfo.VariableHoldingCurrentFunction->SetInitialValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
+    CurrentFunctionInfo.Name = Name;
 }
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
