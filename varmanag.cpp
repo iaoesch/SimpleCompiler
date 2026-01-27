@@ -65,14 +65,31 @@ static ErrorEnvironment Errorenv;
 Environment *VariableManager::DefaultEnvironment = &Errorenv;
 
 
-void VariableManager::CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode)
+std::shared_ptr<VariableContextClass> VariableManager::CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode)
 {
+    std::shared_ptr<VariableContextClass> NewContext;
     if (ContextStack.empty()) {
-        ContextStack.push_back(std::make_shared<VariableContextManageClass>(Name));
+        NewContext = std::make_shared<VariableContextManageClass>(Name);
     } else {
-        ContextStack.push_back(ContextStack.back()->CreateSubContext(Name, ParentVisibilityMode == HideParent));
+        NewContext = ContextStack.back()->CreateSubContext(Name, ParentVisibilityMode == HideParent);
     }
-    Contexts.push_back(ContextStack.back());
+    ContextStack.push_back(NewContext);
+    Contexts.push_back(NewContext);
+    return NewContext;
+}
+
+std::shared_ptr<VariableContextProxyClass> VariableManager::CreateNewProxyContext(std::string Name, ParentVisibility ParentVisibilityMode)
+{
+    std::shared_ptr<VariableContextProxyClass> NewContext;
+    if (ContextStack.empty()) {
+        NewContext = std::make_shared<VariableContextProxyClass>(Name);
+    } else {
+        NewContext = ContextStack.back()->CreateProxySubContext(
+            Name, ParentVisibilityMode == HideParent);
+    }
+    ContextStack.push_back(NewContext);
+    Contexts.push_back(NewContext);
+    return NewContext;
 }
 
 void VariableManager::LeaveContext(int Levels)

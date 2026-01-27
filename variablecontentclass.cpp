@@ -156,6 +156,34 @@ FunctionDefinitionClass::FunctionDefinitionClass(const std::string &Name_, Locat
     : FunctionDefinitionBaseClass(Name_, Loc)
 {}
 
+MethodDefinitionClass::MethodDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, VariableManager::LocalStorageType StorageTemplate_, std::shared_ptr<Variables::ObjectClass> MyObject, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Parameters, std::move(StorageTemplate_), Loc)
+{}
+
+MethodDefinitionClass::MethodDefinitionClass(const std::string &Name_, LocationType const &Loc)
+    : FunctionDefinitionBaseClass(Name_, Loc)
+{}
+
+void MethodDefinitionClass::Print(std::ostream &s) const
+{
+    {
+        FunctionDefinitionBaseClass::Print(s);
+        for(auto &r: Statements) {
+            r->Print(s);
+        }
+    }
+
+}
+
+void MethodDefinitionClass::DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const
+{
+    DrawDeclarationNode(s, MyNodeNumber);
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> call |<f2> \"];" << std::endl;
+    DrawStatementNodeList(Statements, s, MyNodeNumber);
+
+}
+
+
 PredefinedFunctionDefinitionClass::PredefinedFunctionDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters_, std::shared_ptr<Callable> Function_, LocalStorageType StorageTemplate_, LocationType const &Loc)
     : FunctionDefinitionBaseClass(Name_, Parameters_, std::move(StorageTemplate_), Loc),
     Function(Function_)
@@ -610,6 +638,39 @@ Variables::VariableContentClass FunctionDefinitionClass::Execute(Environment &En
         Env.OutputStream() << *ReturnValue;
         Env.OutputStream() << "\n";
        return *ReturnValue;
+    } else {
+        Env.OutputStream() << "Returning Nothing\n";
+        return VariableContentClass::MakeUndefined();
+    }
+}
+
+Variables::VariableContentClass MethodDefinitionClass::Execute(Environment &Env) const
+{
+    std::shared_ptr<Variables::VariableContentClass> ReturnValue;
+    std::ostringstream Output;
+    Output  << "FunctionDefinitionClass::Execute '" << Name << "', Statements.size() = " << Statements.size();
+    Env.Tracing(Location, Output.str());
+
+    for (auto const &s: Statements) {
+        Env.DebugOutput() << "executing << ";
+        s->Print(Env.DebugOutput());
+        Env.DebugOutput() << ">>" << std::endl;
+        auto r = s->Execute(Env);
+        if (r) {
+            if (std::holds_alternative<std::shared_ptr<Variables::VariableContentClass>>(*r)) {
+                ReturnValue = std::get<std::shared_ptr<Variables::VariableContentClass>>(*r);
+                break;
+            }
+        }
+        Env.DebugOutput() << "executing done" << std::endl;
+    }
+    Env.Tracing(Location, "FunctionDefinitionClass::Execute '" + Name + "' done");
+
+    if (ReturnValue != nullptr) {
+        Env.OutputStream() << "Returning ";
+        Env.OutputStream() << *ReturnValue;
+        Env.OutputStream() << "\n";
+        return *ReturnValue;
     } else {
         Env.OutputStream() << "Returning Nothing\n";
         return VariableContentClass::MakeUndefined();

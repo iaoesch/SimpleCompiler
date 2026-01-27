@@ -147,10 +147,11 @@ void FunctionNodeHelper::BeginMethodDefinition(std::string Name, const LocationT
         throw(yy::parser::syntax_error(l, "function allready defined"));
     }
   //  CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.CreateVariable(Name, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Function), 0.0);
-    CurrentFunctionInfo.CurrentFunction = std::make_shared<Variables::MethodDefinitionClass>(Name, l);
+    CurrentFunctionInfo.CurrentMethod = std::make_shared<Variables::MethodDefinitionClass>(Name, l);
   //  CurrentFunctionInfo.VariableHoldingCurrentFunction->SetInitialValue(Variables::VariableContentClass(CurrentFunctionInfo.CurrentFunction));
     CurrentFunctionInfo.Name = Name;
 }
+
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
 {

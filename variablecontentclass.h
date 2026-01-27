@@ -18,6 +18,7 @@
 class ProxyVariableClass;
 class InternalObjectClass;
 class LateBindingVariableClass;
+class VariableContextClass;
 
 
 
@@ -73,6 +74,7 @@ private:
 //    ObjectDataType ObjectAttributesTemplate;
     std::map<std::string, std::shared_ptr<VariableContentClass>> ClassData;
     std::map<std::string, std::shared_ptr<MethodDefinitionClass>> Methodes;
+    std::shared_ptr<VariableContextClass>  ContextForParsing;
     const std::string Name;
 
     std::vector<std::shared_ptr<ClassClass>> Parents;
@@ -118,6 +120,8 @@ public:
     std::shared_ptr<VariableClass> GetParentVariableReference(std::string Name, ObjectClass *obj);
     std::shared_ptr<ObjectClass> CreateInstance();
 
+    std::shared_ptr<VariableContextClass> getContextForParsing() const {return ContextForParsing;}
+    void setContextForParsing(const std::shared_ptr<VariableContextClass> &newContextForParsing)  {ContextForParsing = newContextForParsing;}
 };
 
 
@@ -761,10 +765,11 @@ public:
     VariableContentClass Execute(Environment &Env) const override;// = 0;
 };
 #endif
-class MethodDefinitionClass : public FunctionDefinitionClass {
+class MethodDefinitionClass : public FunctionDefinitionBaseClass {
 private:
     std::list<std::shared_ptr<StatementClass>> Statements;
     std::shared_ptr<Variables::ClassClass> MyClass;
+public:
     MethodDefinitionClass(const std::string &Name_, const std::vector<std::shared_ptr<VariableClass> > &Parameters, const std::list<std::shared_ptr<StatementClass> > &Statements, LocalStorageType StorageTemplate, std::shared_ptr<Variables::ObjectClass> MyObject, LocationType const &Loc);
     MethodDefinitionClass(const std::string &Name_, LocationType const &Loc);
     MethodDefinitionClass(MethodDefinitionClass &&src) = default;

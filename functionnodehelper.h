@@ -35,12 +35,15 @@ class FunctionNodeHelper {
     
     struct FunctionDefinitionInfoType {
         std::shared_ptr<Variables::FunctionDefinitionClass> CurrentFunction;
+        std::shared_ptr<Variables::MethodDefinitionClass> CurrentMethod;
         std::string Name;
         //std::shared_ptr<VariableClass> ReturnVariable;
         std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
         //Variables::VariableContentClass ReturnedValue;
         std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
         //     int NextPositionalParameter;
+        std::shared_ptr<VariableContextProxyClass> ProxyContext;
+        std::shared_ptr<Variables::ClassClass> ClassForMethod;
     };
     std::vector<FunctionDefinitionInfoType> FunctionsDefinitonsPending;
     
@@ -99,6 +102,41 @@ public:
     void EndFunctionDefinition(const LocationType &l);
     
     void BeginMethodDefinition(std::string Name, const LocationType &l);
+    void StartMethodParameterDefinition() {
+        if (FunctionsDefinitonsPending.empty()) {
+           throw(INTERNAL_ERROR_OBJECT("<StartMethodParameterDefinition()> Not inside function"));
+        }
+        FunctionsDefinitonsPending.back().ProxyContext = Variables.CreateNewProxyContext(FunctionsDefinitonsPending.back().Name + "AttributesProxy");
+        Variables.StartLocal(FunctionsDefinitonsPending.back().CurrentFunction);
+        Variables.CreateNewContext(FunctionsDefinitonsPending.back().Name + "Params");
+    }
+    void SetClassContext(std::string Classname) {
+        if (FunctionsDefinitonsPending.empty()) {
+            throw(INTERNAL_ERROR_OBJECT("<SetClassContext()> Not inside function"));
+        }
+        std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Classname);
+        if (Var == nullptr) {
+            throw SyntaxErrorClass("Class '" + Classname + "' not found");
+        }
+        if (Var->Type() != TypeDescriptorClass::Type::Class) {
+            throw SyntaxErrorClass("'" + Classname + "' is not an class, cannot define a messages for it");
+        }
+        if (!Var->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>()) {
+            throw SyntaxErrorClass("'" + Classname + "' contains not an class, cannot define a messages for it");
+        }
+        FunctionsDefinitonsPending.back().ClassForMethod = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+
+        auto Context = FunctionsDefinitonsPending.back().ClassForMethod->getContextForParsing();
+        FunctionsDefinitonsPending.back().ProxyContext->SetReferedContext(Context);
+    }
+    void EndMethodDefinition(const LocationType &l) {
+        (void) l;
+        if (FunctionsDefinitonsPending.empty()) {
+            throw(INTERNAL_ERROR_OBJECT("<EndMethodDefinition()> Not inside function"));
+        }
+        FunctionsDefinitonsPending.pop_back();
+        Variables.LeaveContext(3);
+    }
     std::shared_ptr<Variables::FunctionDefinitionBaseClass> BeginFunctionCall(std::string Name, const LocationType &l);
     std::shared_ptr<ReferementClass> MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc);
     std::shared_ptr<AssignementClass> MakeAssign(const std::string Assignee, std::shared_ptr<ExpressionClass>  Assigned, LocationType const &Loc);

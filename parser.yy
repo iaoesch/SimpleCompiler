@@ -151,7 +151,7 @@
 %type  <std::shared_ptr<StatementClass>> assignment
 %type  <std::shared_ptr<StatementClass>> referement
 %type  <std::shared_ptr<StatementClass>> loopstatement ifstatement returnstatement
-%type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition
+%type  <FunctionDefinitionClassSharedPtr> functiondefinition functionBodydefinition Anonymeousfunctiondefinition methodedefinition
 %type  <std::shared_ptr<VariableValueClass>> variabledefinition
 %type  <std::shared_ptr<FunctionCallClass>> functioncall sendmessage
 %type  <std::shared_ptr<ConditionalExpressionClass>> condexp
@@ -404,7 +404,7 @@ sendmessage:
   "*" {$$ = std::make_shared<FunctionCallClass>($3, $5, @$);}
 
 |  "send"
-   "identifier" <FunctionDefinitionClassSharedPtr>{drv.Currentfunction.BeginMethodCall($2, @2);}
+   "identifier" <FunctionDefinitionClassSharedPtr>{drv.Currentfunction.BeginMethodCallForObject($2, @2);}
    "with"
    messageparameterlist
    "to"
@@ -466,7 +466,7 @@ Namedparameter:
 methodedefinition:
    "method" "identifier" "taking"   {
                                       drv.Currentfunction.BeginMethodDefinition($2, @2);
-                                      drv.Currentfunction.StartParameterDefinition();
+                                      drv.Currentfunction.StartMethodParameterDefinition();
                                     }
    argumentlist
    returntype.opt
@@ -483,7 +483,7 @@ methodedefinition:
    "endmethod"      {
                        drv.Currentfunction.Set($12, @12);
                        drv.Currentfunction.EndCodeDefinition();
-                       $$ = drv.Currentfunction.EndMethodDefinition(@$);
+                       drv.Currentfunction.EndMethodDefinition(@$);
                     }
 ;
 

@@ -39,6 +39,9 @@ namespace Variables {
     class VariableContentClass;
 }
 
+class VariableContextProxyClass;
+class VariableContextManageClass;
+
 class VariableContextClass {
     protected:
         VariableContextClass *ParentContext;
@@ -52,7 +55,8 @@ class VariableContextClass {
         //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
         //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
     public:
-        std::shared_ptr<VariableContextClass> CreateSubContext(const std::string &Name, bool HideParent = false);
+        std::shared_ptr<VariableContextManageClass> CreateSubContext(const std::string &Name, bool HideParent = false);
+        std::shared_ptr<VariableContextProxyClass> CreateProxySubContext(const std::string &Name, bool HideParent = false);
 
         virtual std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) = 0;
         virtual std::shared_ptr<VariableClass> LookupVariable(const std::string Name) = 0;
@@ -86,19 +90,18 @@ public:
     void Dump(std::ostream &s) override;
 };
 
-inline std::shared_ptr<VariableContextClass> VariableContextClass::CreateSubContext(const std::string &Name, bool HideParent) {Children.push_back(std::make_shared<VariableContextManageClass>(Name, this, HideParent)); return Children.back();}
 
 class VariableContextProxyClass  : public VariableContextClass {
-    VariableContextClass *TheRealContext;
+    std::shared_ptr<VariableContextClass> TheRealContext;
     bool ReadOnly;
 
 public:
 
-    VariableContextProxyClass(const std::string &Name_, VariableContextManageClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent), TheRealContext(nullptr), ReadOnly(true) {}
+    VariableContextProxyClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent), TheRealContext(nullptr), ReadOnly(true) {}
     //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
     //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
 public:
-    void SetReferedContext(VariableContextClass *Ref) {TheRealContext = Ref;}
+    void SetReferedContext(std::shared_ptr<VariableContextClass> Ref) {TheRealContext = Ref;}
     std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) override
     {
         if ((TheRealContext != nullptr) && (ReadOnly == false)) {
@@ -146,6 +149,9 @@ public:
     }
 
 };
+
+inline std::shared_ptr<VariableContextManageClass> VariableContextClass::CreateSubContext(const std::string &Name, bool HideParent) {auto Context = std::make_shared<VariableContextManageClass>(Name, this, HideParent); Children.push_back(Context); return Context;}
+inline std::shared_ptr<VariableContextProxyClass> VariableContextClass::CreateProxySubContext(const std::string &Name, bool HideParent) {auto Proxy = std::make_shared<VariableContextProxyClass>(Name, this, HideParent); Children.push_back(Proxy); return Proxy;}
 
 
 /* Class definition            */
@@ -201,7 +207,8 @@ public:
 
     void clear() {Local = false; LocalOffset = 0; ContextStack.clear(); Contexts.clear();}
 
-   void CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
+    std::shared_ptr<VariableContextClass> CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
+   std::shared_ptr<VariableContextProxyClass> CreateNewProxyContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
    void EndLocal();

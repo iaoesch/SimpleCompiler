@@ -15,6 +15,7 @@ class VariableManager;
 class StatementClass;
 class ReferementClass;
 class AssignementClass;
+class VariableContextClass;
 
 namespace Variables {
 
@@ -39,6 +40,7 @@ private:
         std::string Name;
         std::shared_ptr<Variables::ClassClass> BaseClass;
         std::shared_ptr<Variables::ClassClass> NewClassContent;
+        std::shared_ptr<VariableContextClass>  ClassContext;
         AttributeListType ClassAttributes;
         AttributeListType ObjectAttributes;
         std::shared_ptr<VariableClass> NewClass;
