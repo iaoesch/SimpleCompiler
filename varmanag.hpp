@@ -124,6 +124,9 @@ public:
             // we cannot throw here, as it is legal to look while proxy is not ready
             //throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
             // for now we just signal 'not found'
+            if ((ParentIsHidden == false) && (ParentContext != nullptr)) {
+                return ParentContext->LookupVariable(Name);
+            }
             return nullptr;
         }
     }

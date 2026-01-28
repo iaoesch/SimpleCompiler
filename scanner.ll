@@ -94,6 +94,7 @@ blank [ \t]
 "taking"      return yy::parser::make_TAKING (loc);
   /*"returning"      return yy::parser::make_RETURNING (loc); */
   /*"of"      return yy::parser::make_OF (loc); */
+"endmethod"      return yy::parser::make_ENDMETHOD (loc);
 
 "as"      return yy::parser::make_AS (loc);
 "typeof"      return yy::parser::make_TYPEOF (loc);

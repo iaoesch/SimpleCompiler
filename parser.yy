@@ -106,6 +106,7 @@
   ON      "on"
   METHOD "method"
   TAKING "taking"
+  ENDMETHOD "endmethod"
 
   AS "as"
   TYPEOF "typeof"

@@ -90,7 +90,13 @@ public:
         if (FunctionsDefinitonsPending.empty()) {
             throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
         }
-        Variables.CreateNewContext(std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).Name);
+        if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+            Variables.CreateNewContext(std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).Name);
+        } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+            Variables.CreateNewContext(std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).Name);
+        } else {
+            throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+        }
     }
 
     void EndCodeDefinition() {

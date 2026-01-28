@@ -352,7 +352,7 @@ void TestClass::BuildAllTests()
            "a as integer; \n"
            "endclass; \n"
            "method TestMethod taking a,b returning integer of class TestClass:\n"
-           "x = a + b;\n"
+           "x := a + b;\n"
            "endmethod\n;";
 
     Expected.clear();

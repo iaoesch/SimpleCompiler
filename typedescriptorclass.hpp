@@ -379,7 +379,7 @@ inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type
         (t == TypeDescriptorClass::Type::Array) ||
         (t == TypeDescriptorClass::Type::Internal) ||
         (t == TypeDescriptorClass::Type::Object) ||
-        (t == TypeDescriptorClass::Type::Class) ||
+        //(t == TypeDescriptorClass::Type::Class) ||
         (t == TypeDescriptorClass::Type::Illegal)) {
         return false;
     }
