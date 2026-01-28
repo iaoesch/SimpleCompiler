@@ -33,8 +33,8 @@ void FunctionNodeHelper::EndFunctionCall(const yy::parser::location_type &l)
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::BeginFunctionDefinition(std::string Name, const yy::parser::location_type &l)
 {
-    FunctionsDefinitonsPending.push_back({});
-    FunctionDefinitionInfoType &CurrentFunctionInfo = this->FunctionsDefinitonsPending.back();
+    FunctionsDefinitonsPending.push_back(FunctionDefinitionInfoType__{});
+    FunctionDefinitionInfoType__ &CurrentFunctionInfo = std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back());
     CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.GetVariableReference(Name);
     if (CurrentFunctionInfo.VariableHoldingCurrentFunction != nullptr) {
         throw(yy::parser::syntax_error(l, "function allready defined"));
@@ -70,8 +70,17 @@ std::string FunctionNodeHelper::GetQualifiedName()
         throw(INTERNAL_ERROR_OBJECT("<GetQualifiedName()> Not inside function"));
     }
     for (auto const &f: FunctionsDefinitonsPending) {
-        Name.append("::");
-        Name.append(f.Name);
+        if (std::holds_alternative<FunctionDefinitionInfoType__>(f)) {
+            Name.append("::");
+            Name.append(std::get<FunctionDefinitionInfoType__>(f).Name);
+        } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+            Name.append(std::get<MethodDefinitionInfoType>(f).ClassForMethod->GetName());
+            Name.append("::");
+            Name.append(std::get<MethodDefinitionInfoType>(f).Name);
+        } else {
+            throw(INTERNAL_ERROR_OBJECT("<GetQualifiedName()> No valid Infotype"));
+        }
+
     }
     return Name;
 }
@@ -81,7 +90,13 @@ void FunctionNodeHelper::Set(const std::vector<std::shared_ptr<VariableClass> > 
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
     }
-    FunctionsDefinitonsPending.back().CurrentFunction->Set(Parameters, Loc);
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction->Set(Parameters, Loc);
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+        std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod->Set(Parameters, Loc);
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
 }
 
 void FunctionNodeHelper::Set(const std::list<std::shared_ptr<StatementClass> > &Statements, LocationType const &Loc)
@@ -90,7 +105,13 @@ void FunctionNodeHelper::Set(const std::list<std::shared_ptr<StatementClass> > &
         throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
     }
     // Env.DebugOutput() << "Settting " << Statements.size() << "statements for " << FunctionsDefinitonsPending.back().Name << "\n";
-    FunctionsDefinitonsPending.back().CurrentFunction->Set(Statements, Loc);
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction->Set(Statements, Loc);
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+        std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod->Set(Statements, Loc);
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
     KnownFunctions[GetQualifiedName()] = Statements;
 }
 
@@ -99,7 +120,13 @@ void FunctionNodeHelper::Set(Variables::FunctionDefinitionClass::LocalStorageTyp
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
     }
-    FunctionsDefinitonsPending.back().CurrentFunction->Set(StorageTemplate, Loc);
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction->Set(StorageTemplate, Loc);
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+        std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod->Set(StorageTemplate, Loc);
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::GetReference()
@@ -107,7 +134,11 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::GetRefer
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
     }
-    return FunctionsDefinitonsPending.back().CurrentFunction;
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        return std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction;
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<GetReference()> No valid Infotype"));
+    }
 }
 
 std::string FunctionNodeHelper::GetName()
@@ -115,7 +146,13 @@ std::string FunctionNodeHelper::GetName()
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
     }
-    return FunctionsDefinitonsPending.back().Name;
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        return std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).Name;
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+        return std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).Name;
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
 }
 
 std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::parser::location_type &l)
@@ -124,24 +161,37 @@ std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::Get(yy::
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<Get()> Not inside function"));
     }
-    FunctionsDefinitonsPending.back().CurrentFunction->SetReturnType(std::move(FunctionsDefinitonsPending.back().ReturnType));
-    return FunctionsDefinitonsPending.back().CurrentFunction;
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction->SetReturnType(std::move(std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).ReturnType));
+        return std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction;
+  //  } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+  //      std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod->SetReturnType(std::move(std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).ReturnType));
+  //      return std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod;
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
 }
 
-std::shared_ptr<Variables::FunctionDefinitionClass> FunctionNodeHelper::SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType)
+void FunctionNodeHelper::SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> NewReturnType)
 {
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<SetReturnVariable()> Not inside function"));
     }
-    //FunctionsDefinitonsPending.back().ReturnVariable = NewReturnVariable;
-    FunctionsDefinitonsPending.back().ReturnType = std::move(NewReturnType);
-    return FunctionsDefinitonsPending.back().CurrentFunction;
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).ReturnType = std::move(NewReturnType);
+        //  return std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).CurrentFunction;
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())) {
+        std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).ReturnType = std::move(NewReturnType);
+    //    return std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).CurrentMethod;
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
 }
 
 void FunctionNodeHelper::BeginMethodDefinition(std::string Name, const LocationType &l)
 {
-    FunctionsDefinitonsPending.push_back({});
-    FunctionDefinitionInfoType &CurrentFunctionInfo = this->FunctionsDefinitonsPending.back();
+    FunctionsDefinitonsPending.push_back(MethodDefinitionInfoType{});
+    MethodDefinitionInfoType &CurrentFunctionInfo = std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
     CurrentFunctionInfo.VariableHoldingCurrentFunction = Variables.GetVariableReference(Name);
     if (CurrentFunctionInfo.VariableHoldingCurrentFunction != nullptr) {
         throw(yy::parser::syntax_error(l, "function allready defined"));

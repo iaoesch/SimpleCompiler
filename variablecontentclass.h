@@ -204,8 +204,8 @@ public:
 class ListClass {
     std::vector<std::unique_ptr<VariableContentClass>> Data;
 public:
-    ListClass(const ListClass &s) {for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));}};//= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
-    ListClass &operator = (const ListClass &s){Data.clear(); for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));} return *this;};// = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass(const ListClass &s) {for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));}}//= default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
+    ListClass &operator = (const ListClass &s){Data.clear(); for (auto &e : s.Data){Data.push_back(std::make_unique<VariableContentClass>(*e));} return *this;} // = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
     ListClass(ListClass &&s) = default; //{ (void)s; SIGNAL_UNIMPLEMENTED();}
     ListClass &operator = (ListClass &&s) = default; //{(void)s; SIGNAL_UNIMPLEMENTED();}
 

@@ -113,9 +113,18 @@ public:
     std::shared_ptr<VariableClass> LookupVariable(const std::string Name) override
     {
         if (TheRealContext != nullptr) {
+            // we must follow parents here, but which one?
+            // parent of proxy or parent of proxied?
+            // maybe a call of LookupVariableInThisContextOnly() is better here?
             return TheRealContext->LookupVariable(Name);
         } else {
-            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+            // we probably should follow parents here, but which one?
+            // parent of proxy or parent of proxied?
+            //
+            // we cannot throw here, as it is legal to look while proxy is not ready
+            //throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+            // for now we just signal 'not found'
+            return nullptr;
         }
     }
 
@@ -125,7 +134,9 @@ public:
         if (TheRealContext != nullptr) {
             return TheRealContext->LookupVariableInThisContextOnly(Name);
         } else {
-            throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+            // we cannot throw here, as it is legal to look while proxy is not ready
+            // throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+            return nullptr;
         }
     }
     size_t GetNumberOfVariables() const override

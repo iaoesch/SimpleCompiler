@@ -348,6 +348,17 @@ void TestClass::BuildAllTests()
     Unexpected.clear();
     TestVector.push_back({"class definition", Code, Expected, Unexpected});
 
+    Code = "class TestClass \n"
+           "a as integer; \n"
+           "endclass; \n"
+           "method TestMethod taking a,b returning integer of class TestClass:\n"
+           "x = a + b;\n"
+           "endmethod\n;";
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Unexpected.clear();
+    TestVector.push_back({"class definition", Code, Expected, Unexpected});
 
 }
 

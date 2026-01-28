@@ -106,6 +106,10 @@ void VariableManager::LeaveContext(int Levels)
 
 void VariableManager::StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent)
 {
+    if (Parent == nullptr) {
+        throw INTERNAL_ERROR_OBJECT("parent is null");
+    }
+
     Local = true;
     LocalOffset = 0;
     LocalClassOffset = 0;
@@ -224,7 +228,10 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
     if (Local && (Storage == (StorageClass::RW | StorageClass::Local))) {
         DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
         Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent, Storage);
-        std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        //std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.push_back(Variables::VariableContentClass::MakeEmpty(Type));
+        LocalFunctionStorageContextType t = std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates);
+        Variables::VariableContentClass e = Variables::VariableContentClass::MakeEmpty(Type);
+        t.LocalStorageTemplates.push_back(e);
         assert(LocalOffset == std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalStorageTemplates.size());
     } else if (Local && (Storage == (StorageClass::RW | StorageClass::Class))) {
         DefaultEnvironment->DebugOutput() << "creating member " << Name << ">\n";

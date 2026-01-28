@@ -53,6 +53,12 @@ void FunctionDefinitionClass::Set(const std::list<std::shared_ptr<StatementClass
     Location += Loc;
 }
 
+void MethodDefinitionClass::Set(const std::list<std::shared_ptr<StatementClass> > &Statements_, LocationType const &Loc)
+{
+    Statements = Statements_;
+    Location += Loc;
+}
+
 void FunctionDefinitionBaseClass::Set(LocalStorageType StorageTemplate_, LocationType const &Loc)
 {
     StorageTemplate = std::move(StorageTemplate_);
