@@ -106,7 +106,7 @@ public:
     uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
     uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetObjectVariableReferences().size();}
     std::shared_ptr<MethodDefinitionClass> GetMethod(std::string Name) const;
-
+    void AddMethod(std::string Name, std::shared_ptr<MethodDefinitionClass> Method);
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
     {
         return ObjectStorageInitialValues.at(Offset);
@@ -136,7 +136,7 @@ class ObjectClass {
     //ObjectClass *Parent;
 public:
     ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
-    ObjectClass(const ObjectClass &s) { (void)s; SIGNAL_UNIMPLEMENTED();}
+    ObjectClass(const ObjectClass &s) = default;
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;
 
@@ -179,6 +179,8 @@ public:
     void SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v);
 
     void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
+        (void) Offset;
+        (void) v;
         throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
     }
 

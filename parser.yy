@@ -98,6 +98,7 @@
   ENDFUNCTION "endfunction"
   RETURNING "returning"
   SEND "send"
+  TELL "tell"
   WITH "with"
   TO "to"
   CLASS "class"
@@ -107,6 +108,7 @@
   METHOD "method"
   TAKING "taking"
   ENDMETHOD "endmethod"
+  NEW "new"
 
   AS "as"
   TYPEOF "typeof"
@@ -383,6 +385,7 @@ typedefinition:
 | "stack" "of" typedefinition  { $$ = std::make_unique<VariableTypeDescriptorClass>(StackDescriptorClass(std::move($3)));}
 | "map" "[" mapkeytype "]" "of" typedefinition { $$ = std::make_unique<VariableTypeDescriptorClass>(MapDescriptorClass($3, std::move($6)));}
 | "typeof" "(" exp ")"   { $$ = std::make_unique<VariableTypeDescriptorClass>($3->Type());}
+| "identifier"   { $$ = drv.CurrentClass.MakeTypeFromClassName($1);}
 
 ;
 
@@ -629,6 +632,7 @@ primary:
 | literal       { $$ = std::make_shared<ConstantClass>($1, @1); drv.GetOutputStream() << "parser: constant " << $1 << "\n";}
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
+| "new" "identifier"  { $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);}
 ;
 
 

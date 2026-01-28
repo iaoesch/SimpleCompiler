@@ -658,6 +658,9 @@ StatementResultClass AssignementClass::Execute(Environment &Env) const
 {
     Env.Tracing(GetLocation(), "Assign(...)");
     VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
+    if (ReferedVariable == nullptr) {
+        throw SyntaxErrorClass("Could not get write reference to '" + Variable->GetName() + "'");
+    }
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
         Env.DebugOutput() << "AsgExe:" << Result;
@@ -1091,6 +1094,40 @@ const TypeDescriptorClass FunctionCallClass::GetType() const
 {
     return TheFunction->GetReturnType();
 }
+
+
+Variables::VariableContentClass InstanceClass::Evaluate(Environment &Env) const
+{
+    if (Env.DoEvaluateFunctions) {
+        return Variables::VariableContentClass(*(TheClass->CreateInstance()));
+    } else {
+        return Variables::VariableContentClass::MakeUndefined();
+    }
+}
+
+void InstanceClass::Print(std::ostream &s) const { s << TheClass->GetName(); }
+
+bool InstanceClass::IsSame(std::shared_ptr<ExpressionClass> Other)
+{
+    (void)Other;
+    return false;
+}
+
+void InstanceClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+{
+    //int NodeNumber1 = NodeNumber++;
+    s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> Instance of " << TheClass->GetName() << " |<f2> \"];" << endl;
+   // s << "\"Node" << MyNodeNumber << "\":f0 -> \"Node" << NodeNumber1 << "\":f1;" << endl;
+   // TheFunction->DrawDeclarationNode(s, NodeNumber1);
+   // DrawStatementNodeList(Assignements, s, MyNodeNumber);
+
+}
+
+const TypeDescriptorClass InstanceClass::GetType() const
+{
+    return VariableTypeDescriptorClass(TheClass);
+}
+
 
 const TypeDescriptorClass UnaryOperationClass::GetType() const
 {

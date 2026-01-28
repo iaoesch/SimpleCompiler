@@ -267,7 +267,7 @@ void FunctionNodeHelper::BeginMethodCallForObject(std::string ObjectName, const 
     if (Var == nullptr) {
         throw SyntaxErrorClass("Object '" + ObjectName + "' not found");
     }
-    if (Var->Type() != TypeDescriptorClass::Type::Object) {
+    if (!Var->Type().IsKindOf(TypeDescriptorClass::Type::Object)) {
         throw SyntaxErrorClass("'" + ObjectName + "' is not an object, cannot send messages to it");
     }
     VariableTypeDescriptorClass Type = Var->Type();

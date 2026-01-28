@@ -146,6 +146,9 @@ public:
         if (FunctionsDefinitonsPending.empty()) {
             throw(INTERNAL_ERROR_OBJECT("<EndMethodDefinition()> Not inside function"));
         }
+        MethodDefinitionInfoType &Info = std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
+
+        Info.ClassForMethod->AddMethod(Info.Name, Info.CurrentMethod);
         FunctionsDefinitonsPending.pop_back();
         Variables.LeaveContext(3);
     }

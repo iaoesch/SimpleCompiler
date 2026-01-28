@@ -3,6 +3,7 @@
 #include "Errclass.hpp"
 #include "varmanag.hpp"
 #include "variablecontentclass.h"
+#include "compact.h"
 
 void ClassNodeHelper::StartClassDefinition(std::string ClassName)
 {
@@ -80,4 +81,36 @@ bool ClassNodeHelper::AddObjectAttribute(std::string Name, std::shared_ptr<Varia
     }
     auto const&[it, Success] = PendingClassDefinitions.back().ObjectAttributes.insert({Name, Attribute});
     return Success;
+}
+
+std::unique_ptr<VariableTypeDescriptorClass> ClassNodeHelper::MakeTypeFromClassName(std::string ClassName)
+{
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ClassName);
+    if (Var == nullptr) {
+        throw(SyntaxErrorClass("Class '" + ClassName + "' not fond"));
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Class) {
+        throw(SyntaxErrorClass("'" + ClassName + "' is not a class"));
+    }
+    if ( ! Var->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>()) {
+        throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
+    }
+    std::shared_ptr<Variables::ClassClass> TheClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    return std::make_unique<VariableTypeDescriptorClass>(TheClass);
+}
+
+std::shared_ptr<InstanceClass> ClassNodeHelper::MakeObjectFromClassName(std::string ClassName, const LocationType &l)
+{
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ClassName);
+    if (Var == nullptr) {
+        throw(SyntaxErrorClass("Class '" + ClassName + "' not fond"));
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Class) {
+        throw(SyntaxErrorClass("'" + ClassName + "' is not a class"));
+    }
+    if ( ! Var->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>()) {
+        throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
+    }
+    std::shared_ptr<Variables::ClassClass> TheClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    return std::make_shared<InstanceClass>(TheClass, l);
 }

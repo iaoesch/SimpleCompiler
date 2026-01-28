@@ -1082,10 +1082,18 @@ ClassClass::MethodCallHelperClass ClassClass::GetMethodeReference(std::string Na
 }
 #endif
 
+ValueTypeDescriptorClass ObjectClass::GetTypeDescriptor() const
+{
+    if (MyClass == nullptr) {
+        throw (INTERNAL_ERROR_OBJECT("Myclass is nullpter, cannot get type"));
+    }
+    return ValueTypeDescriptorClass(MyClass);
+}
+
 void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void) Limit;
-    s << "Not implemented yet";
+    s << "Object of class " << (MyClass==nullptr?"<nullptr>":MyClass->GetName());
 }
 
 #if 0
@@ -1134,6 +1142,13 @@ ClassClass::GetMethod(std::string Name) const {
     }
 }
 
+void ClassClass::AddMethod(std::string Name, std::shared_ptr<MethodDefinitionClass> Method)
+{
+    if (Method == nullptr) {
+        throw(INTERNAL_ERROR_OBJECT("Adding nullptr as method"));
+    }
+    Methodes[Name] = Method;
+}
 
 
 } // namespace Variables

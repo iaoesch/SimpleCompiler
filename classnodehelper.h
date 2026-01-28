@@ -16,6 +16,7 @@ class StatementClass;
 class ReferementClass;
 class AssignementClass;
 class VariableContextClass;
+class InstanceClass;
 
 namespace Variables {
 
@@ -64,7 +65,10 @@ public:
     bool AddObjectAttribute(std::string Name, std::shared_ptr<VariableClass> Attribute);
     AttributeListType const &GetClassAttributes() {return PendingClassDefinitions.back().ClassAttributes;}
     AttributeListType const &GetObjectAttributes() {return PendingClassDefinitions.back().ObjectAttributes;}
-    
+
+    std::unique_ptr<VariableTypeDescriptorClass> MakeTypeFromClassName(std::string ClassName);
+
+    std::shared_ptr<InstanceClass> MakeObjectFromClassName(std::string ClassName, const LocationType &l);
 };
 
 #endif // CLASSNODEHELPER_H

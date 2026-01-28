@@ -312,6 +312,31 @@ private:
     virtual const TypeDescriptorClass GetType() const override;
 };
 
+class InstanceClass : public ValueClass {
+    std::shared_ptr<Variables::ClassClass> TheClass;
+    //std::list<std::shared_ptr<StatementClass>> Assignements;
+    // std::vector<Variables::VariableContentClass> StorageTemplate;
+
+public:
+    InstanceClass(std::shared_ptr<Variables::ClassClass> C, const LocationType &Loc) : ValueClass(Loc), TheClass(C) {}
+    InstanceClass(const InstanceClass &f) = default;
+    virtual                  ~InstanceClass() override {}
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//Val->GetValue(); }
+    virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == ToDerive) {return std::make_shared<ConstantClass>(1.0, GetLocation());} else {return std::make_shared<ConstantClass>(0.0, GetLocation());}}
+    virtual void              Print(std::ostream &s) const override;
+    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<InstanceClass>(*this); }
+    virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { (void)Env; return shared_from_this(); }
+    virtual bool              IsConstant() override {return false;}
+    virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
+    virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    const std::string &GetName() {return TheClass->GetName();}
+    //  Variables::VariableContentClass &GetContentForOffset(uint32_t Offset);
+
+private:
+    virtual const TypeDescriptorClass GetType() const override;
+};
+
 
 class InverseClass : public UnaryOperationClass {
 

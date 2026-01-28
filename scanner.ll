@@ -82,6 +82,7 @@ blank [ \t]
 "endfunction"      return yy::parser::make_ENDFUNCTION (loc);
 
 "send"      return yy::parser::make_SEND (loc);
+"tell"      return yy::parser::make_TELL (loc);
 "with"      return yy::parser::make_WITH (loc);
 "to"      return yy::parser::make_TO (loc);
 
@@ -95,6 +96,7 @@ blank [ \t]
   /*"returning"      return yy::parser::make_RETURNING (loc); */
   /*"of"      return yy::parser::make_OF (loc); */
 "endmethod"      return yy::parser::make_ENDMETHOD (loc);
+"new"         return yy::parser::make_NEW (loc);
 
 "as"      return yy::parser::make_AS (loc);
 "typeof"      return yy::parser::make_TYPEOF (loc);
