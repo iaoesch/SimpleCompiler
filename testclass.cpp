@@ -398,8 +398,40 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("a");
     Unexpected.push_back("b");
     Unexpected.push_back("x");
+    Unexpected.push_back("w");
 
     TestVector.push_back({"object method call", Code, Expected, Unexpected});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method StoreSumm taking a,b returning integer of class TestClass:\n"
+           "w := a + b;\n"
+           "returning 13;\n"
+           "endmethod\n"
+           "method GetSumm taking a,b returning integer of class TestClass:\n"
+           "returning w;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to StoreSumm with a:=7, b:=11;"
+           "y := tell o to GetSumm   with a:=99, b:=113;"
+           "print(z);\n"
+           "print(y);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["y"] = MakeVariable("y", 18LL);
+    Expected["z"] = MakeVariable("z", 13LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object method call using this", Code, Expected, Unexpected});
 
 }
 
