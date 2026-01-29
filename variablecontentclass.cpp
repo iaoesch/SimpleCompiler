@@ -1123,7 +1123,7 @@ std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Nam
 
 std::shared_ptr<MethodDefinitionClass>
 ClassClass::GetMethod(std::string Name) const {
-    auto it = Methodes.find("Name");
+    auto it = Methodes.find(Name);
     if (it != Methodes.end()) {
         return it->second;
     } else {

@@ -85,6 +85,28 @@ std::string FunctionNodeHelper::GetQualifiedName()
     return Name;
 }
 
+std::shared_ptr<VariableClass> FunctionNodeHelper::AddParameter(std::string Name, const VariableTypeDescriptorClass &Type, LocationType const &Loc)
+{
+    std::shared_ptr<VariableClass> var = Variables.CreateVariable(Name, Type, 0.0);
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(
+            FunctionsDefinitonsPending.back())) {
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())
+            .Parameters.push_back(var);
+        // std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back()).ParameterLocations
+        // += Loc;
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(
+                   FunctionsDefinitonsPending.back())) {
+        std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())
+            .Parameters.push_back(var);
+        // std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back()).ParameterLocations
+        // += Loc;
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
+    return var;
+};
+
+#if 0
 void FunctionNodeHelper::Set(const std::vector<std::shared_ptr<VariableClass> > &Parameters, LocationType const &Loc)
 {
     if (FunctionsDefinitonsPending.empty()) {
@@ -98,6 +120,7 @@ void FunctionNodeHelper::Set(const std::vector<std::shared_ptr<VariableClass> > 
         throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
     }
 }
+#endif
 
 void FunctionNodeHelper::Set(const std::list<std::shared_ptr<StatementClass> > &Statements, LocationType const &Loc)
 {
@@ -202,6 +225,54 @@ void FunctionNodeHelper::BeginMethodDefinition(std::string Name, const LocationT
     CurrentFunctionInfo.Name = Name;
 }
 
+void FunctionNodeHelper::StartMethodParameterDefinition() {
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<StartMethodParameterDefinition()> Not inside function"));
+    }
+    auto &Info = std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
+    Info.ProxyContext = Variables.CreateNewProxyContext(Info.Name + "AttributesProxy");
+    Variables.StartLocal(Info.CurrentMethod);
+    Variables.CreateNewContext(Info.Name + "Params");
+    // Class is not known yet here, so we store reference to set classtype later
+    Info.ThisParameter = AddParameter("$$this$$", VariableTypeDescriptorClass(TypeDescriptorClass::Type::Undefined), LocationType());
+}
+
+void FunctionNodeHelper::SetClassContext(std::string Classname) {
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<SetClassContext()> Not inside function"));
+    }
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(Classname);
+    if (Var == nullptr) {
+        throw SyntaxErrorClass("Class '" + Classname + "' not found");
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Class) {
+        throw SyntaxErrorClass("'" + Classname + "' is not an class, cannot define a messages for it");
+    }
+    if (!Var->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>()) {
+        throw SyntaxErrorClass("'" + Classname + "' contains not an class, cannot define a messages for it");
+    }
+    auto &Info = std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
+
+    Info.ClassForMethod = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+    // Now we know the Class, so we can set type for this
+    Info.ThisParameter->SetType(VariableTypeDescriptorClass(Info.ClassForMethod));
+
+    auto Context = Info.ClassForMethod->getContextForParsing();
+    Info.ProxyContext->SetReferedContext(Context);
+}
+
+void FunctionNodeHelper::EndMethodDefinition(const LocationType &l) {
+    (void) l;
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<EndMethodDefinition()> Not inside function"));
+    }
+    MethodDefinitionInfoType &Info = std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
+
+    Info.ClassForMethod->AddMethod(Info.Name, Info.CurrentMethod);
+    FunctionsDefinitonsPending.pop_back();
+    Variables.LeaveContext(3);
+}
+
 
 std::shared_ptr<ReferementClass> FunctionNodeHelper::MakeRef(const std::string Referer, std::shared_ptr<ExpressionClass> Refered, const LocationType &Loc)
 {
@@ -223,18 +294,33 @@ std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssign(const std::stri
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<MakeAssign()> Not inside functioncall"));
     }
-    
-    if ((std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter >= 0) && (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter < 0xFFFF)) {
-        throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
+    if (std::holds_alternative<FunctionCallInfoType>(FunctionCallsPending.back())) {
+        if ((std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter >= 0) && (std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter < 0xFFFF)) {
+            throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
+        }
+        // set marker for positionalmode
+        std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = 0xFFFF;
+        std::shared_ptr<VariableClass> Var = std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction->GetParameterByName(Assignee);
+        if (Var == nullptr) {
+            throw INTERNAL_ERROR_OBJECT ("Parameter not found");
+        }
+        auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+        return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
+    } else if (std::holds_alternative<MethodCallInfoType>(FunctionCallsPending.back())) {
+        if ((std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter >= 0) && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter < 0xFFFF)) {
+            throw INTERNAL_ERROR_OBJECT ("mixing positional and named parameter not allowed");
+        }
+        // set marker for positionalmode
+        std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = 0xFFFF;
+        std::shared_ptr<VariableClass> Var = std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod->GetParameterByName(Assignee);
+        if (Var == nullptr) {
+            throw INTERNAL_ERROR_OBJECT ("Parameter not found");
+        }
+        auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+        return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
+    } else {
+        throw (INTERNAL_ERROR_OBJECT("unknown info variant"));
     }
-    // set marker for positionalmode
-    std::get<FunctionCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = 0xFFFF;
-    std::shared_ptr<VariableClass> Var = std::get<FunctionCallInfoType>(FunctionCallsPending.back()).CurrentFunction->GetParameterByName(Assignee);
-    if (Var == nullptr) {
-        throw INTERNAL_ERROR_OBJECT ("Parameter not found");
-    }
-    auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
-    return std::make_shared<AssignementClass>(Assigned, ToAssign, Loc);
 }
 
 std::shared_ptr<AssignementClass> FunctionNodeHelper::MakeAssignBySequence(std::shared_ptr<ExpressionClass> Assigned, const LocationType &Loc)
@@ -309,7 +395,7 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found");
     }
-    if (Var->Type() != TypeDescriptorClass::Type::Object) {
+    if ( ! Var->Type().IsKindOf(TypeDescriptorClass::Type::Object)) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
     }
     if (Var->Type().GetTypeDetails<ObjectDescriptorClass>().GetClass() != UsedClass) {
@@ -317,7 +403,6 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     }
     auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
     auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
-    std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }
 
@@ -327,7 +412,7 @@ void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::sh
         throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
     }
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
-    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_back(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_front(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
 }
 
 std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const LocationType &Loc)
@@ -347,4 +432,57 @@ std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const Lo
                std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
                Loc);
 
+}
+void FunctionNodeHelper::StartCodeDefinition() {
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+    }
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(
+            FunctionsDefinitonsPending.back())) {
+        Variables.CreateNewContext(std::get<FunctionDefinitionInfoType__>(
+                                       FunctionsDefinitonsPending.back())
+                                       .Name);
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(
+                   FunctionsDefinitonsPending.back())) {
+        Variables.CreateNewContext(
+            std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back())
+                .Name);
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
+}
+FunctionNodeHelper::FunctionNodeHelper(VariableManager &Variables)
+    : Variables(Variables) ,/* CurrentFunction(nullptr), NextPositionalParameter(-1),*/ AnonymeousElementCounter(0) {}
+
+void FunctionNodeHelper::EndParameterDefinition() {
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> Not inside function"));
+    }
+    if (std::holds_alternative<FunctionDefinitionInfoType__>(
+            FunctionsDefinitonsPending.back())) {
+        auto &Info = std::get<FunctionDefinitionInfoType__>(
+            FunctionsDefinitonsPending.back());
+        Info.CurrentFunction->Set(Info.Parameters,
+                                  LocationType() /*Info.ParameterLocations*/);
+    } else if (std::holds_alternative<MethodDefinitionInfoType>(
+                   FunctionsDefinitonsPending.back())) {
+        auto &Info =
+            std::get<MethodDefinitionInfoType>(FunctionsDefinitonsPending.back());
+        Info.CurrentMethod->Set(Info.Parameters,
+                                LocationType() /*Info.ParameterLocations*/);
+    } else {
+        throw(INTERNAL_ERROR_OBJECT("<Set()> No valid Infotype"));
+    }
+}
+void FunctionNodeHelper::StartParameterDefinition() {
+    if (FunctionsDefinitonsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));
+    }
+    Variables.StartLocal(
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())
+            .CurrentFunction);
+    Variables.CreateNewContext(
+        std::get<FunctionDefinitionInfoType__>(FunctionsDefinitonsPending.back())
+            .Name +
+        "Params");
 }

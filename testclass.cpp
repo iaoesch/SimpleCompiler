@@ -376,6 +376,31 @@ void TestClass::BuildAllTests()
     Unexpected.clear();
     TestVector.push_back({"object definition", Code, Expected, Unexpected});
 
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method TestMethod taking a,b returning integer of class TestClass:\n"
+           "x := a + b;\n"
+           "returning x;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to TestMethod with a:=7, b:=11;"
+           "print(z);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["z"] = MakeVariable("z", 18LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+
+    TestVector.push_back({"object method call", Code, Expected, Unexpected});
+
 }
 
 std::vector<std::string> TestClass::DoAllTests()

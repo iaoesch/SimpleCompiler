@@ -88,9 +88,13 @@ private:
 public:
     ClassClass(std::string Name_, std::shared_ptr<ClassClass> Parent)
         : Name(Name_),
-          Parents{Parent},
           StorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetStorageTemplateSize()),
-          ClassStorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetClassStorageTemplateSize()) {}
+          ClassStorageTemplateFirstOffset(Parent == nullptr ? 0 : Parent->GetClassStorageTemplateSize())
+    {
+        if (Parent!=nullptr) {
+            Parents.push_back(Parent);
+        }
+    }
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     void PrintDetail(std::ostream &s, int Limit) const;

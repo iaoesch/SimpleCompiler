@@ -478,7 +478,7 @@ methodedefinition:
    "class"
    "identifier" ":" {
                        drv.Currentfunction.SetReturnType(std::move($6));
-                       drv.Currentfunction.Set($5, @5);
+                       //drv.Currentfunction.Set($5, @5);
                        drv.Currentfunction.EndParameterDefinition();
                        drv.Currentfunction.SetClassContext($9);
                        drv.Currentfunction.StartCodeDefinition();
@@ -525,7 +525,7 @@ functionBodydefinition:
   returntype.opt
   "(" argumentlist ")"    {
                               drv.Currentfunction.SetReturnType(std::move($2));
-                              drv.Currentfunction.Set($4, @4);
+                              //drv.Currentfunction.Set($4, @4);
                               drv.Currentfunction.EndParameterDefinition();
                               drv.Currentfunction.StartCodeDefinition();
                               /*drv.Variables.CreateNewContext(drv.Currentfunction.GetName());*/
@@ -551,10 +551,12 @@ functionBodydefinition:
 returntype.opt:
  %empty                       {$$ = std::make_unique<VariableTypeDescriptorClass>(TypeDescriptorClass::Type::Undefined);}
  | "returning" typedefinition {$$ = std::move($2);}
+;
 
 argumentlist:
-  "identifier"           {$$ = std::vector<std::shared_ptr<VariableClass>>(); auto var = drv.Variables.CreateVariable($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $$.push_back(var);}
-| argumentlist "," "identifier" {auto var = drv.Variables.CreateVariable($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), 0.0); $1.push_back(var); $$ = $1; };
+  "identifier"           {drv.Currentfunction.AddParameter($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @1);}
+| argumentlist "," "identifier" {drv.Currentfunction.AddParameter($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @3);}
+;
 
 %left or;
 %left and;
@@ -632,6 +634,7 @@ primary:
 | literal       { $$ = std::make_shared<ConstantClass>($1, @1); drv.GetOutputStream() << "parser: constant " << $1 << "\n";}
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
+| sendmessage   { $$ = $1;}
 | "new" "identifier"  { $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);}
 ;
 

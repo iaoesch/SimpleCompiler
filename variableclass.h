@@ -59,6 +59,13 @@ public:
     }
 
     const VariableTypeDescriptorClass &Type() const {return MyType;}
+    void SetType(const VariableTypeDescriptorClass &Type) {
+        if(MyType == TypeDescriptorClass::Type::Undefined) {
+            MyType = Type;
+        } else {
+            throw (INTERNAL_ERROR_OBJECT("Cannot override type"));
+        }
+    }
     const ValueTypeDescriptorClass &ContaindedType() const {return GetContainedType();}
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const = 0;
