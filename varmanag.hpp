@@ -220,7 +220,7 @@ public:
    std::shared_ptr<VariableClass> CreateMember(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateLateBindingVariable(std::string Name, std::shared_ptr<VariableClass> MemberToBindTo);
    private:
-   std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage, std::shared_ptr<VariableClass> ReferedVariable = nullptr);
+   std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage, bool NoCheck = false, std::shared_ptr<VariableClass> ReferedVariable = nullptr);
 
    public:
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);

@@ -215,28 +215,36 @@ std::shared_ptr<VariableClass> VariableManager::CreateLateBindingVariable(std::s
     if (MemberToBindTo == nullptr) {
         throw INTERNAL_ERROR_OBJECT("Trying to bond to nullptr");
     }
-    return CreateSymbol(Name, MemberToBindTo->Type(), DefaultStorage, MemberToBindTo);
+    return CreateSymbol(Name, MemberToBindTo->Type(), DefaultStorage, true, MemberToBindTo);
 }
 
-std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage, std::shared_ptr<VariableClass> ReferedVariable)
+std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage, bool NoCheck, std::shared_ptr<VariableClass> ReferedVariable)
 {
     if (ContextStack.empty()) {
         throw INTERNAL_ERROR_OBJECT("No valid context");
         return nullptr;
     }
-    std::shared_ptr<VariableClass> Var = ContextStack.back()->LookupVariable(Name);
-    if (Var != nullptr) {
-        if (ContextStack.back()->LookupVariableInThisContextOnly(Name) != nullptr) {
-            throw SyntaxErrorClass("Variable '" + Name + "' Allready defined");
-        } else {
-            DefaultEnvironment->OutputStream() << "Warning, '" << Name << "shadows another variable\n";
+    std::shared_ptr<VariableClass> Var;
+    if (NoCheck == false) {
+        Var = ContextStack.back()->LookupVariable(Name);
+        if (Var != nullptr) {
+            if (ContextStack.back()->LookupVariableInThisContextOnly(Name) != nullptr) {
+                throw SyntaxErrorClass("Variable '" + Name + "' Allready defined");
+            } else {
+                DefaultEnvironment->OutputStream() << "Warning, '" << Name << "shadows another variable\n";
+            }
         }
     }
     typedef VariableClass::StorageClass StorageClass;
     if (Local && (Storage == (StorageClass::RW | StorageClass::Local))) {
         if (ReferedVariable != nullptr) {
             DefaultEnvironment->DebugOutput() << "creating local member access <" << Name << ">\n";
-            Var = std::make_shared<LateBindingVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent, Storage, ReferedVariable);
+            // instead of dynamic cast, add additional variant to LocalStorageInfoStack
+            auto Parent = std::dynamic_pointer_cast<Variables::MethodDefinitionClass>(std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent) ;
+            if (Parent == nullptr) {
+                throw INTERNAL_ERROR_OBJECT("got wrong parent type");
+            }
+            Var = std::make_shared<LateBindingVariableClass>(Name, Type, LocalOffset++, Parent, Storage, ReferedVariable);
         } else {
            DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
            Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent, Storage);

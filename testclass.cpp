@@ -29,7 +29,7 @@ std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, s
     std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(Name, nullptr);
     for (auto &r: Value) {
         NewClass->GetObjectStorageInitialValues().push_back(r);
-        NewClass->GetObjectVariableReferences().push_back(std::make_shared<AttributeIndexVariableClass>("Hans", r.getType(), 1, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
+        NewClass->GetObjectVariableReferences().push_back(std::make_shared<AttributeIndexVariableClass>("Hans", r.getType(), 1, NewClass, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
     }
     Var->SetValue(Variables::VariableContentClass(NewClass));
     return Var;
