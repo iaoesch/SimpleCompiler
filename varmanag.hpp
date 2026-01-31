@@ -39,8 +39,9 @@ namespace Variables {
     class VariableContentClass;
 }
 
-class VariableContextProxyClass;
+class VariableContextProxyForClassmemberClass;
 class VariableContextManageClass;
+class VariableManager;
 
 class VariableContextClass {
     protected:
@@ -56,7 +57,7 @@ class VariableContextClass {
         //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
     public:
         std::shared_ptr<VariableContextManageClass> CreateSubContext(const std::string &Name, bool HideParent = false);
-        std::shared_ptr<VariableContextProxyClass> CreateProxySubContext(const std::string &Name, bool HideParent = false);
+        std::shared_ptr<VariableContextProxyForClassmemberClass> CreateProxySubContext(const std::string &Name, bool HideParent = false);
 
         virtual std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) = 0;
         virtual std::shared_ptr<VariableClass> LookupVariable(const std::string Name) = 0;
@@ -91,45 +92,29 @@ public:
 };
 
 
-class VariableContextProxyClass  : public VariableContextClass {
+class VariableContextProxyForClassmemberClass  : public VariableContextClass {
     std::shared_ptr<VariableContextClass> TheRealContext;
     bool ReadOnly;
+    VariableManager &MyManager;
 
 public:
 
-    VariableContextProxyClass(const std::string &Name_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent), TheRealContext(nullptr), ReadOnly(true) {}
+    VariableContextProxyForClassmemberClass(const std::string &Name_, VariableManager &MyManager_, VariableContextClass *Parent_ = nullptr, bool HideParent = false) : VariableContextClass(Name_, Parent_, HideParent), TheRealContext(nullptr), ReadOnly(true), MyManager(MyManager_) {}
     //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, const std::string&,VariableContextClass*, bool>(const std::string &, VariableContextClass* &&, bool &&);
     //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
 public:
     void SetReferedContext(std::shared_ptr<VariableContextClass> Ref) {TheRealContext = Ref;}
+
     std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) override
     {
         if ((TheRealContext != nullptr) && (ReadOnly == false)) {
-            return TheRealContext->RegisterVariable(Name, Var, OverwriteAllowed);
+            throw (INTERNAL_ERROR_OBJECT("Register via Proxy not allowed, unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
+   //         return TheRealContext->RegisterVariable(Name, Var, OverwriteAllowed);
         } else {
             throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
         }
     }
-    std::shared_ptr<VariableClass> LookupVariable(const std::string Name) override
-    {
-        if (TheRealContext != nullptr) {
-            // we must follow parents here, but which one?
-            // parent of proxy or parent of proxied?
-            // maybe a call of LookupVariableInThisContextOnly() is better here?
-            return TheRealContext->LookupVariable(Name);
-        } else {
-            // we probably should follow parents here, but which one?
-            // parent of proxy or parent of proxied?
-            //
-            // we cannot throw here, as it is legal to look while proxy is not ready
-            //throw (INTERNAL_ERROR_OBJECT("Using unavaillable Proxy (ro = " + std::to_string(ReadOnly) + ")"));
-            // for now we just signal 'not found'
-            if ((ParentIsHidden == false) && (ParentContext != nullptr)) {
-                return ParentContext->LookupVariable(Name);
-            }
-            return nullptr;
-        }
-    }
+    std::shared_ptr<VariableClass> LookupVariable(const std::string Name) override;
 
     // For Testpurposes
     std::shared_ptr<VariableClass> LookupVariableInThisContextOnly(const std::string Name) override
@@ -165,7 +150,7 @@ public:
 };
 
 inline std::shared_ptr<VariableContextManageClass> VariableContextClass::CreateSubContext(const std::string &Name, bool HideParent) {auto Context = std::make_shared<VariableContextManageClass>(Name, this, HideParent); Children.push_back(Context); return Context;}
-inline std::shared_ptr<VariableContextProxyClass> VariableContextClass::CreateProxySubContext(const std::string &Name, bool HideParent) {auto Proxy = std::make_shared<VariableContextProxyClass>(Name, this, HideParent); Children.push_back(Proxy); return Proxy;}
+inline std::shared_ptr<VariableContextProxyForClassmemberClass> VariableContextClass::CreateProxySubContext(const std::string &Name, bool HideParent) {auto Proxy = std::make_shared<VariableContextProxyForClassmemberClass>(Name, this, HideParent); Children.push_back(Proxy); return Proxy;}
 
 
 /* Class definition            */
@@ -181,7 +166,7 @@ class VariableManager
 public:
     enum ParentVisibility {ParentVisible, HideParent};
     typedef std::vector<Variables::VariableContentClass> LocalStorageType;
-    typedef std::vector<std::shared_ptr<LateBindingVariableClass>> ObjectMemberVariableType;
+    typedef std::vector<std::shared_ptr<AttributeIndexVariableClass>> ObjectMemberVariableType;
 private:
     struct LocalFunctionStorageContextType {
     //    LocalFunctionStorageContextType(LocalFunctionStorageContextType &&) = default;
@@ -213,7 +198,6 @@ private:
     static Environment *DefaultEnvironment;
 
    // Data
-    std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage);
 public:
     static void SetDefaultEnvironment(Environment &Env) {DefaultEnvironment = &Env;}
 
@@ -222,7 +206,7 @@ public:
     void clear() {Local = false; LocalOffset = 0; ContextStack.clear(); Contexts.clear();}
 
     std::shared_ptr<VariableContextClass> CreateNewContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
-   std::shared_ptr<VariableContextProxyClass> CreateNewProxyContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
+   std::shared_ptr<VariableContextProxyForClassmemberClass> CreateNewProxyContext(std::string Name, ParentVisibility ParentVisibilityMode = ParentVisible);
    void LeaveContext(int Levels = 1);
    void StartLocal(std::shared_ptr<Variables::FunctionDefinitionBaseClass> Parent);
    void EndLocal();
@@ -233,6 +217,12 @@ public:
    std::shared_ptr<VariableClass> CreateConstant(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateFunction(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
    std::shared_ptr<VariableClass> CreateClass(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateMember(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
+   std::shared_ptr<VariableClass> CreateLateBindingVariable(std::string Name, std::shared_ptr<VariableClass> MemberToBindTo);
+   private:
+   std::shared_ptr<VariableClass> CreateSymbol(std::string Name, const VariableTypeDescriptorClass &Type, VariableClass::StorageClass Storage, std::shared_ptr<VariableClass> ReferedVariable = nullptr);
+
+   public:
    std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
    std::shared_ptr<VariableClass> GetVariableReferenceCreateIfNotFound(std::string Name, const VariableTypeDescriptorClass &RequiredType);
  //  std::shared_ptr<VariableClass> CreateVariableAndGetReference(std::string Name, const VariableTypeDescriptorClass &RequiredType);
@@ -243,7 +233,6 @@ public:
    size_t GetNumberOfVariablesForContext(size_t Index) const {return Contexts[Index]->GetNumberOfVariables();}
 
    void Dump(std::ostream &s);
-   std::shared_ptr<VariableClass> CreateMember(std::string Name, const VariableTypeDescriptorClass &Type, double Value);
 };
 
 

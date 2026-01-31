@@ -49,7 +49,7 @@ class FunctionNodeHelper {
         std::shared_ptr<VariableClass> VariableHoldingCurrentFunction;
         std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
         //     int NextPositionalParameter;
-        std::shared_ptr<VariableContextProxyClass> ProxyContext;
+        std::shared_ptr<VariableContextProxyForClassmemberClass> ProxyContext;
         std::shared_ptr<Variables::ClassClass> ClassForMethod;
         std::vector<std::shared_ptr<VariableClass> > Parameters;
         std::shared_ptr<VariableClass> ThisParameter;

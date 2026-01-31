@@ -54,6 +54,7 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
         case Type::String:
         case Type::Type:
         case Type::Class:
+        case Type::MemberPointer:
         case Type::List:
         case Type::Map:
         case Type::Expression:
@@ -185,6 +186,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::Array:     s << std::get<ArrayDescriptorClass>(t.Descriptor); break;
     case ValueTypeDescriptorClass::Type::Map:       s << "Map"; break;
     case ValueTypeDescriptorClass::Type::Class:     s << "Class"; break;
+    case ValueTypeDescriptorClass::Type::MemberPointer: s << "Memberptr"; break;
     case ValueTypeDescriptorClass::Type::Object:    s << "Object"; break;
     case ValueTypeDescriptorClass::Type::Internal:  s << "Internal"; break;
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;

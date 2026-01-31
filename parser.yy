@@ -112,6 +112,7 @@
 
   AS "as"
   TYPEOF "typeof"
+  TYPE   "type"
   HOLDING "holding"
   INTEGER "integer"
   FLOAT "float"
@@ -419,7 +420,7 @@ sendmessage:
    "to"
    "identifier" {drv.Currentfunction.SetCalledMethodForObject($5, @5);}
    "with"
-   messageparameterlist {drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($8), @8); $$ = drv.Currentfunction.FinishMethodCall(@$);}
+   "[" messageparameterlist "]" {drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($9), @9); $$ = drv.Currentfunction.FinishMethodCall(@$);}
 ;
 
 messageparameterlist:
@@ -650,8 +651,8 @@ arraycontentliteral:
 | "stringliteral"       {$$ = Variables::VariableContentClass($1); }
 | listliteral    {$$ = $1;}
 | mapliteral     {$$ = $1;}
-| typedefinition {
-    $$ = Variables::VariableContentClass($1->ToValueType()); }
+| "type" typedefinition {
+    $$ = Variables::VariableContentClass($2->ToValueType()); }
 ;
 
 numericliteral:

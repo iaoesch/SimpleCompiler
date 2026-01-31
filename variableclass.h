@@ -135,15 +135,44 @@ private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
 
+class AttributeIndexVariableClass : public VariableClass
+{
+    uint32_t Index;
+    std::shared_ptr<Variables::FunctionDefinitionClass> BoundClass;
+
+public:
+    AttributeIndexVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_) {}
+    virtual ~AttributeIndexVariableClass() override {}
+    virtual Variables::VariableContentClass const &GetValue() const override;
+    virtual Variables::VariableContentClass const &GetInitialValue() const override;
+    virtual Variables::VariableContentClass &GetWriteReferenceToValue() override;
+    virtual void        SetValue(Variables::VariableContentClass v) override;
+    virtual void        SetInitialValue(Variables::VariableContentClass v) override;
+    virtual void        Print(std::ostream &s) override;
+    //  virtual void        DrawNode(std::ostream &s, int MyNodeNumber) const override;
+
+    bool operator == (AttributeIndexVariableClass const& other) const {
+        return Type() == other.Type();
+    }
+
+    uint32_t GetIndex() {return Index;}
+    std::shared_ptr<Variables::FunctionDefinitionClass> GetBoundClass() {return BoundClass;}
+
+private:
+    virtual const ValueTypeDescriptorClass &GetContainedType() const override;
+};
+
 class LateBindingVariableClass : public VariableClass
 {
     uint32_t Reference;
     static const uint32_t ThisOffset = 0;
     std::string ReferenceName;
-    std::shared_ptr<Variables::FunctionDefinitionBaseClass> BoundMethod;
+    std::shared_ptr<Variables::MethodDefinitionClass> BoundMethod;
+    std::shared_ptr<AttributeIndexVariableClass> Memberreference;
 
 public:
-    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), ReferenceName(Name_) {}
+    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::MethodDefinitionClass> Parent_, StorageClass Storage_, std::shared_ptr<AttributeIndexVariableClass> Memberreference_) : VariableClass(Name_, Type_, Storage_),
+        Reference(Reference_), ReferenceName(Name_), BoundMethod(Parent_), Memberreference(Memberreference_){}
     virtual ~LateBindingVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;
@@ -162,6 +191,7 @@ public:
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;
 };
+
 
 class StaticClassMemberVariableClass : public VariableClass
 {

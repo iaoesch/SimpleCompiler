@@ -56,7 +56,7 @@ public:
     void EndClassDefinition();
     void StartMemberDefinition();
 
-    void EndMemberDefinition() {}
+    void EndMemberDefinition();
 
 private:
 public:

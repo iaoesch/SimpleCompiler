@@ -17,7 +17,7 @@
 //#include "varmanag.hpp"
 class ProxyVariableClass;
 class InternalObjectClass;
-class LateBindingVariableClass;
+class AttributeIndexVariableClass;
 class VariableContextClass;
 
 
@@ -41,7 +41,7 @@ public:
 
 class VariableContentClass;
 class ObjectClass;
-
+#if 0
 class AttributeBuilder {
 public:
     typedef std::map<std::string, std::shared_ptr<VariableClass>> AttributeListType;
@@ -62,13 +62,14 @@ public:
     AttributeListType const &GetClassAttributes() {return ClassAttributes;}
     AttributeListType const &GetObjectAttributes() {return ObjectAttributes;}
 };
+#endif
 
 class ClassClass : public std::enable_shared_from_this<ClassClass> {
 public:
   //  typedef AttributeBuilder::AttributeListType ObjectDataType;
 
     typedef std::vector<Variables::VariableContentClass> MemberStorageType;
-    typedef std::vector<std::shared_ptr<LateBindingVariableClass>> ObjectMemberVariableType;
+    typedef std::vector<std::shared_ptr<AttributeIndexVariableClass>> ObjectMemberVariableType;
 
 private:
 //    ObjectDataType ObjectAttributesTemplate;
@@ -128,6 +129,31 @@ public:
     void setContextForParsing(const std::shared_ptr<VariableContextClass> &newContextForParsing)  {ContextForParsing = newContextForParsing;}
 };
 
+class MemberPointer {
+    uint32_t Offset;
+    std::shared_ptr<ClassClass> MyClass;
+public:
+    MemberPointer(std::shared_ptr<ClassClass> MyClass_, uint32_t Offset_) : Offset(Offset_), MyClass(MyClass_) {}
+    uint32_t getOffset() const
+    {
+        return Offset;
+    }
+    bool IsCompatible(std::shared_ptr<ClassClass> OtherClass) const
+    {
+        // For now we assume that each class exists only once
+        // and we ignore inheritance
+        return MyClass == OtherClass;
+    }
+    void RejectIncompatible(std::shared_ptr<ClassClass> OtherClass) const
+    {
+        // For now we assume that each class exists only once
+        // and we ignore inheritance
+        if (MyClass != OtherClass) {
+            throw SyntaxErrorClass("Not compatible memberpointer");
+        }
+    }
+
+};
 
 class ObjectClass {
     typedef ClassClass::MemberStorageType LocalStorageType;
@@ -185,6 +211,32 @@ public:
     void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
         (void) Offset;
         (void) v;
+        throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
+    }
+
+    VariableContentClass const &GetVariableContentForOffset(MemberPointer &MemberPtr) const
+    {
+        MemberPtr.RejectIncompatible(MyClass);
+        return AttributeStorage.at(MemberPtr.getOffset());
+    }
+
+    VariableContentClass const &GetInitialVariableContentForOffset(MemberPointer &MemberPtr) const
+    {
+        MemberPtr.RejectIncompatible(MyClass);
+        return MyClass->GetInitialVariableContentForOffset(MemberPtr.getOffset());
+    }
+
+    VariableContentClass &GetVariableContentWriteReferenceForOffset(MemberPointer &MemberPtr)
+    {
+        MemberPtr.RejectIncompatible(MyClass);
+        return AttributeStorage.at(MemberPtr.getOffset());
+    }
+
+    void SetVariableContentForOffset(MemberPointer &MemberPtr, VariableContentClass const &v);
+
+    void InitializeVariableContentForOffset(MemberPointer &MemberPtr, VariableContentClass const &v) {
+        (void) v;
+        MemberPtr.RejectIncompatible(MyClass);
         throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
     }
 
@@ -446,6 +498,7 @@ class
                          MapClass,
                          std::shared_ptr<ClassClass>,
                          ObjectClass,
+                         MemberPointer,
                          TypeDescriptorClass,
                          std::shared_ptr<ExpressionClass>,
                          std::shared_ptr<FunctionDefinitionBaseClass>,
@@ -478,6 +531,7 @@ public:
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ClassClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Class)), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::ObjectClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::MemberPointer Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::MemberPointer)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<InternalObjectClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Internal)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ExpressionClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Expression)), AssignedExpression(nullptr) {}
@@ -733,15 +787,25 @@ public:
                 {
                     return StorageTemplate.at(Offset);
                 }
-    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const {if (ActiveStorage.empty()) {throw INTERNAL_ERROR_OBJECT("Invalid Frame access"); }return ActiveStorage.back().at(Offset);}
-    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {if (ActiveStorage.empty())
-        {
-            throw INTERNAL_ERROR_OBJECT("Invalid Frame access for " + Name);
-        }ActiveStorage.back().at(Offset) = v;}
+    VariableContentClass       &GetVariableContentWriteReferenceForOffset(uint32_t Offset) const
+                {
+                    if (ActiveStorage.empty())
+                    {
+                        throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
+                    }
+                return ActiveStorage.back().at(Offset);}
+    void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v)
+                {
+                   if (ActiveStorage.empty())
+                   {
+                       throw INTERNAL_ERROR_OBJECT("Invalid Frame access for " + Name);
+                    }
+                    ActiveStorage.back().at(Offset) = v;}
 
-        void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
-            StorageTemplate.at(Offset) = v;
-        }
+    void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v)
+    {
+        StorageTemplate.at(Offset) = v;
+    }
     std::shared_ptr<VariableClass> GetParameterByName(std::string Name);
     std::shared_ptr<VariableClass> GetParameterByIndex(int i);
     TypeDescriptorClass const &GetReturnType() const;
@@ -792,6 +856,7 @@ public:
     void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const override;
 
     VariableContentClass Execute(Environment &Env) const override;// = 0;
+    VariableContentClass const &GetThis() const {return GetVariableContentForOffset(0);}
 };
 
 class Callable {
@@ -824,6 +889,13 @@ inline void ObjectClass::SetVariableContentForOffset(uint32_t Offset, const Vari
 {
         AttributeStorage.at(Offset) = v;
 }
+
+inline void ObjectClass::SetVariableContentForOffset(MemberPointer &MemberPtr, const VariableContentClass &v)
+{
+    MemberPtr.RejectIncompatible(MyClass);
+    AttributeStorage.at(MemberPtr.getOffset()) = v;
+}
+
 
 }
 

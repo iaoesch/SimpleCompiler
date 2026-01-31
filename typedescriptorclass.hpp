@@ -155,6 +155,7 @@ public:
         Reference,
         Type,
         Object,
+        MemberPointer,
         Class,
         Internal,
         Illegal  // $Internal flag
@@ -227,6 +228,7 @@ protected:
         case Type::Internal:
         case Type::Dynamic:
         case Type::Class:
+        case Type::MemberPointer:
             return std::monostate();
             break;
             

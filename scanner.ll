@@ -100,6 +100,7 @@ blank [ \t]
 
 "as"      return yy::parser::make_AS (loc);
 "typeof"      return yy::parser::make_TYPEOF (loc);
+"type"      return yy::parser::make_TYPE (loc);
 
 "holding"      return yy::parser::make_HOLDING (loc);
 "integer"      return yy::parser::make_INTEGER (loc);

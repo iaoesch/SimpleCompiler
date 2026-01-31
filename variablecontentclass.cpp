@@ -612,6 +612,7 @@ bool operator ==(const VariableContentClass &r, const VariableContentClass &l)
     return Result;
 
 
+
 #else
     return l.Data == r.Data;
 #endif

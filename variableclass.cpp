@@ -212,6 +212,43 @@ const ValueTypeDescriptorClass &LateBindingVariableClass::GetContainedType() con
   //  return Parent->GetVariableContentForOffset(Reference).getType();
 }
 
+const Variables::VariableContentClass &AttributeIndexVariableClass::GetValue() const
+{
+    throw INTERNAL_ERROR_OBJECT("Atribute index has no value");
+}
+
+Variables::VariableContentClass const &AttributeIndexVariableClass::GetInitialValue() const
+{
+    throw INTERNAL_ERROR_OBJECT("Atribute index have no value");
+}
+
+
+Variables::VariableContentClass &AttributeIndexVariableClass::GetWriteReferenceToValue()
+{
+    throw INTERNAL_ERROR_OBJECT("Atribute index has no value");
+}
+
+void AttributeIndexVariableClass::SetValue(Variables::VariableContentClass v)
+{
+    throw INTERNAL_ERROR_OBJECT("Atribute index has no value");
+}
+
+void AttributeIndexVariableClass::SetInitialValue(Variables::VariableContentClass v)
+{
+    throw INTERNAL_ERROR_OBJECT("Atribute index has no value");
+}
+
+void AttributeIndexVariableClass::Print(std::ostream &s)
+{
+    s << "<" << GetName() << ":" << Type() << ": Attribute Index>";
+}
+
+const ValueTypeDescriptorClass &AttributeIndexVariableClass::GetContainedType() const
+{
+    return ValueTypeDescriptorClass(ValueTypeDescriptorClass::Type::Undefined);
+    //  return Parent->GetVariableContentForOffset(Reference).getType();
+}
+
 
 const Variables::VariableContentClass &TemporaryVariableClass::GetValue() const
 {

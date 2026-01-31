@@ -29,7 +29,7 @@ std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, s
     std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(Name, nullptr);
     for (auto &r: Value) {
         NewClass->GetObjectStorageInitialValues().push_back(r);
-        NewClass->GetObjectVariableReferences().push_back(std::make_shared<LateBindingVariableClass>("Hans", r.getType(), 1, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
+        NewClass->GetObjectVariableReferences().push_back(std::make_shared<AttributeIndexVariableClass>("Hans", r.getType(), 1, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
     }
     Var->SetValue(Variables::VariableContentClass(NewClass));
     return Var;
@@ -387,7 +387,7 @@ void TestClass::BuildAllTests()
            "o as TestClass;\n"
            "o := new TestClass;\n"
            "print(o);\n"
-           "z := tell o to TestMethod with a:=7, b:=11;"
+           "z := tell o to TestMethod with [a:=7, b:=11];"
            "print(z);\n"
         ;
 
@@ -415,8 +415,8 @@ void TestClass::BuildAllTests()
            "o as TestClass;\n"
            "o := new TestClass;\n"
            "print(o);\n"
-           "z := tell o to StoreSumm with a:=7, b:=11;"
-           "y := tell o to GetSumm   with a:=99, b:=113;"
+           "z := tell o to StoreSumm with [a:=7, b:=11];"
+           "y := tell o to GetSumm   with [a:=99, b:=113];"
            "print(z);\n"
            "print(y);\n"
         ;

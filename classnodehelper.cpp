@@ -30,7 +30,14 @@ void ClassNodeHelper::StartMemberDefinition()
         throw INTERNAL_ERROR_OBJECT("StartMemberDefinition without pending classdefinition");
     }
     Variables.StartClass(PendingClassDefinitions.back().NewClassContent);
-    PendingClassDefinitions.back().ClassContext = Variables.CreateNewContext(PendingClassDefinitions.back().Name + "Params");
+    PendingClassDefinitions.back().ClassContext = Variables.CreateNewContext(PendingClassDefinitions.back().Name + "Members");
+    PendingClassDefinitions.back().NewClassContent->setContextForParsing(PendingClassDefinitions.back().ClassContext);
+
+}
+
+void ClassNodeHelper::EndMemberDefinition()
+{
+    Variables.EndClass();
 }
 
 bool ClassNodeHelper::SetBaseClass(std::string Name)
@@ -59,7 +66,6 @@ bool ClassNodeHelper::SetBaseClass(std::string Name)
         }
     }
     std::shared_ptr<Variables::ClassClass> NewClassContent = std::make_shared<Variables::ClassClass>(PendingClassDefinitions.back().Name, PendingClassDefinitions.back().BaseClass);
-    NewClassContent->setContextForParsing(PendingClassDefinitions.back().ClassContext);
     PendingClassDefinitions.back().NewClassContent = NewClassContent;
     PendingClassDefinitions.back().NewClass->SetInitialValue(Variables::VariableContentClass(NewClassContent));
     return true;
