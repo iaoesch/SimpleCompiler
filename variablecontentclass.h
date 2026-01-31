@@ -152,6 +152,10 @@ public:
             throw SyntaxErrorClass("Not compatible memberpointer");
         }
     }
+    void PrintDetail(std::ostream &s) const
+    {
+        s << "Memberoffset: " << Offset << ", class '" << MyClass->GetName() << "'\n";
+    }
 
 };
 
@@ -211,7 +215,7 @@ public:
     void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v) {
         (void) Offset;
         (void) v;
-        throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
+        throw INTERNAL_ERROR_OBJECT ("Cannot initialize Attribute of object after construction");
     }
 
     VariableContentClass const &GetVariableContentForOffset(MemberPointer &MemberPtr) const
@@ -237,7 +241,7 @@ public:
     void InitializeVariableContentForOffset(MemberPointer &MemberPtr, VariableContentClass const &v) {
         (void) v;
         MemberPtr.RejectIncompatible(MyClass);
-        throw INTERNAL_ERROR_OBJECT ("Cannot initialioze Attribute of object after construction");
+        throw INTERNAL_ERROR_OBJECT ("Cannot initialize Attribute of object after construction");
     }
 
 

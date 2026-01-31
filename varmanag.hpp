@@ -57,7 +57,7 @@ class VariableContextClass {
         //    friend std::shared_ptr<VariableContextClass> std::make_shared<VariableContextClass, std::string, VariableContextClass*, bool>(std::string, VariableContextClass*, bool);
     public:
         std::shared_ptr<VariableContextManageClass> CreateSubContext(const std::string &Name, bool HideParent = false);
-        std::shared_ptr<VariableContextProxyForClassmemberClass> CreateProxySubContext(const std::string &Name, bool HideParent = false);
+        std::shared_ptr<VariableContextProxyForClassmemberClass> CreateProxySubContext(const std::string &Name, VariableManager &MyManager, bool HideParent = false);
 
         virtual std::shared_ptr<VariableClass> RegisterVariable(const std::string Name, std::shared_ptr<VariableClass> Var, bool OverwriteAllowed = false) = 0;
         virtual std::shared_ptr<VariableClass> LookupVariable(const std::string Name) = 0;
@@ -150,7 +150,7 @@ public:
 };
 
 inline std::shared_ptr<VariableContextManageClass> VariableContextClass::CreateSubContext(const std::string &Name, bool HideParent) {auto Context = std::make_shared<VariableContextManageClass>(Name, this, HideParent); Children.push_back(Context); return Context;}
-inline std::shared_ptr<VariableContextProxyForClassmemberClass> VariableContextClass::CreateProxySubContext(const std::string &Name, bool HideParent) {auto Proxy = std::make_shared<VariableContextProxyForClassmemberClass>(Name, this, HideParent); Children.push_back(Proxy); return Proxy;}
+inline std::shared_ptr<VariableContextProxyForClassmemberClass> VariableContextClass::CreateProxySubContext(const std::string &Name, VariableManager &MyManager, bool HideParent) {auto Proxy = std::make_shared<VariableContextProxyForClassmemberClass>(Name, MyManager, this, HideParent); Children.push_back(Proxy); return Proxy;}
 
 
 /* Class definition            */

@@ -137,11 +137,12 @@ private:
 
 class AttributeIndexVariableClass : public VariableClass
 {
-    uint32_t Index;
-    std::shared_ptr<Variables::FunctionDefinitionClass> BoundClass;
+ //   uint32_t Index;
+ //   std::shared_ptr<Variables::ClassClass> BoundClass;
+    const Variables::VariableContentClass MemberPtr;
 
 public:
-    AttributeIndexVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_) {}
+    AttributeIndexVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, std::shared_ptr<Variables::ClassClass> BoundClass_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), MemberPtr(Variables::MemberPointer(BoundClass_, Reference)) {}
     virtual ~AttributeIndexVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;
@@ -155,8 +156,8 @@ public:
         return Type() == other.Type();
     }
 
-    uint32_t GetIndex() {return Index;}
-    std::shared_ptr<Variables::FunctionDefinitionClass> GetBoundClass() {return BoundClass;}
+ //   uint32_t GetIndex() {return Index;}
+ //   std::shared_ptr<Variables::FunctionDefinitionClass> GetBoundClass() {return BoundClass;}
 
 private:
     virtual const ValueTypeDescriptorClass &GetContainedType() const override;

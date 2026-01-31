@@ -82,10 +82,10 @@ std::shared_ptr<VariableContextProxyForClassmemberClass> VariableManager::Create
 {
     std::shared_ptr<VariableContextProxyForClassmemberClass> NewContext;
     if (ContextStack.empty()) {
-        NewContext = std::make_shared<VariableContextProxyForClassmemberClass>(Name);
+        NewContext = std::make_shared<VariableContextProxyForClassmemberClass>(Name, *this);
     } else {
         NewContext = ContextStack.back()->CreateProxySubContext(
-            Name, ParentVisibilityMode == HideParent);
+            Name, *this, ParentVisibilityMode == HideParent);
     }
     ContextStack.push_back(NewContext);
     Contexts.push_back(NewContext);
