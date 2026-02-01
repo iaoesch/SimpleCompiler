@@ -3,6 +3,7 @@
 #include "driver.hh"
 
 
+
 TestClass::TestClass(Environment &Env, SystemInterfaceClass *SystemInterface_)
     : Env(Env), SystemInterface(SystemInterface_)
 {
@@ -46,31 +47,31 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("x");
     std::string Code = "a:=2;";
     Expected["a"] = MakeVariable("a", 2LL);
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5.5;";
     Expected["a"] = MakeVariable("a", 5.5);
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \nb:=3; \nc:=a+b;";
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 8LL);
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \nb:=3; \nc:=7; \nd:=a+b;\nd:=d+c;";
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 7LL);
     Expected["d"] = MakeVariable("d", 15LL);
-    TestVector.push_back({"Addition chain", Code, Expected, Unexpected});
+    TestVector.push_back({"Addition chain", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \nb:=3; \nc:=7; \nd:=a+b+c;";
     Expected["a"] = MakeVariable("a", 5LL);
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 7LL);
     Expected["d"] = MakeVariable("d", 15LL);
-    TestVector.push_back({"Addition chain", Code, Expected, Unexpected});
+    TestVector.push_back({"Addition chain", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -84,7 +85,7 @@ void TestClass::BuildAllTests()
     Expected["b"] = MakeVariable("b", 3LL);
     Expected["c"] = MakeVariable("c", 7LL);
     Expected["d"] = MakeVariable("d", 7LL);
-    TestVector.push_back({"if", Code, Expected, Unexpected});
+    TestVector.push_back({"if", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=5; \n"
@@ -98,7 +99,7 @@ void TestClass::BuildAllTests()
     Expected["b"] = MakeVariable("b", 5LL);
     Expected["c"] = MakeVariable("c", 7LL);
     Expected["d"] = MakeVariable("d", 5LL);
-    TestVector.push_back({"if", Code, Expected, Unexpected});
+    TestVector.push_back({"if", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -119,7 +120,7 @@ void TestClass::BuildAllTests()
     Expected["c"] = MakeVariable("c", 8LL);
     Expected["y"] = MakeVariable("y", 17LL);
     Expected["z"] = MakeVariable("z", 101LL);
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -139,7 +140,7 @@ void TestClass::BuildAllTests()
     Expected["z"] = MakeVariable("z", 101LL);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Assignment", Code, Expected, Unexpected});
+    TestVector.push_back({"Assignment", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -228,7 +229,7 @@ void TestClass::BuildAllTests()
     Expected["z2"] = MakeVariable("z", 2111260LL + 2111150LL + 1+2+4+8+16+32+32+128+128);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Argument an returnvalue passing", Code, Expected, Unexpected});
+    TestVector.push_back({"Argument an returnvalue passing", Code, Expected, Unexpected, NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -260,7 +261,7 @@ void TestClass::BuildAllTests()
     Expected["z"] = MakeVariable("z", 112LL);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected , NoException});
 
     Code = "a:=5; \n"
            "b:=3; \n"
@@ -296,7 +297,7 @@ void TestClass::BuildAllTests()
     Expected["z"] = MakeVariable("z", 7132LL);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected, NoException});
 
 
     Code = "a:=5; \n"
@@ -337,7 +338,7 @@ void TestClass::BuildAllTests()
     Expected["z"] = MakeVariable("z", 7135LL);
     Unexpected.clear();
     Unexpected.push_back("w");
-    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected});
+    TestVector.push_back({"Parent variable access", Code, Expected, Unexpected, NoException});
 
     Code = "class TestClass \n"
            "a as integer; \n"
@@ -346,7 +347,7 @@ void TestClass::BuildAllTests()
     Expected.clear();
     Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
     Unexpected.clear();
-    TestVector.push_back({"class definition", Code, Expected, Unexpected});
+    TestVector.push_back({"class definition", Code, Expected, Unexpected, NoException});
 
     Code = "class TestClass \n"
            "a as integer; \n"
@@ -358,7 +359,7 @@ void TestClass::BuildAllTests()
     Expected.clear();
     Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
     Unexpected.clear();
-    TestVector.push_back({"Method definition", Code, Expected, Unexpected});
+    TestVector.push_back({"Method definition", Code, Expected, Unexpected, NoException});
 
     Code = "class TestClass \n"
            "a as integer; \n"
@@ -374,7 +375,7 @@ void TestClass::BuildAllTests()
     Expected.clear();
     Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
     Unexpected.clear();
-    TestVector.push_back({"object definition", Code, Expected, Unexpected});
+    TestVector.push_back({"object definition", Code, Expected, Unexpected, NoException});
 
 
     Code = "class TestClass \n"
@@ -400,7 +401,7 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("x");
     Unexpected.push_back("w");
 
-    TestVector.push_back({"object method call", Code, Expected, Unexpected});
+    TestVector.push_back({"object method call", Code, Expected, Unexpected, NoException});
 
     Code = "class TestClass \n"
            "w as integer; \n"
@@ -432,7 +433,74 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("x");
     Unexpected.push_back("w");
 
-    TestVector.push_back({"object method call using this", Code, Expected, Unexpected});
+    TestVector.push_back({"object method call using this", Code, Expected, Unexpected, NoException});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method StoreSumm taking a,b returning integer of class TestClass:\n"
+           "w := a + b;\n"
+           "returning 13;\n"
+           "endmethod\n"
+           "method GetSumm taking a,b returning integer of class TestClass:\n"
+           "returning w;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to StoreSumm with [a:=7, b:=11];\n"
+           "print(o);\n"
+           "p as TestClass;\n"
+           "p := o;\n"
+           "y := tell p to GetSumm   with [a:=99, b:=113];\n"
+           "print(z);\n"
+           "print(y);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["y"] = MakeVariable("y", 18LL);
+    Expected["z"] = MakeVariable("z", 13LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object passing", Code, Expected, Unexpected, NoException});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method StoreSumm taking a,b returning integer of class TestClass:\n"
+           "w := a + b;\n"
+           "returning 13;\n"
+           "endmethod\n"
+           "method GetSumm taking a,b returning integer of class TestClass:\n"
+           "returning w;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to StoreSumm with [a:=7, b:=11];\n"
+           "print(o);\n"
+           "p as TestClass;\n"
+           "y := tell p to GetSumm   with [a:=99, b:=113];\n"
+           "print(z);\n"
+           "print(y);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["y"] = MakeVariable("y", 18LL);
+    Expected["z"] = MakeVariable("z", 13LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object passing", Code, Expected, Unexpected, RuntimeException});
 
 }
 
@@ -460,7 +528,7 @@ int TestClass::DoSingleTest(TestDataType const &TestData)
 {
 
     std::cout << "\n *** Ececuting Test " + TestData.Title + " *** ...";
-    std::vector<std::string> Results = DoOneTest(TestData.Codeblock, TestData.Expected, TestData.Unexpected);
+    std::vector<std::string> Results = DoOneTest(TestData.Codeblock, TestData.Expected, TestData.Unexpected, TestData.ExpectedException);
     if (Results.size() == 0) {
         std::cout << " *** Test Passed ***\n";
     } else {
@@ -472,7 +540,7 @@ int TestClass::DoSingleTest(TestDataType const &TestData)
     return Results.empty()?0:1;
 }
 
-std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVariableType Expected, std::vector<std::string> Unexpected)
+std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVariableType Expected, std::vector<std::string> Unexpected, ExceptionFilter ExpectedExceptions)
 {
     std::vector<std::string> Errors;
     std::unique_ptr<driver> drv = std::make_unique<driver>(Env, SystemInterface);
@@ -480,42 +548,71 @@ std::vector<std::string> TestClass::DoOneTest (std::string Codeblock, ExpectedVa
     drv->result.clear();
     try {
         if (drv->parse(Codeblock.c_str())) {
+            if ((ExpectedExceptions & ParsingException) != 0) {
+                return {};
+            }
             Errors.push_back("Abnormal parsing end");
             return Errors;
         }
     } catch (ErrorBaseClass &e) {
+        if ((ExpectedExceptions & ParsingException) != 0) {
+            return {};
+        }
         std::ostringstream os;
         os << " at Location: " << drv->location;
         Errors.push_back(std::string("Exception: ") + e.what() + os.str());
         return Errors;
     } catch (std::exception &e) {
+        if ((ExpectedExceptions & StdException) != 0) {
+            return {};
+        }
         std::ostringstream os;
         os << " at Location: " << drv->location;
         Errors.push_back(std::string("Exception: ") + e.what() + os.str());
         return Errors;
     } catch (...) {
+        if ((ExpectedExceptions & OtherException) != 0) {
+            return {};
+        }
         std::ostringstream os;
         os << " at Location: " << drv->location;
         Errors.push_back(std::string("Unknown Exception ") + os.str());
         return Errors;
     }
     if (!drv->GetErrors().empty()) {
+        if ((ExpectedExceptions & ParsingException) != 0) {
+            return {};
+        }
         Errors.push_back(std::string("Syntax error in testcode"));
         return Errors;
     }
     try {
         drv->Run();
     } catch (ErrorBaseClass &e) {
+        if ((ExpectedExceptions & RuntimeException) != 0) {
+            return {};
+        }
         std::ostringstream os;
         Errors.push_back(std::string("Runtime Exception: ") + e.what());
         return Errors;
     } catch (std::exception &e) {
+        if ((ExpectedExceptions & StdException) != 0) {
+            return {};
+        }
         Errors.push_back(std::string("Runtime Exception: ") + e.what());
         return Errors;
     } catch (...) {
+        if ((ExpectedExceptions & OtherException) != 0) {
+            return {};
+        }
         Errors.push_back(std::string("Unknown Exception at runtime "));
         return Errors;
     }
+    if (ExpectedExceptions != NoException) {
+        Errors.push_back(std::string("Expected exception not thrown..."));
+        return Errors;
+    }
+
     for (auto &v: Expected) {
         std::shared_ptr<VariableClass> V =
             drv->Variables.GetVariableReferenceForContext(v.first, 0);

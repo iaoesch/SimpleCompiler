@@ -659,7 +659,7 @@ StatementResultClass AssignementClass::Execute(Environment &Env) const
     Env.Tracing(GetLocation(), "Assign(...)");
     VariableReferenceType ReferedVariable = Variable->GetWriteReferenceToContent(WritableValueClass::IfNotExistCreateIfPossible);
     if (ReferedVariable == nullptr) {
-        throw SyntaxErrorClass("Could not get write reference to '" + Variable->GetName() + "'");
+        throw SyntaxErrorClass("Assign: Could not get write reference to '" + Variable->GetName() + "'");
     }
     try {
         Variables::VariableContentClass Result = AssignedExpression->Evaluate(Env);
@@ -672,7 +672,7 @@ StatementResultClass AssignementClass::Execute(Environment &Env) const
     }
     catch (RuntimeErrorClass &e) {
         std::stringstream s;
-        s << "at [" << GetLocation() << "]";
+        s << "while assigning at [" << GetLocation() << "]";
         e.ExtendMessage(s.str(), GetLocation().begin.line);
         throw e;
     }
@@ -1061,10 +1061,28 @@ Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) co
 {
     if (Env.DoEvaluateFunctions) {
         TheFunction->CreateFrame();
-        for (auto const &s: Assignements) {
-            s->Execute(Env);
+        try {
+           for (auto const &s: Assignements) {
+               s->Execute(Env);
+           }
         }
-        auto Result = TheFunction->Execute(Env);
+        catch (RuntimeErrorClass &e) {
+            std::stringstream s;
+            s << "while passing Arguments at [" << GetLocation() << "]";
+            e.ExtendMessage(s.str(), GetLocation().begin.line);
+            throw e;
+        }
+        Variables::VariableContentClass Result;
+        try  {
+            Result = TheFunction->Execute(Env);
+        }
+        catch (RuntimeErrorClass &e) {
+           std::stringstream s;
+           s << "while executing functionbody at [" << GetLocation() << "]";
+           e.ExtendMessage(s.str(), GetLocation().begin.line);
+           throw e;
+        }
+
         TheFunction->ReleaseFrame();
         return Result;
     } else {
