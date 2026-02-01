@@ -171,7 +171,7 @@ class ObjectClass {
 public:
     ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
 public:
-    ObjectClass(const ObjectClass &s) = default;
+    ObjectClass(const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();} // = default;
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
 public:
     void PrintDetail(std::ostream &s, int Limit) const;

@@ -148,8 +148,8 @@ const ValueTypeDescriptorClass &LocalVariableClass::GetContainedType() const
 const Variables::VariableContentClass &LateBindingVariableClass::GetValue() const
 {
     Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-    const Variables::ObjectClass &r = v.GetValue<Variables::ObjectClass>();
-    return r.GetVariableContentForOffset((Memberreference->GetValue().GetValue<Variables::MemberPointer>()));
+    const Variables::ObjectReference &r = v.GetValue<Variables::ObjectReference>();
+    return r->GetVariableContentForOffset((Memberreference->GetValue().GetValue<Variables::MemberPointer>()));
 }
 
 Variables::VariableContentClass const &LateBindingVariableClass::GetInitialValue() const
@@ -162,8 +162,8 @@ Variables::VariableContentClass &LateBindingVariableClass::GetWriteReferenceToVa
 {
     if (!IsWriteable()) { throw RuntimeErrorClass("Variable not writeable", -1);}
     Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-    Variables::ObjectClass &r = v.GetWriteReference<Variables::ObjectClass>();
-    return r.GetVariableContentWriteReferenceForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>());
+    Variables::ObjectReference &r = v.GetWriteReference<Variables::ObjectReference>();
+    return r->GetVariableContentWriteReferenceForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>());
 }
 
 void LateBindingVariableClass::SetValue(Variables::VariableContentClass v)
@@ -172,8 +172,8 @@ void LateBindingVariableClass::SetValue(Variables::VariableContentClass v)
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Variables::VariableContentClass &ThisObject = BoundMethod->GetVariableContentWriteReferenceForOffset(ThisOffset);
-        Variables::ObjectClass &r = ThisObject.GetWriteReference<Variables::ObjectClass>();
-        return r.SetVariableContentForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>(), v);
+        Variables::ObjectReference &r = ThisObject.GetWriteReference<Variables::ObjectReference>();
+        return r->SetVariableContentForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>(), v);
     } else {
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
@@ -190,8 +190,8 @@ void LateBindingVariableClass::SetInitialValue(Variables::VariableContentClass v
     PrepareForAssignment(v);
     if (IsAssignable(v)) {
         Variables::VariableContentClass v = BoundMethod->GetVariableContentForOffset(ThisOffset);
-        Variables::ObjectClass &r = v.GetWriteReference<Variables::ObjectClass>();
-        return r.InitializeVariableContentForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>(), v);
+        Variables::ObjectReference &r = v.GetWriteReference<Variables::ObjectReference>();
+        return r->InitializeVariableContentForOffset(Memberreference->GetValue().GetValue<Variables::MemberPointer>(), v);
     } else {
         std::stringstream s;
         s << "Incompatible Type, assigning " << v.getType() << " to " << Type();
