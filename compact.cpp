@@ -1099,7 +1099,7 @@ const TypeDescriptorClass FunctionCallClass::GetType() const
 Variables::VariableContentClass InstanceClass::Evaluate(Environment &Env) const
 {
     if (Env.DoEvaluateFunctions) {
-        return Variables::VariableContentClass(*(TheClass->CreateInstance()));
+        return Variables::VariableContentClass((TheClass->CreateInstance()));
     } else {
         return Variables::VariableContentClass::MakeUndefined();
     }
@@ -1125,7 +1125,7 @@ void InstanceClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 const TypeDescriptorClass InstanceClass::GetType() const
 {
-    return VariableTypeDescriptorClass(TheClass);
+    return VariableTypeDescriptorClass(ObjectReferenceDescriptorClass(TheClass));
 }
 
 

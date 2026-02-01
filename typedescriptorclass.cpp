@@ -105,12 +105,27 @@ TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescript
             }
         }
         break;
-            
 
-        case Type::Object:
+#if 0
+        case Type::Object_z:
         {
             const ObjectDescriptorClass &od1 = std::get<ObjectDescriptorClass>(t1.Descriptor);
             const ObjectDescriptorClass &od2 = std::get<ObjectDescriptorClass>(t2.Descriptor);
+            if (od1 == od2) {
+                return t1;
+            } else if (od1.IsDerivedFrom(od2)) {
+                return t2;
+            } else if (od2.IsDerivedFrom(od1)) {
+                return t1;
+            } else {
+                return TypeDescriptorClass(Type::Undefined);
+            }
+        }
+#endif
+        case Type::ObjectReference:
+        {
+            const ObjectReferenceDescriptorClass &od1 = std::get<ObjectReferenceDescriptorClass>(t1.Descriptor);
+            const ObjectReferenceDescriptorClass &od2 = std::get<ObjectReferenceDescriptorClass>(t2.Descriptor);
             if (od1 == od2) {
                 return t1;
             } else if (od1.IsDerivedFrom(od2)) {
@@ -187,7 +202,8 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::Map:       s << "Map"; break;
     case ValueTypeDescriptorClass::Type::Class:     s << "Class"; break;
     case ValueTypeDescriptorClass::Type::MemberPointer: s << "Memberptr"; break;
-    case ValueTypeDescriptorClass::Type::Object:    s << "Object"; break;
+  //  case ValueTypeDescriptorClass::Type::Object_z:    s << "Object"; break;
+    case ValueTypeDescriptorClass::Type::ObjectReference:    s << "Objectref"; break;
     case ValueTypeDescriptorClass::Type::Internal:  s << "Internal"; break;
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
     case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;

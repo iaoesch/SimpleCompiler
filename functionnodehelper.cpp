@@ -255,7 +255,7 @@ void FunctionNodeHelper::SetClassContext(std::string Classname) {
 
     Info.ClassForMethod = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
     // Now we know the Class, so we can set type for this
-    Info.ThisParameter->SetType(VariableTypeDescriptorClass(Info.ClassForMethod));
+    Info.ThisParameter->SetType(VariableTypeDescriptorClass(ObjectReferenceDescriptorClass(Info.ClassForMethod)));
 
     auto Context = Info.ClassForMethod->getContextForParsing();
     Info.ProxyContext->SetReferedContext(Context);
@@ -353,11 +353,11 @@ void FunctionNodeHelper::BeginMethodCallForObject(std::string ObjectName, const 
     if (Var == nullptr) {
         throw SyntaxErrorClass("Object '" + ObjectName + "' not found");
     }
-    if (!Var->Type().IsKindOf(TypeDescriptorClass::Type::Object)) {
+    if (!Var->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
         throw SyntaxErrorClass("'" + ObjectName + "' is not an object, cannot send messages to it");
     }
     VariableTypeDescriptorClass Type = Var->Type();
-    ObjectDescriptorClass const ObjectDescriptor = Type.GetTypeDetails<ObjectDescriptorClass>();
+    ObjectReferenceDescriptorClass const ObjectDescriptor = Type.GetTypeDetails<ObjectReferenceDescriptorClass>();
     std::shared_ptr<const Variables::ClassClass> UsedClass = ObjectDescriptor.GetClass();
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject = Var;
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass = UsedClass;
@@ -395,10 +395,10 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     if (Var == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found");
     }
-    if ( ! Var->Type().IsKindOf(TypeDescriptorClass::Type::Object)) {
+    if ( ! Var->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
     }
-    if (Var->Type().GetTypeDetails<ObjectDescriptorClass>().GetClass() != UsedClass) {
+    if (Var->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass() != UsedClass) {
         throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
     }
     auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);

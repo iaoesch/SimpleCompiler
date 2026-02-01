@@ -165,15 +165,14 @@ private:
 
 class LateBindingVariableClass : public VariableClass
 {
-    uint32_t Reference;
     static const uint32_t ThisOffset = 0;
     std::string ReferenceName;
     std::shared_ptr<Variables::MethodDefinitionClass> BoundMethod;
     std::shared_ptr<VariableClass> Memberreference;
 
 public:
-    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference_, std::shared_ptr<Variables::MethodDefinitionClass> Parent_, StorageClass Storage_, std::shared_ptr<VariableClass> Memberreference_) : VariableClass(Name_, Type_, Storage_),
-        Reference(Reference_), ReferenceName(Name_), BoundMethod(Parent_), Memberreference(Memberreference_){}
+    LateBindingVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, std::shared_ptr<Variables::MethodDefinitionClass> Parent_, StorageClass Storage_, std::shared_ptr<VariableClass> Memberreference_) : VariableClass(Name_, Type_, Storage_),
+        ReferenceName(Name_), BoundMethod(Parent_), Memberreference(Memberreference_){}
     virtual ~LateBindingVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;

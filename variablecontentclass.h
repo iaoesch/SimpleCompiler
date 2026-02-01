@@ -170,10 +170,13 @@ class ObjectClass {
     //ObjectClass *Parent;
 public:
     ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
+public:
     ObjectClass(const ObjectClass &s) = default;
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+public:
     void PrintDetail(std::ostream &s, int Limit) const;
 
+   // ValueTypeDescriptorClass GetTypeDescriptor() const;
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     bool operator == (const ObjectClass &Other) const {(void) Other; return false;}
 #if 0
@@ -218,27 +221,27 @@ public:
         throw INTERNAL_ERROR_OBJECT ("Cannot initialize Attribute of object after construction");
     }
 
-    VariableContentClass const &GetVariableContentForOffset(MemberPointer &MemberPtr) const
+    VariableContentClass const &GetVariableContentForOffset(const MemberPointer &MemberPtr) const
     {
         MemberPtr.RejectIncompatible(MyClass);
         return AttributeStorage.at(MemberPtr.getOffset());
     }
 
-    VariableContentClass const &GetInitialVariableContentForOffset(MemberPointer &MemberPtr) const
+    VariableContentClass const &GetInitialVariableContentForOffset(const MemberPointer &MemberPtr) const
     {
         MemberPtr.RejectIncompatible(MyClass);
         return MyClass->GetInitialVariableContentForOffset(MemberPtr.getOffset());
     }
 
-    VariableContentClass &GetVariableContentWriteReferenceForOffset(MemberPointer &MemberPtr)
+    VariableContentClass &GetVariableContentWriteReferenceForOffset(const MemberPointer &MemberPtr)
     {
         MemberPtr.RejectIncompatible(MyClass);
         return AttributeStorage.at(MemberPtr.getOffset());
     }
 
-    void SetVariableContentForOffset(MemberPointer &MemberPtr, VariableContentClass const &v);
+    void SetVariableContentForOffset(const MemberPointer &MemberPtr, VariableContentClass const &v);
 
-    void InitializeVariableContentForOffset(MemberPointer &MemberPtr, VariableContentClass const &v) {
+    void InitializeVariableContentForOffset(const MemberPointer &MemberPtr, VariableContentClass const &v) {
         (void) v;
         MemberPtr.RejectIncompatible(MyClass);
         throw INTERNAL_ERROR_OBJECT ("Cannot initialize Attribute of object after construction");
@@ -479,7 +482,7 @@ public:
 
 
 class FunctionDefinitionBaseClass;
-
+typedef std::shared_ptr<ObjectClass> ObjectReference;
 
 class
     VariableContentClass {
@@ -502,6 +505,7 @@ class
                          MapClass,
                          std::shared_ptr<ClassClass>,
                          ObjectClass,
+                         ObjectReference,
                          MemberPointer,
                          TypeDescriptorClass,
                          std::shared_ptr<ExpressionClass>,
@@ -534,7 +538,8 @@ public:
     VariableContentClass(Variables::ListClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MapClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<ClassClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Class)), AssignedExpression(nullptr) {}
-    VariableContentClass(Variables::ObjectClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+   // VariableContentClass(Variables::ObjectClass Value) : Data(Value), Type(Value.GetTypeDescriptor()), AssignedExpression(nullptr) {}
+    VariableContentClass(Variables::ObjectReference Value) : Data(Value), Type((Value->GetTypeDescriptor())), AssignedExpression(nullptr) {}
     VariableContentClass(Variables::MemberPointer Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::MemberPointer)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<InternalObjectClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Internal)), AssignedExpression(nullptr) {}
     VariableContentClass(std::shared_ptr<FunctionDefinitionBaseClass> Value) : Data(Value), Type(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Function)), AssignedExpression(nullptr) {}
@@ -894,10 +899,11 @@ inline void ObjectClass::SetVariableContentForOffset(uint32_t Offset, const Vari
         AttributeStorage.at(Offset) = v;
 }
 
-inline void ObjectClass::SetVariableContentForOffset(MemberPointer &MemberPtr, const VariableContentClass &v)
+inline void ObjectClass::SetVariableContentForOffset(const MemberPointer &MemberPtr, const VariableContentClass &v)
 {
     MemberPtr.RejectIncompatible(MyClass);
-    AttributeStorage.at(MemberPtr.getOffset()) = v;
+    VariableContentClass &tmp = AttributeStorage.at(MemberPtr.getOffset());
+    tmp = v;
 }
 
 

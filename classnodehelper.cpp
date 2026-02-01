@@ -102,7 +102,7 @@ std::unique_ptr<VariableTypeDescriptorClass> ClassNodeHelper::MakeTypeFromClassN
         throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
     }
     std::shared_ptr<Variables::ClassClass> TheClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
-    return std::make_unique<VariableTypeDescriptorClass>(TheClass);
+    return std::make_unique<VariableTypeDescriptorClass>(ObjectReferenceDescriptorClass(TheClass));
 }
 
 std::shared_ptr<InstanceClass> ClassNodeHelper::MakeObjectFromClassName(std::string ClassName, const LocationType &l)

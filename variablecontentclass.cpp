@@ -474,6 +474,7 @@ std::ostream &operator <<(std::ostream &s, const VariableContentClass &v)
                    [&s](const MapClass &arg) { (void)arg; s << "[map]"; },
                    [&s](const std::shared_ptr<ClassClass> &arg) { (void)arg; s << "[Class]"; },
                    [&s](const ObjectClass &arg) { (void)arg; s << "[Object]"; },
+                   [&s](const ObjectReference &arg) { (void)arg; s << "[Objectref]"; },
                    [&s](const MemberPointer &arg) { (void)arg; s << "[Member ptr]"; },
                    [&s](const std::shared_ptr<InternalObjectClass> &arg) { (void)arg; s << "[Internal]";  },
                    [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression]\n"; arg->Print(s);  },
@@ -498,6 +499,7 @@ void VariableContentClass::PrintDetail(std::ostream &s, int Limit) const
                        [&s, Limit](const MapClass &arg) { s << "[map:"; arg.PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const std::shared_ptr<ClassClass> &arg) { s << "[Class:"; arg->PrintDetail(s, Limit); s << "]"; },
                        [&s, Limit](const ObjectClass &arg) { s << "[Object:"; arg.PrintDetail(s, Limit); s << "]"; },
+                       [&s, Limit](const ObjectReference &arg) { s << "[Object:"; arg->PrintDetail(s, Limit); s << "]"; },
                        [&s](const MemberPointer &arg) { s << "[MemberPtr:"; arg.PrintDetail(s); s << "]"; },
                        [&s](const std::shared_ptr<InternalObjectClass> &arg) { s << "[Internal: "; arg->PrintDetail(s); s << "]";},
                        [&s](const std::shared_ptr<ExpressionClass> &arg) { s << "[expression>\n"; auto v = arg->Evaluate(); if (!v.Isempty()) {s << v;}; arg->Print(s);  },
@@ -1085,18 +1087,43 @@ ClassClass::MethodCallHelperClass ClassClass::GetMethodeReference(std::string Na
 }
 #endif
 
+#if 0
 ValueTypeDescriptorClass ObjectClass::GetTypeDescriptor() const
 {
     if (MyClass == nullptr) {
         throw (INTERNAL_ERROR_OBJECT("Myclass is nullpter, cannot get type"));
     }
-    return ValueTypeDescriptorClass(MyClass);
+    return ValueTypeDescriptorClass(ObjectDescriptorClass(MyClass));
+}
+#endif
+
+ValueTypeDescriptorClass ObjectClass::GetTypeDescriptor() const
+{
+    if (MyClass == nullptr) {
+        throw (INTERNAL_ERROR_OBJECT("Myclass is nullpter, cannot get type"));
+    }
+    return ValueTypeDescriptorClass(ObjectReferenceDescriptorClass(MyClass));
 }
 
 void ObjectClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void) Limit;
-    s << "Object of class " << (MyClass==nullptr?"<nullptr>":MyClass->GetName());
+    s << "Object of class ";
+    if (MyClass==nullptr) {
+       s << "<nullptr>";
+    } else {
+       s << "'" << MyClass->GetName() << "'= {\n";
+          for (int i = 0; i < AttributeStorage.size(); i++) {
+           if (MyClass->GetObjectVariableReferences().size() > i) {
+             s << MyClass->GetObjectVariableReferences()[i]->GetName() << ": ";
+           } else {
+               s << "'?': ";
+           }
+           s << AttributeStorage[i] << "\n";
+       }
+          s << "}\n";
+    }
+
 }
 
 #if 0

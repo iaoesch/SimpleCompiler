@@ -415,8 +415,9 @@ void TestClass::BuildAllTests()
            "o as TestClass;\n"
            "o := new TestClass;\n"
            "print(o);\n"
-           "z := tell o to StoreSumm with [a:=7, b:=11];"
-           "y := tell o to GetSumm   with [a:=99, b:=113];"
+           "z := tell o to StoreSumm with [a:=7, b:=11];\n"
+           "print(o);\n"
+           "y := tell o to GetSumm   with [a:=99, b:=113];\n"
            "print(z);\n"
            "print(y);\n"
         ;

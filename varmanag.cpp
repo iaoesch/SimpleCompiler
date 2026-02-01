@@ -244,7 +244,8 @@ std::shared_ptr<VariableClass> VariableManager::CreateSymbol(std::string Name, c
             if (Parent == nullptr) {
                 throw INTERNAL_ERROR_OBJECT("got wrong parent type");
             }
-            Var = std::make_shared<LateBindingVariableClass>(Name, Type, LocalOffset++, Parent, Storage, ReferedVariable);
+            LocalOffset++; // we use unescessary space for now...
+            Var = std::make_shared<LateBindingVariableClass>(Name, Type, Parent, Storage, ReferedVariable);
         } else {
            DefaultEnvironment->DebugOutput() << "creating local <" << Name << ">\n";
            Var = std::make_shared<LocalVariableClass>(Name, Type, LocalOffset++, std::get<FktTemplate>(LocalStorageInfoStack.back().LocalStorageTemplates).LocalsParent, Storage);

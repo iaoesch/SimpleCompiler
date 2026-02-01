@@ -27,8 +27,9 @@ class DynamicDescriptorClass;
 class VariableTypeDescriptorClass;
 class ObjectDescriptorClass;
 class ClassDescriptorClass;
+class ObjectReferenceDescriptorClass;
 
-using ValueTypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass, ReferenceDescriptorClass, ObjectDescriptorClass>;
+using ValueTypeDescriptor = std::variant<std::monostate, StackDescriptorClass, ArrayDescriptorClass, MapDescriptorClass, ReferenceDescriptorClass, /*ObjectDescriptorClass,*/ ObjectReferenceDescriptorClass>;
 
 
 #if 0
@@ -54,6 +55,11 @@ public:
 };
 #endif
 
+class ObjectReferenceDescriptorClass;
+
+// namespace just for refactoring, rename ObjectDescriptorClass later
+// to ObjectReferenceDescriptorClass...
+namespace HideOldImplementation {
 class ObjectDescriptorClass  {
     std::shared_ptr<Variables::ClassClass> MyClass;
 
@@ -61,6 +67,7 @@ public:
     ObjectDescriptorClass(std::shared_ptr<Variables::ClassClass> MyClass_) : MyClass(MyClass_) {}
     ObjectDescriptorClass(const ObjectDescriptorClass &s) = default;
     ObjectDescriptorClass &operator=(const ObjectDescriptorClass &s) = default;
+    bool operator ==(const ObjectReferenceDescriptorClass &s) const = delete;
     bool operator ==(const ObjectDescriptorClass &s) const
     {
         // If we have just one class, we might just compare the pointer to it
@@ -71,10 +78,23 @@ public:
            // return (MyClass->IsDerivedFrom(*s.MyClass)) || (s.MyClass->IsDerivedFrom(*MyClass));
         }
     }
+    bool IsDerivedFrom(const ObjectReferenceDescriptorClass &s) const = delete;
     bool IsDerivedFrom(const ObjectDescriptorClass &s) const {
        // return MyClass->IsDerivedFrom(*s.MyClass);
     }
     std::shared_ptr<const Variables::ClassClass> GetClass() const { return MyClass;}
+};
+}
+
+class ObjectReferenceDescriptorClass : public HideOldImplementation::ObjectDescriptorClass{
+public:
+    using ObjectDescriptorClass::ObjectDescriptorClass;
+    ObjectReferenceDescriptorClass(const ObjectReferenceDescriptorClass &s) = default;
+    ObjectReferenceDescriptorClass &operator=(const ObjectReferenceDescriptorClass &s) = default;
+    bool operator ==(const ObjectReferenceDescriptorClass &s) const {return ObjectDescriptorClass::operator==(ObjectDescriptorClass(s));}
+    bool IsDerivedFrom(const ObjectDescriptorClass &s) const {
+        // return ObjectDescriptorClass::IsDerivedFrom(ObjectDescriptorClass(s)));
+    }
 };
 
 class StackDescriptorClass  {
@@ -154,7 +174,8 @@ public:
         Dynamic,
         Reference,
         Type,
-        Object,
+     //   Object_z,
+        ObjectReference,
         MemberPointer,
         Class,
         Internal,
@@ -206,8 +227,10 @@ protected:
             return Type::Map;
         } else if (std::holds_alternative<ReferenceDescriptorClass>(Descriptor)) {
             return Type::Reference;
-        } else if (std::holds_alternative<ObjectDescriptorClass>(Descriptor)) {
-            return Type::Object;
+ //       } else if (std::holds_alternative<ObjectDescriptorClass>(Descriptor)) {
+ //           return Type::Object_z;
+        } else if (std::holds_alternative<ObjectReferenceDescriptorClass>(Descriptor)) {
+            return Type::ObjectReference;
         } else {
             throw std::runtime_error("Inconsistent type state");
         }
@@ -236,7 +259,8 @@ protected:
         case Type::Array:
         case Type::Map:
         case Type::Reference:
-        case Type::Object:
+     //   case Type::Object_z:
+        case Type::ObjectReference:
         case Type::Illegal:
             throw INTERNAL_ERROR_OBJECT("Invalid Type");
             break;
@@ -380,7 +404,8 @@ inline bool operator == (TypeDescriptorClass const&td, TypeDescriptorClass::Type
     if ((t == TypeDescriptorClass::Type::Stack) ||
         (t == TypeDescriptorClass::Type::Array) ||
         (t == TypeDescriptorClass::Type::Internal) ||
-        (t == TypeDescriptorClass::Type::Object) ||
+    //    (t == TypeDescriptorClass::Type::Object_z) ||
+        (t == TypeDescriptorClass::Type::ObjectReference) ||
         //(t == TypeDescriptorClass::Type::Class) ||
         (t == TypeDescriptorClass::Type::Illegal)) {
         return false;
@@ -405,8 +430,11 @@ inline bool operator == (TypeDescriptorClass const&t1, TypeDescriptorClass const
     if (t1.MyType == TypeDescriptorClass::Type::Internal) {
         return false;
     }
-    if (t1.MyType == TypeDescriptorClass::Type::Object) {
-        return std::get<ObjectDescriptorClass>(t1.Descriptor) == std::get<ObjectDescriptorClass>(t2.Descriptor);
+ //   if (t1.MyType == TypeDescriptorClass::Type::Object_z) {
+ //       return std::get<ObjectDescriptorClass>(t1.Descriptor) == std::get<ObjectDescriptorClass>(t2.Descriptor);
+ //   }
+    if (t1.MyType == TypeDescriptorClass::Type::ObjectReference) {
+        return std::get<ObjectReferenceDescriptorClass>(t1.Descriptor) == std::get<ObjectReferenceDescriptorClass>(t2.Descriptor);
     }
     if (t1.MyType == TypeDescriptorClass::Type::Stack) {
         return std::get<StackDescriptorClass>(t1.Descriptor).BaseType->MyType == std::get<StackDescriptorClass>(t2.Descriptor).BaseType->MyType;
