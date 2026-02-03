@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "typedescriptorclass.hpp"
+#include "variablecontentclass.h"
 
 TypeDescriptorClass CommonType(const TypeDescriptorClass &t1, const TypeDescriptorClass &t2)
 {
@@ -203,7 +204,7 @@ std::ostream &operator << (std::ostream &s, TypeDescriptorClass const&t)
     case ValueTypeDescriptorClass::Type::Class:     s << "Class"; break;
     case ValueTypeDescriptorClass::Type::MemberPointer: s << "Memberptr"; break;
   //  case ValueTypeDescriptorClass::Type::Object_z:    s << "Object"; break;
-    case ValueTypeDescriptorClass::Type::ObjectReference:    s << "Objectref"; break;
+    case ValueTypeDescriptorClass::Type::ObjectReference:    s << "Objectref(" << t.GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass()->GetName() << ")"; break;
     case ValueTypeDescriptorClass::Type::Internal:  s << "Internal"; break;
     case ValueTypeDescriptorClass::Type::Function:  s << "Function"; break;
     case ValueTypeDescriptorClass::Type::Expression:s << "Expression"; break;
@@ -240,3 +241,6 @@ ArrayDescriptorClass::ArrayDescriptorClass(std::vector<int64_t> UncheckedDimensi
 
 
 
+bool HideOldImplementation::ObjectDescriptorClass::IsDerivedFrom(const ObjectDescriptorClass &s) const {
+    return MyClass->IsDerivedFrom(*s.MyClass);
+}

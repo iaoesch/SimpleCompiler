@@ -481,9 +481,6 @@ void TestClass::BuildAllTests()
            "endmethod\n"
            "o as TestClass;\n"
            "o := new TestClass;\n"
-           "print(o);\n"
-           "z := tell o to StoreSumm with [a:=7, b:=11];\n"
-           "print(o);\n"
            "p as TestClass;\n"
            "y := tell p to GetSumm   with [a:=99, b:=113];\n"
            "print(z);\n"
@@ -491,7 +488,35 @@ void TestClass::BuildAllTests()
         ;
 
     Expected.clear();
-    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Unexpected.clear();
+    TestVector.push_back({"calling uninitialzed objectreference", Code, Expected, Unexpected, RuntimeException});
+
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method StoreSumm taking a,b returning integer of class TestClass:\n"
+           "w := a + b;\n"
+           "returning 13;\n"
+           "endmethod\n"
+           "method GetSumm taking a,b returning integer of class TestClass:\n"
+           "returning w;\n"
+           "endmethod\n"
+           "class TestClassChild based on TestClass\n"
+           "v as integer; \n"
+           "endclass; \n"
+           "o as TestClassChild;\n"
+           "o := new TestClassChild;\n"
+           "print(o);\n"
+           "z := tell o to StoreSumm with [a:=7, b:=11];\n"
+           "print(o);\n"
+           "y := tell o to GetSumm   with [a:=99, b:=113];\n"
+           "print(z);\n"
+           "print(y);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClassChild"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
     Expected["y"] = MakeVariable("y", 18LL);
     Expected["z"] = MakeVariable("z", 13LL);
     Unexpected.clear();
@@ -500,7 +525,7 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("x");
     Unexpected.push_back("w");
 
-    TestVector.push_back({"object passing", Code, Expected, Unexpected, RuntimeException});
+    TestVector.push_back({"object parent method call using this", Code, Expected, Unexpected, NoException});
 
 }
 

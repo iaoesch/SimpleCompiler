@@ -1150,6 +1150,32 @@ std::shared_ptr<VariableClass> ObjectClass::GetVariableReference(std::string Nam
     }
 }
 #endif
+bool ClassClass::IsDerivedFrom(const ClassClass &s) const
+{
+    for (auto &p: Parents) {
+        if (p != nullptr) {
+            if (p->IsSameOrDerivedFrom(s)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool ClassClass::IsSameOrDerivedFrom(const ClassClass &s) const
+{
+    if (*this == s) {
+        return true;
+    }
+    for (auto &p: Parents) {
+        if (p != nullptr) {
+            if (p->IsSameOrDerivedFrom(s)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 
 std::shared_ptr<MethodDefinitionClass>
 ClassClass::GetMethod(std::string Name) const {

@@ -391,17 +391,21 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
 
     // make assignement for this (first parameter)
-    std::shared_ptr<VariableClass> Var = Method->GetParameterByIndex(0);
-    if (Var == nullptr) {
+    std::shared_ptr<VariableClass> Thisreference = Method->GetParameterByIndex(0);
+    if (Thisreference == nullptr) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found");
     }
-    if ( ! Var->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
+    if ( ! Thisreference->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
         throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
     }
-    if (Var->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass() != UsedClass) {
+    // class D public B
+    // d->mb B is Base of d d is derived from B
+    // b->mb B is same as b
+    // d->md D is same as d
+    if (! UsedClass->IsSameOrDerivedFrom(*Thisreference->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass())) {
         throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
     }
-    auto ToAssign = std::make_shared<VariableValueClass>(Var, Loc);
+    auto ToAssign = std::make_shared<VariableValueClass>(Thisreference, Loc);
     auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }

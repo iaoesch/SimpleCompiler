@@ -46,7 +46,8 @@ public:
     bool IsAssignable(Variables::VariableContentClass const &Content)
     {
         return( (   (MyType == TypeDescriptorClass::Type::Dynamic)
-                  || (MyType == Content.getType()))
+                  || (MyType == Content.getType())
+                 || (CommonType(MyType, Content.getType()) == MyType))
                 && IsWriteable()) ;
 
     }

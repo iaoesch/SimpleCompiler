@@ -98,9 +98,12 @@ public:
     }
     ClassClass(const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
     ClassClass &operator = (const ClassClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
+
     void PrintDetail(std::ostream &s, int Limit) const;
     const std::string &GetName() const {return Name;}
     bool operator == (const ClassClass &Other) const;
+    bool IsSameOrDerivedFrom(const ClassClass &s) const;
+    bool IsDerivedFrom(const ClassClass &s) const;
 
     //LocalStorageType FullObjectGetStorageTemplate();
     MemberStorageType &GetObjectStorageInitialValues() {return ObjectStorageInitialValues;}
@@ -110,8 +113,10 @@ public:
     uint32_t GetStorageTemplateFirstOffset() {return ClassStorageTemplateFirstOffset;}
     uint32_t GetClassStorageTemplateSize() {return GetClassStorageTemplateFirstOffset() + GetClassStorageTemplate().size();}
     uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetObjectVariableReferences().size();}
+
     std::shared_ptr<MethodDefinitionClass> GetMethod(std::string Name) const;
     void AddMethod(std::string Name, std::shared_ptr<MethodDefinitionClass> Method);
+
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
     {
         return ObjectStorageInitialValues.at(Offset);
@@ -119,8 +124,8 @@ public:
 
     ValueTypeDescriptorClass GetTypeDescriptor() const;
     std::shared_ptr<VariableClass> GetVariableTemplateReference(std::string Name);
-    struct MethodCallHelperClass{std::shared_ptr<VariableClass> Method; std::shared_ptr<ClassClass> Role;};
-    MethodCallHelperClass GetMethodeReference(std::string Name);
+  //  struct MethodCallHelperClass{std::shared_ptr<VariableClass> Method; std::shared_ptr<ClassClass> Role;};
+  //  MethodCallHelperClass GetMethodeReference(std::string Name);
 
     std::shared_ptr<VariableClass> GetParentVariableReference(std::string Name, ObjectClass *obj);
     std::shared_ptr<ObjectClass> CreateInstance();
@@ -146,9 +151,8 @@ public:
     }
     void RejectIncompatible(std::shared_ptr<ClassClass> OtherClass) const
     {
-        // For now we assume that each class exists only once
-        // and we ignore inheritance
-        if (MyClass != OtherClass) {
+        // Other must be known to us -> either our or derived from our class
+        if ( ! OtherClass->IsSameOrDerivedFrom(*MyClass)) {
             throw SyntaxErrorClass("Not compatible memberpointer");
         }
     }
@@ -195,9 +199,9 @@ public:
     }
 #endif
     std::shared_ptr<VariableClass> GetVariableReference(std::string Name);
-    ClassClass::MethodCallHelperClass GetMethodeReference(std::string Name) {
-        return MyClass->GetMethodeReference(Name);
-    }
+ //  ClassClass::MethodCallHelperClass GetMethodeReference(std::string Name) {
+ //       return MyClass->GetMethodeReference(Name);
+ //   }
     VariableContentClass const &GetVariableContentForOffset(uint32_t Offset) const
     {
         return AttributeStorage.at(Offset);

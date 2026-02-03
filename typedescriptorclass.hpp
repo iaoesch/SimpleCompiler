@@ -70,7 +70,7 @@ public:
     bool operator ==(const ObjectReferenceDescriptorClass &s) const = delete;
     bool operator ==(const ObjectDescriptorClass &s) const
     {
-        // If we have just one class, we might just compare the pointer to it
+        // If we have just one instance per class, we can just compare the pointer to it
         if (MyClass == s.MyClass) {
             return true;
         } else {
@@ -79,9 +79,7 @@ public:
         }
     }
     bool IsDerivedFrom(const ObjectReferenceDescriptorClass &s) const = delete;
-    bool IsDerivedFrom(const ObjectDescriptorClass &s) const {
-       // return MyClass->IsDerivedFrom(*s.MyClass);
-    }
+    bool IsDerivedFrom(const ObjectDescriptorClass &s) const;
     std::shared_ptr<const Variables::ClassClass> GetClass() const { return MyClass;}
 };
 }
@@ -93,7 +91,7 @@ public:
     ObjectReferenceDescriptorClass &operator=(const ObjectReferenceDescriptorClass &s) = default;
     bool operator ==(const ObjectReferenceDescriptorClass &s) const {return ObjectDescriptorClass::operator==(ObjectDescriptorClass(s));}
     bool IsDerivedFrom(const ObjectDescriptorClass &s) const {
-        // return ObjectDescriptorClass::IsDerivedFrom(ObjectDescriptorClass(s)));
+         return ObjectDescriptorClass::IsDerivedFrom(ObjectDescriptorClass(s));
     }
 };
 
@@ -462,6 +460,7 @@ inline bool operator != (TypeDescriptorClass const&t1, TypeDescriptorClass const
 {
     return !(t1 == t2);
 }
+//#include "variablecontentclass.h"
 
 
 #endif // TYPEDESCRIPTORCLASS_HPP
