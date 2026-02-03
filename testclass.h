@@ -36,7 +36,7 @@ private:
     std::vector<std::string> DoOneTest(std::string Codeblock, ExpectedVariableType Expected, std::vector<std::string> Unexpected, ExceptionFilter ExpectedExceptions);
     std::shared_ptr<GlobalVariableClass> MakeVariable(std::string Name, int64_t Value);
     int DoSingleTest(TestDataType const &TestData);
-    std::shared_ptr<GlobalVariableClass> MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value);
+    std::shared_ptr<GlobalVariableClass> MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value, std::shared_ptr<Variables::ClassClass> Parent = nullptr);
     void BuildAllTests();
     std::shared_ptr<GlobalVariableClass> MakeVariable(std::string Name, double Value);
 };

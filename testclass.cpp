@@ -24,10 +24,10 @@ std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, d
     return Var;
 }
 
-std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value)
+std::shared_ptr<GlobalVariableClass> TestClass::MakeVariable(std::string Name, std::vector<Variables::VariableContentClass> Value, std::shared_ptr<Variables::ClassClass> Parent)
 {
     std::shared_ptr<GlobalVariableClass> Var = std::make_shared<GlobalVariableClass>(Name, VariableTypeDescriptorClass(VariableTypeDescriptorClass::Type::Undefined), VariableClass::StorageClass::RW | VariableClass::StorageClass::Local);
-    std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(Name, nullptr);
+    std::shared_ptr<Variables::ClassClass> NewClass = std::make_shared<Variables::ClassClass>(Name, Parent);
     for (auto &r: Value) {
         NewClass->GetObjectStorageInitialValues().push_back(r);
         NewClass->GetObjectVariableReferences().push_back(std::make_shared<AttributeIndexVariableClass>("Hans", r.getType(), 1, NewClass, VariableClass::StorageClass::RW | VariableClass::StorageClass::Local));
@@ -516,7 +516,8 @@ void TestClass::BuildAllTests()
         ;
 
     Expected.clear();
-    Expected["TestClassChild"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["TestClassChild"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))}, Expected["TestClass"]->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>() );
     Expected["y"] = MakeVariable("y", 18LL);
     Expected["z"] = MakeVariable("z", 13LL);
     Unexpected.clear();

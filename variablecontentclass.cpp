@@ -955,6 +955,7 @@ ProxyVariableClass MapClass::GetOrCreateIndexedElement(std::string BaseName, Ele
 void ClassClass::PrintDetail(std::ostream &s, int Limit) const
 {
     (void) Limit;
+    s << "'" << Name << "' ";
     s << "class parent: \n";
     for (auto &p: Parents) {
         Limit--;
