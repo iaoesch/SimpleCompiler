@@ -755,7 +755,7 @@ protected:
     std::vector<std::shared_ptr<VariableClass>> Parameters;
     std::string Name;
     LocalStorageType StorageTemplate;
-    mutable std::vector<LocalStorageType> ActiveStorage;
+    mutable std::vector<std::shared_ptr<LocalStorageType>> ActiveStorage;
     //std::vector<Variables::VariableContentClass> ActiveReturnValue;
     //std::shared_ptr<VariableClass> ActiveReturnVariable;
     std::unique_ptr<VariableTypeDescriptorClass> ReturnType;
@@ -782,7 +782,8 @@ public:
     virtual void DrawDefinitionNode(std::ostream &s, int MyNodeNumber) const = 0;
 
     LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
-    void CreateFrame() {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep", Location.begin.line);} ActiveStorage.push_back(StorageTemplate);}
+    void UseFrame(std::shared_ptr<LocalStorageType>StorageTemplateReference) {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep", Location.begin.line);} ActiveStorage.push_back(StorageTemplateReference);}
+    void CreateFrame() {UseFrame(std::make_shared<LocalStorageType>(StorageTemplate));}
     void ReleaseFrame() {ActiveStorage.pop_back();}
    // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}
@@ -793,7 +794,7 @@ public:
                   if (ActiveStorage.empty()) {
                       throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
                   }
-                  return ActiveStorage.back().at(Offset);
+                  return ActiveStorage.back()->at(Offset);
                 }
 
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const
@@ -806,14 +807,14 @@ public:
                     {
                         throw INTERNAL_ERROR_OBJECT("Invalid Frame access");
                     }
-                return ActiveStorage.back().at(Offset);}
+                return ActiveStorage.back()->at(Offset);}
     void                        SetVariableContentForOffset(uint32_t Offset, VariableContentClass const &v)
                 {
                    if (ActiveStorage.empty())
                    {
                        throw INTERNAL_ERROR_OBJECT("Invalid Frame access for " + Name);
                     }
-                    ActiveStorage.back().at(Offset) = v;}
+                    ActiveStorage.back()->at(Offset) = v;}
 
     void InitializeVariableContentForOffset(uint32_t Offset, VariableContentClass const &v)
     {
@@ -874,7 +875,7 @@ public:
 
 class Callable {
 public:
-    virtual VariableContentClass Execute(FunctionDefinitionBaseClass::LocalStorageType &Parameters) = 0;
+    virtual VariableContentClass Execute(std::shared_ptr<FunctionDefinitionBaseClass::LocalStorageType> Parameters) = 0;
 };
 
 class PredefinedFunctionDefinitionClass : public FunctionDefinitionBaseClass {

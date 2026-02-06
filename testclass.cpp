@@ -528,6 +528,44 @@ void TestClass::BuildAllTests()
 
     TestVector.push_back({"object parent method call using this", Code, Expected, Unexpected, NoException});
 
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method GetValue taking a,b returning integer of class TestClass:\n"
+           "returning 13;\n"
+           "endmethod\n"
+           "method GetSumm taking a,b returning integer of class TestClass:\n"
+           "returning w;\n"
+           "endmethod\n"
+           "class TestClassChild based on TestClass\n"
+           "v as integer; \n"
+           "endclass; \n"
+           "method GetValue taking a,b returning integer of class TestClassChild:\n"
+           "returning 11;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClassChild;\n"
+           "print(o);\n"
+           "z := tell o to GetValue with [a:=7, b:=11];\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "y := tell o to GetValue with [a:=99, b:=113];\n"
+           "print(z);\n"
+           "print(y);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["TestClassChild"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))}, Expected["TestClass"]->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>() );
+    Expected["y"] = MakeVariable("y", 13LL);
+    Expected["z"] = MakeVariable("z", 11LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object overwritten method call using this", Code, Expected, Unexpected, NoException});
 }
 
 std::vector<std::string> TestClass::DoAllTests()

@@ -431,9 +431,10 @@ std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const Lo
         std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
         Loc);
 
-    return std::make_shared<FunctionCallClass>(
+    return std::make_shared<MethodCallClass>(
                std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod,
                std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
+               std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc),
                Loc);
 
 }

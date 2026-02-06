@@ -305,12 +305,29 @@ public:
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;
     virtual void              DrawNode(std::ostream &s, int MyNodeNumber) const override;
 
-    const std::string &GetName() {return TheFunction->GetName();}
+    const std::string &GetName() const {return TheFunction->GetName();}
   //  Variables::VariableContentClass &GetContentForOffset(uint32_t Offset);
 
 private:
     virtual const TypeDescriptorClass GetType() const override;
+
+protected:
+    Variables::VariableContentClass CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheFunction) const;
 };
+
+class MethodCallClass : public FunctionCallClass {
+
+    std::shared_ptr<ExpressionClass> ThisPointer;
+
+    public:
+    MethodCallClass(std::shared_ptr<Variables::MethodDefinitionClass> m, std::list<std::shared_ptr<StatementClass>> a, std::shared_ptr<ExpressionClass> ThisPointer_, const LocationType &Loc) : FunctionCallClass(m, a, Loc), ThisPointer(ThisPointer_) {}
+    MethodCallClass(const MethodCallClass &f) = default;
+    virtual                  ~MethodCallClass() override {}
+
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;
+
+};
+
 
 class InstanceClass : public ValueClass {
     std::shared_ptr<Variables::ClassClass> TheClass;

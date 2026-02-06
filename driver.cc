@@ -20,10 +20,10 @@ class TestCaller : public Variables::Callable {
 
     // Callable interface
 public:
-    virtual Variables::VariableContentClass Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters) override;
+    virtual Variables::VariableContentClass Execute(std::shared_ptr<Variables::FunctionDefinitionBaseClass::LocalStorageType> Parameters) override;
 };
 
-Variables::VariableContentClass TestCaller::Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters)
+Variables::VariableContentClass TestCaller::Execute(std::shared_ptr<Variables::FunctionDefinitionBaseClass::LocalStorageType> Parameters)
 {
     return Variables::VariableContentClass(6LL);
 }

@@ -1057,7 +1057,7 @@ void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 }
 
-Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) const
+Variables::VariableContentClass FunctionCallClass::CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheFunction) const
 {
     if (Env.DoEvaluateFunctions) {
         TheFunction->CreateFrame();
@@ -1085,6 +1085,35 @@ Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) co
 
         TheFunction->ReleaseFrame();
         return Result;
+    } else {
+        return Variables::VariableContentClass::MakeUndefined();
+    }
+}
+
+Variables::VariableContentClass FunctionCallClass::Evaluate(Environment &Env) const
+{
+    return CommonEvaluate(Env, TheFunction);
+}
+
+
+Variables::VariableContentClass MethodCallClass::Evaluate(Environment &Env) const
+{
+    if (Env.DoEvaluateFunctions) {
+        Variables::VariableContentClass ThisReference = ThisPointer->Evaluate(Env);
+        if (ThisReference.holds_alternative<Variables::ObjectReference>()) {
+            std::shared_ptr<const Variables::ClassClass> Class = ThisReference.GetValue<Variables::ObjectReference>()->GetTypeDescriptor().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass();
+            if (Class == nullptr) {
+                throw INTERNAL_ERROR_OBJECT("Objecdescriptor has no class");
+            }
+            std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = Class->GetMethod(GetName());
+            if (TheMethod != nullptr) {
+               return CommonEvaluate(Env, TheMethod);
+            } else {
+                throw RuntimeErrorClass("Method '" + GetName() + "' for class '" + Class->GetName() + "' not found", GetLocation().begin.line);
+            }
+        } else {
+            throw RuntimeErrorClass("Calling method for something not an object", GetLocation().begin.line);
+        }
     } else {
         return Variables::VariableContentClass::MakeUndefined();
     }

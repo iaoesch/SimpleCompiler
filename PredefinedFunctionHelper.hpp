@@ -177,14 +177,17 @@ public:
 
     // Callable interface
 public:
-    virtual Variables::VariableContentClass Execute(Variables::FunctionDefinitionBaseClass::LocalStorageType &Parameters) override
+    virtual Variables::VariableContentClass Execute(std::shared_ptr<Variables::FunctionDefinitionBaseClass::LocalStorageType> Parameters) override
     {
-        if (Parameters.size() != sizeof...(P)) {
+        if (Parameters == nullptr) {
+            throw INTERNAL_ERROR_OBJECT("got nullptr for parameters");
+        }
+        if (Parameters->size() != sizeof...(P)) {
             throw INTERNAL_ERROR_OBJECT("Number of parametername missmatch");
         }
 //        auto I = std::make_index_sequence<sizeof...(P)>();
 //        return Object->*FunctionPtr(std::get<P>(Parameters[I])...);
-        return docall(Parameters, std::make_index_sequence<sizeof...(P)>());
+        return docall(*Parameters, std::make_index_sequence<sizeof...(P)>());
     }
 
 };
