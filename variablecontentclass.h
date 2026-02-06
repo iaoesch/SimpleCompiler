@@ -783,7 +783,7 @@ public:
 
     LocalStorageType &GetStorageTemplate() {return StorageTemplate;}
     void UseFrame(std::shared_ptr<LocalStorageType>StorageTemplateReference) {if (ActiveStorage.size() > 100) {throw RuntimeErrorClass("Recursion too deep", Location.begin.line);} ActiveStorage.push_back(StorageTemplateReference);}
-    void CreateFrame() {UseFrame(std::make_shared<LocalStorageType>(StorageTemplate));}
+    std::shared_ptr<LocalStorageType> CreateFrame() {auto tmp = std::make_shared<LocalStorageType>(StorageTemplate); UseFrame(tmp); return tmp;}
     void ReleaseFrame() {ActiveStorage.pop_back();}
    // void SetReturnValue(std::shared_ptr<VariableClass> ReturnVariable_) {ActiveReturnVariable = ReturnVariable_;}
     void SetReturnType(std::unique_ptr<VariableTypeDescriptorClass> ReturnType_) {ReturnType = std::move(ReturnType_);}

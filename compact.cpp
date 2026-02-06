@@ -1057,10 +1057,13 @@ void FunctionCallStatementClass::DrawNode(std::ostream &s, int MyNodeNumber) con
 
 }
 
-Variables::VariableContentClass FunctionCallClass::CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheFunction) const
+Variables::VariableContentClass FunctionCallClass::CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheCalledMethod, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheOverwrittenMethod) const
 {
     if (Env.DoEvaluateFunctions) {
-        TheFunction->CreateFrame();
+        auto Frame = TheCalledMethod->CreateFrame();
+        if (TheOverwrittenMethod != nullptr) {
+            TheOverwrittenMethod->UseFrame(Frame);
+        }
         try {
            for (auto const &s: Assignements) {
                s->Execute(Env);
@@ -1074,7 +1077,7 @@ Variables::VariableContentClass FunctionCallClass::CommonEvaluate(Environment &E
         }
         Variables::VariableContentClass Result;
         try  {
-            Result = TheFunction->Execute(Env);
+            Result = TheCalledMethod->Execute(Env);
         }
         catch (RuntimeErrorClass &e) {
            std::stringstream s;
@@ -1083,7 +1086,7 @@ Variables::VariableContentClass FunctionCallClass::CommonEvaluate(Environment &E
            throw e;
         }
 
-        TheFunction->ReleaseFrame();
+        TheCalledMethod->ReleaseFrame();
         return Result;
     } else {
         return Variables::VariableContentClass::MakeUndefined();
@@ -1107,7 +1110,7 @@ Variables::VariableContentClass MethodCallClass::Evaluate(Environment &Env) cons
             }
             std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = Class->GetMethod(GetName());
             if (TheMethod != nullptr) {
-               return CommonEvaluate(Env, TheMethod);
+               return CommonEvaluate(Env, TheMethod, getTheFunction());
             } else {
                 throw RuntimeErrorClass("Method '" + GetName() + "' for class '" + Class->GetName() + "' not found", GetLocation().begin.line);
             }

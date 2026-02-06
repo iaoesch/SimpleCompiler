@@ -292,6 +292,12 @@ class FunctionCallClass : public ValueClass {
     std::list<std::shared_ptr<StatementClass>> Assignements;
    // std::vector<Variables::VariableContentClass> StorageTemplate;
 
+protected:
+    std::shared_ptr<Variables::FunctionDefinitionBaseClass> getTheFunction() const
+    {
+        return TheFunction;
+    }
+
 public:
     FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionBaseClass> f, std::list<std::shared_ptr<StatementClass>> a, const LocationType &Loc) : ValueClass(Loc), TheFunction(f), Assignements(a) {}
     FunctionCallClass(const FunctionCallClass &f) = default;
@@ -308,11 +314,12 @@ public:
     const std::string &GetName() const {return TheFunction->GetName();}
   //  Variables::VariableContentClass &GetContentForOffset(uint32_t Offset);
 
+
 private:
     virtual const TypeDescriptorClass GetType() const override;
 
 protected:
-    Variables::VariableContentClass CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheFunction) const;
+    Variables::VariableContentClass CommonEvaluate(Environment &Env, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheCalledMethod, std::shared_ptr<Variables::FunctionDefinitionBaseClass> TheOverwrittenMethod = nullptr) const;
 };
 
 class MethodCallClass : public FunctionCallClass {
