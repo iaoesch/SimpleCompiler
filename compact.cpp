@@ -1178,13 +1178,19 @@ Variables::VariableContentClass InstanceConstructionClass::Evaluate(Environment 
         ThisStorage->SetValue(Instance);
         std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = TheClass->GetMethod(ConstructorName);
         if (TheMethod != nullptr) {
+            if (ParameterListLength == 0) {
+                throw INTERNAL_ERROR_OBJECT("Constructorcall without this... ");
+            }
             auto ConstructorResult = CommonEvaluate(Env, TheMethod);
             if (! ConstructorResult.Isempty()) {
                 throw RuntimeErrorClass("Method '" + ConstructorName + "' for class '" + TheClass->GetName() + "' is not allowed to return something, but it does", GetLocation().begin.line);
             }
          } else {
-            throw RuntimeErrorClass("Method '" + ConstructorName + "' for class '" + TheClass->GetName() + "' not found", GetLocation().begin.line);
-        }
+            if (ParameterListLength != 0) {
+               throw RuntimeErrorClass("Method '" + ConstructorName + "' for class '" + TheClass->GetName() + "' not found", GetLocation().begin.line);
+
+            }
+         }
 
         return Variables::VariableContentClass(Instance);
     } else {

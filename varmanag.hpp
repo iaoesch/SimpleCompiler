@@ -181,7 +181,7 @@ private:
         LocalStorageType &LocalClassAttributeStorageTemplates;
         LocalStorageType &LocalAttrubiteStorageTemplates;
         ObjectMemberVariableType &LocalVariableTemplates;
-        std::shared_ptr<Variables::ClassClass> LocalsParent;
+        std::shared_ptr<const Variables::ClassClass> LocalsParent;
     };
 
     // Some shortcuts for easier use

@@ -636,14 +636,15 @@ primary:
 | "(" exp ")"   { std::swap ($$, $2); }
 | functioncall  { $$ = $1;}
 | sendmessage   { $$ = $1;}
-| "new" "identifier"  { $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);}
-| "new" "identifier" "with" "[" messageparameterlist "]" {
-      $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);
-      drv.Currentfunction.BeginMethodCallForObject($2, @$);
-      drv.Currentfunction.SetCalledMethodForObject("OnConstruct", @$);
-      drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($5), @5);
-      drv.Currentfunction.FinishMethodCall(@$);
-    //  $$ = drv.CurrentClass.MakeTypeFromClassName($2);
+| "new" "identifier"
+      {
+         drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnConstruct", @2);
+         drv.Currentfunction.SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> >(), @$);
+         $$ = drv.Currentfunction.FinishConstructorMethodCall(@$);
+      }
+| "new" "identifier" {drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnConstruct", @2);} "with" "[" messageparameterlist "]" {
+      drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($6), @6);
+      $$ = drv.Currentfunction.FinishConstructorMethodCall(@$);
       }
 ;
 

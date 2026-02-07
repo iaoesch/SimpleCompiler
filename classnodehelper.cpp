@@ -107,6 +107,7 @@ std::unique_ptr<VariableTypeDescriptorClass> ClassNodeHelper::MakeTypeFromClassN
 
 std::shared_ptr<InstanceConstructionClass> ClassNodeHelper::MakeObjectFromClassName(std::string ClassName, const LocationType &l)
 {
+    throw(INTERNAL_ERROR_OBJECT("Not implemented and probably not used ever"));
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ClassName);
     if (Var == nullptr) {
         throw(SyntaxErrorClass("Class '" + ClassName + "' not fond"));
@@ -118,5 +119,5 @@ std::shared_ptr<InstanceConstructionClass> ClassNodeHelper::MakeObjectFromClassN
         throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
     }
     std::shared_ptr<Variables::ClassClass> TheClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
-    return std::make_shared<InstanceConstructionClass>(TheClass, l);
+   // return std::make_shared<InstanceConstructionClass>(TheClass, l);
 }

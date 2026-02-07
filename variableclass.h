@@ -143,7 +143,7 @@ class AttributeIndexVariableClass : public VariableClass
     const Variables::VariableContentClass MemberPtr;
 
 public:
-    AttributeIndexVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, std::shared_ptr<Variables::ClassClass> BoundClass_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), MemberPtr(Variables::MemberPointer(BoundClass_, Reference)) {}
+    AttributeIndexVariableClass(const std::string &Name_, const VariableTypeDescriptorClass &Type_, uint32_t Reference, std::shared_ptr<const Variables::ClassClass> BoundClass_, StorageClass Storage_) : VariableClass(Name_, Type_, Storage_), MemberPtr(Variables::MemberPointer(BoundClass_, Reference)) {}
     virtual ~AttributeIndexVariableClass() override {}
     virtual Variables::VariableContentClass const &GetValue() const override;
     virtual Variables::VariableContentClass const &GetInitialValue() const override;

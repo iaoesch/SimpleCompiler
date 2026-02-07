@@ -410,38 +410,54 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }
 
-void FunctionNodeHelper::BeginConstructorMethodCallForObject(std::shared_ptr< Variables::ClassClass> UsedClass, std::string MethodName, const LocationType &Loc)
+void FunctionNodeHelper::BeginConstructorMethodCallForObject(std::string ClassName, std::string MethodName, const LocationType &Loc)
 {
+    std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ClassName);
+    if (Var == nullptr) {
+        throw(SyntaxErrorClass("Class '" + ClassName + "' not fond"));
+    }
+    if (Var->Type() != TypeDescriptorClass::Type::Class) {
+        throw(SyntaxErrorClass("'" + ClassName + "' is not a class"));
+    }
+    if ( ! Var->GetValue().holds_alternative<std::shared_ptr<Variables::ClassClass>>()) {
+        throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
+    }
+    std::shared_ptr<Variables::ClassClass> UsedClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
+
     FunctionCallsPending.push_back(MethodCallInfoType{});
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = -1;
+
+
 
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject = std::make_shared<GlobalVariableClass>("$$this$$", VariableTypeDescriptorClass(ValueTypeDescriptor(ObjectReferenceDescriptorClass(UsedClass))), VariableClass::StorageClass::Global|VariableClass::StorageClass::RW);
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass = UsedClass;
 
     std::shared_ptr<Variables::MethodDefinitionClass> Method = UsedClass->GetMethod(MethodName);
     if (Method == nullptr) {
-        throw(yy::parser::syntax_error(Loc, "Function: Method not found in Class '" + UsedClass->GetName() + "' (or its parent(s)"));
-    }
-    std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
+         std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = nullptr;
+         std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = nullptr;
+    } else {
+        std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
 
-    // make assignement for this (first parameter)
-    std::shared_ptr<VariableClass> Thisreference = Method->GetParameterByIndex(0);
-    if (Thisreference == nullptr) {
-        throw INTERNAL_ERROR_OBJECT ("this pointer not found");
+        // make assignement for this (first parameter)
+        std::shared_ptr<VariableClass> Thisreference = Method->GetParameterByIndex(0);
+        if (Thisreference == nullptr) {
+            throw INTERNAL_ERROR_OBJECT ("this pointer not found");
+        }
+        if ( ! Thisreference->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
+            throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
+        }
+        // class D public B
+        // d->mb B is Base of d d is derived from B
+        // b->mb B is same as b
+        // d->md D is same as d
+        if (! UsedClass->IsSameOrDerivedFrom(*Thisreference->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass())) {
+            throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
+        }
+        auto ToAssign = std::make_shared<VariableValueClass>(Thisreference, Loc);
+        auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
+        std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
     }
-    if ( ! Thisreference->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
-        throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
-    }
-    // class D public B
-    // d->mb B is Base of d d is derived from B
-    // b->mb B is same as b
-    // d->md D is same as d
-    if (! UsedClass->IsSameOrDerivedFrom(*Thisreference->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass())) {
-        throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
-    }
-    auto ToAssign = std::make_shared<VariableValueClass>(Thisreference, Loc);
-    auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
-    std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }
 
 
@@ -450,8 +466,20 @@ void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::sh
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
     }
-    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
-    std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_front(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
+    if ((!Assignements.empty())
+        && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod != nullptr)
+        && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement != nullptr)) {
+       std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
+       std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_front(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
+    } else if (      Assignements.empty()
+                   && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod == nullptr)
+                   && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement == nullptr)) {
+        if ( ! std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.empty()) {
+            throw INTERNAL_ERROR_OBJECT ("No constructor to call, but assignements not empty");
+        }
+    } else {
+        throw INTERNAL_ERROR_OBJECT ("No assignements for Constructor oder Assignements but no constructor");
+    }
 }
 
 std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const LocationType &Loc)
@@ -469,7 +497,7 @@ std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const Lo
 
 }
 
-std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishConstructorMethodCall(const LocationType &Loc)
+std::shared_ptr<InstanceConstructionClass> FunctionNodeHelper::FinishConstructorMethodCall(const LocationType &Loc)
 {
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<FinishMethodCall()> Not inside functioncall"));

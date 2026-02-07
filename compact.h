@@ -352,10 +352,15 @@ public:
 class InstanceConstructionClass : public FunctionCallClass {
     std::shared_ptr<const Variables::ClassClass> TheClass;
     std::shared_ptr<VariableClass> ThisStorage;
+    size_t ParameterListLength;
     // std::vector<Variables::VariableContentClass> StorageTemplate;
 
 public:
-    InstanceConstructionClass(std::list<std::shared_ptr<StatementClass>> a, std::shared_ptr<VariableClass> ThisStorage_, std::shared_ptr<const Variables::ClassClass> C, const LocationType &Loc) : FunctionCallClass(nullptr, a, Loc), TheClass(C), ThisStorage(ThisStorage_) {}
+    InstanceConstructionClass(std::list<std::shared_ptr<StatementClass>> a, std::shared_ptr<VariableClass> ThisStorage_, std::shared_ptr<const Variables::ClassClass> C, const LocationType &Loc)
+        : FunctionCallClass(nullptr, a, Loc),
+          TheClass(C),
+          ThisStorage(ThisStorage_),
+          ParameterListLength(a.size())    {}
     InstanceConstructionClass(const InstanceConstructionClass &f) = default;
     virtual                  ~InstanceConstructionClass() override {}
     virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//Val->GetValue(); }

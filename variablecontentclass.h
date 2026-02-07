@@ -106,7 +106,9 @@ public:
     bool IsDerivedFrom(const ClassClass &s) const;
 
     //LocalStorageType FullObjectGetStorageTemplate();
+    const MemberStorageType &GetObjectStorageInitialValues() const {return ObjectStorageInitialValues;}
     MemberStorageType &GetObjectStorageInitialValues() {return ObjectStorageInitialValues;}
+    const ObjectMemberVariableType &GetObjectVariableReferences() const {return ObjectMemberReference;}
     ObjectMemberVariableType &GetObjectVariableReferences() {return ObjectMemberReference;}
     MemberStorageType &GetClassStorageTemplate() {return ClassStorageTemplate;}
     uint32_t GetClassStorageTemplateFirstOffset() {return StorageTemplateFirstOffset;}
@@ -128,7 +130,7 @@ public:
   //  MethodCallHelperClass GetMethodeReference(std::string Name);
 
     std::shared_ptr<VariableClass> GetParentVariableReference(std::string Name, ObjectClass *obj);
-    std::shared_ptr<ObjectClass> CreateInstance();
+    std::shared_ptr<ObjectClass> CreateInstance() const;
 
     std::shared_ptr<VariableContextClass> getContextForParsing() const {return ContextForParsing;}
     void setContextForParsing(const std::shared_ptr<VariableContextClass> &newContextForParsing)  {ContextForParsing = newContextForParsing;}
@@ -136,9 +138,9 @@ public:
 
 class MemberPointer {
     uint32_t Offset;
-    std::shared_ptr<ClassClass> MyClass;
+    std::shared_ptr<const ClassClass> MyClass;
 public:
-    MemberPointer(std::shared_ptr<ClassClass> MyClass_, uint32_t Offset_) : Offset(Offset_), MyClass(MyClass_) {}
+    MemberPointer(std::shared_ptr<const ClassClass> MyClass_, uint32_t Offset_) : Offset(Offset_), MyClass(MyClass_) {}
     uint32_t getOffset() const
     {
         return Offset;
@@ -149,7 +151,7 @@ public:
         // and we ignore inheritance
         return MyClass == OtherClass;
     }
-    void RejectIncompatible(std::shared_ptr<ClassClass> OtherClass) const
+    void RejectIncompatible(std::shared_ptr<const ClassClass> OtherClass) const
     {
         // Other must be known to us -> either our or derived from our class
         if ( ! OtherClass->IsSameOrDerivedFrom(*MyClass)) {
@@ -169,11 +171,11 @@ class ObjectClass {
     //typedef std::map<std::shared_ptr<ClassClass>, ObjectDataType> AttributeType;
     //AttributeType Attributes;
     LocalStorageType AttributeStorage;
-    std::shared_ptr<ClassClass> MyClass;
+    std::shared_ptr<const ClassClass> MyClass;
     //std::vector<AttributeType::iterator> MyCurrentAttributeSet;
     //ObjectClass *Parent;
 public:
-    ObjectClass(std::shared_ptr<ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
+    ObjectClass(std::shared_ptr<const ClassClass> MyClass_) : AttributeStorage(MyClass_->GetObjectStorageInitialValues()), MyClass(MyClass_) {}
 public:
     ObjectClass(const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();} // = default;
     ObjectClass &operator = (const ObjectClass &s){ (void)s; SIGNAL_UNIMPLEMENTED();}
@@ -254,7 +256,7 @@ public:
 
 };
 
-inline std::shared_ptr<ObjectClass> ClassClass::CreateInstance()
+inline std::shared_ptr<ObjectClass> ClassClass::CreateInstance() const
 {
     return std::make_shared<ObjectClass>(shared_from_this());
 }

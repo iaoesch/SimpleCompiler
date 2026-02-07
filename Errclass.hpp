@@ -144,7 +144,7 @@ private:
 
     // Methods
 public:
-    RuntimeErrorClass(std::string const &aWhat, int Line) : Message(aWhat) {}
+    RuntimeErrorClass(std::string const &aWhat, int Line) : Message(aWhat) {(void)Line;}
     virtual ~RuntimeErrorClass(void) override {}
     virtual std::unique_ptr<ErrorBaseClass> clone() const override {return std::make_unique<std::remove_cv_t<std::remove_reference_t<decltype(*this)>>>(*this);}
 

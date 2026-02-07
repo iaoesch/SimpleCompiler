@@ -61,10 +61,10 @@ class ObjectReferenceDescriptorClass;
 // to ObjectReferenceDescriptorClass...
 namespace HideOldImplementation {
 class ObjectDescriptorClass  {
-    std::shared_ptr<Variables::ClassClass> MyClass;
+    std::shared_ptr<const Variables::ClassClass> MyClass;
 
 public:
-    ObjectDescriptorClass(std::shared_ptr<Variables::ClassClass> MyClass_) : MyClass(MyClass_) {}
+    ObjectDescriptorClass(std::shared_ptr<const Variables::ClassClass> MyClass_) : MyClass(MyClass_) {}
     ObjectDescriptorClass(const ObjectDescriptorClass &s) = default;
     ObjectDescriptorClass &operator=(const ObjectDescriptorClass &s) = default;
     bool operator ==(const ObjectReferenceDescriptorClass &s) const = delete;
