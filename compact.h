@@ -335,20 +335,33 @@ class MethodCallClass : public FunctionCallClass {
 
 };
 
+class ReferedMethodCallClass : public FunctionCallClass {
 
-class InstanceClass : public ValueClass {
-    std::shared_ptr<Variables::ClassClass> TheClass;
-    //std::list<std::shared_ptr<StatementClass>> Assignements;
+    std::shared_ptr<ExpressionClass> ThisPointer;
+
+public:
+    ReferedMethodCallClass(std::shared_ptr<Variables::MethodDefinitionClass> m, std::list<std::shared_ptr<StatementClass>> a, std::shared_ptr<ExpressionClass> ThisPointer_, const LocationType &Loc) : FunctionCallClass(m, a, Loc), ThisPointer(ThisPointer_) {}
+    ReferedMethodCallClass(const ReferedMethodCallClass &f) = default;
+    virtual                  ~ReferedMethodCallClass() override {}
+
+    virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;
+
+};
+
+
+class InstanceConstructionClass : public FunctionCallClass {
+    std::shared_ptr<const Variables::ClassClass> TheClass;
+    std::shared_ptr<VariableClass> ThisStorage;
     // std::vector<Variables::VariableContentClass> StorageTemplate;
 
 public:
-    InstanceClass(std::shared_ptr<Variables::ClassClass> C, const LocationType &Loc) : ValueClass(Loc), TheClass(C) {}
-    InstanceClass(const InstanceClass &f) = default;
-    virtual                  ~InstanceClass() override {}
+    InstanceConstructionClass(std::list<std::shared_ptr<StatementClass>> a, std::shared_ptr<VariableClass> ThisStorage_, std::shared_ptr<const Variables::ClassClass> C, const LocationType &Loc) : FunctionCallClass(nullptr, a, Loc), TheClass(C), ThisStorage(ThisStorage_) {}
+    InstanceConstructionClass(const InstanceConstructionClass &f) = default;
+    virtual                  ~InstanceConstructionClass() override {}
     virtual Variables::VariableContentClass  Evaluate(Environment &Env) const override;//Val->GetValue(); }
     virtual std::shared_ptr<ExpressionClass> Derive(VariableReferenceType ToDerive) const override { if (ToDerive == ToDerive) {return std::make_shared<ConstantClass>(1.0, GetLocation());} else {return std::make_shared<ConstantClass>(0.0, GetLocation());}}
     virtual void              Print(std::ostream &s) const override;
-    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<InstanceClass>(*this); }
+    virtual std::shared_ptr<ExpressionClass> Clone() const override { return std::make_shared<InstanceConstructionClass>(*this); }
     virtual std::shared_ptr<ExpressionClass> Optimize(Environment &Env) override { (void)Env; return shared_from_this(); }
     virtual bool              IsConstant() override {return false;}
     virtual bool              IsSame(std::shared_ptr<ExpressionClass>Other) override;// = 0;

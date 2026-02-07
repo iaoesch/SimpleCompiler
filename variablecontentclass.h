@@ -871,6 +871,7 @@ public:
 
     VariableContentClass Execute(Environment &Env) const override;// = 0;
     VariableContentClass const &GetThis() const {return GetVariableContentForOffset(0);}
+    void SetThis(VariableContentClass const &NewThis) {return SetVariableContentForOffset(0, NewThis);}
 };
 
 class Callable {

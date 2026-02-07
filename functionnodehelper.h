@@ -115,8 +115,10 @@ public:
     std::map<std::string, std::list<std::shared_ptr<StatementClass>>> const &GetListOfDefinedFunctions() const {return KnownFunctions;}
     void BeginMethodCallForObject(std::string ObjectName, const LocationType &Loc);
     void SetCalledMethodForObject(std::string ObjectName, const LocationType &Loc);
+    void BeginConstructorMethodCallForObject(std::shared_ptr<Variables::ClassClass> UsedClass, std::string MethodName, const LocationType &Loc);
     void SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> > &&Assignements, const LocationType &Loc);
     std::shared_ptr<FunctionCallClass> FinishMethodCall(const LocationType &Loc);
+    std::shared_ptr<FunctionCallClass> FinishConstructorMethodCall(const LocationType &Loc);
     std::shared_ptr<VariableClass> AddParameter(std::string Name, const VariableTypeDescriptorClass &Type, const LocationType &Loc);
 private:
     std::string GetQualifiedName();

@@ -1122,6 +1122,30 @@ Variables::VariableContentClass MethodCallClass::Evaluate(Environment &Env) cons
     }
 }
 
+
+Variables::VariableContentClass ReferedMethodCallClass::Evaluate(Environment &Env) const
+{
+    if (Env.DoEvaluateFunctions) {
+        Variables::VariableContentClass ThisReference = ThisPointer->Evaluate(Env);
+        if (ThisReference.holds_alternative<Variables::ObjectReference>()) {
+            std::shared_ptr<const Variables::ClassClass> Class = ThisReference.GetValue<Variables::ObjectReference>()->GetTypeDescriptor().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass();
+            if (Class == nullptr) {
+                throw INTERNAL_ERROR_OBJECT("Objecdescriptor has no class");
+            }
+            std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = Class->GetMethod(GetName());
+            if (TheMethod != nullptr) {
+                return CommonEvaluate(Env, TheMethod, getTheFunction());
+            } else {
+                throw RuntimeErrorClass("Method '" + GetName() + "' for class '" + Class->GetName() + "' not found", GetLocation().begin.line);
+            }
+        } else {
+            throw RuntimeErrorClass("Calling method for something not an object", GetLocation().begin.line);
+        }
+    } else {
+        return Variables::VariableContentClass::MakeUndefined();
+    }
+}
+
 void FunctionCallClass::Print(std::ostream &s) const { TheFunction->Print(s); }
 
 bool FunctionCallClass::IsSame(std::shared_ptr<ExpressionClass> Other)
@@ -1146,24 +1170,37 @@ const TypeDescriptorClass FunctionCallClass::GetType() const
 }
 
 
-Variables::VariableContentClass InstanceClass::Evaluate(Environment &Env) const
+Variables::VariableContentClass InstanceConstructionClass::Evaluate(Environment &Env) const
 {
+    static const std::string ConstructorName = "OnCreate";
     if (Env.DoEvaluateFunctions) {
-        return Variables::VariableContentClass((TheClass->CreateInstance()));
+        std::shared_ptr<Variables::ObjectClass> Instance = TheClass->CreateInstance();
+        ThisStorage->SetValue(Instance);
+        std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = TheClass->GetMethod(ConstructorName);
+        if (TheMethod != nullptr) {
+            auto ConstructorResult = CommonEvaluate(Env, TheMethod);
+            if (! ConstructorResult.Isempty()) {
+                throw RuntimeErrorClass("Method '" + ConstructorName + "' for class '" + TheClass->GetName() + "' is not allowed to return something, but it does", GetLocation().begin.line);
+            }
+         } else {
+            throw RuntimeErrorClass("Method '" + ConstructorName + "' for class '" + TheClass->GetName() + "' not found", GetLocation().begin.line);
+        }
+
+        return Variables::VariableContentClass(Instance);
     } else {
         return Variables::VariableContentClass::MakeUndefined();
     }
 }
 
-void InstanceClass::Print(std::ostream &s) const { s << TheClass->GetName(); }
+void InstanceConstructionClass::Print(std::ostream &s) const { s << TheClass->GetName(); }
 
-bool InstanceClass::IsSame(std::shared_ptr<ExpressionClass> Other)
+bool InstanceConstructionClass::IsSame(std::shared_ptr<ExpressionClass> Other)
 {
     (void)Other;
     return false;
 }
 
-void InstanceClass::DrawNode(std::ostream &s, int MyNodeNumber) const
+void InstanceConstructionClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 {
     //int NodeNumber1 = NodeNumber++;
     s << "Node" << MyNodeNumber << "[label = \"<f0> |<f1> Instance of " << TheClass->GetName() << " |<f2> \"];" << endl;
@@ -1173,7 +1210,7 @@ void InstanceClass::DrawNode(std::ostream &s, int MyNodeNumber) const
 
 }
 
-const TypeDescriptorClass InstanceClass::GetType() const
+const TypeDescriptorClass InstanceConstructionClass::GetType() const
 {
     return VariableTypeDescriptorClass(ObjectReferenceDescriptorClass(TheClass));
 }

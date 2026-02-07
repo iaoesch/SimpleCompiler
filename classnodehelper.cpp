@@ -105,7 +105,7 @@ std::unique_ptr<VariableTypeDescriptorClass> ClassNodeHelper::MakeTypeFromClassN
     return std::make_unique<VariableTypeDescriptorClass>(ObjectReferenceDescriptorClass(TheClass));
 }
 
-std::shared_ptr<InstanceClass> ClassNodeHelper::MakeObjectFromClassName(std::string ClassName, const LocationType &l)
+std::shared_ptr<InstanceConstructionClass> ClassNodeHelper::MakeObjectFromClassName(std::string ClassName, const LocationType &l)
 {
     std::shared_ptr<VariableClass> Var = Variables.GetVariableReference(ClassName);
     if (Var == nullptr) {
@@ -118,5 +118,5 @@ std::shared_ptr<InstanceClass> ClassNodeHelper::MakeObjectFromClassName(std::str
         throw(SyntaxErrorClass("'" + ClassName + "' refers not to a class"));
     }
     std::shared_ptr<Variables::ClassClass> TheClass = Var->GetValue().GetValue<std::shared_ptr<Variables::ClassClass>>();
-    return std::make_shared<InstanceClass>(TheClass, l);
+    return std::make_shared<InstanceConstructionClass>(TheClass, l);
 }

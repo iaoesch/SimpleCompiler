@@ -637,6 +637,14 @@ primary:
 | functioncall  { $$ = $1;}
 | sendmessage   { $$ = $1;}
 | "new" "identifier"  { $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);}
+| "new" "identifier" "with" "[" messageparameterlist "]" {
+      $$ = drv.CurrentClass.MakeObjectFromClassName($2, @2);
+      drv.Currentfunction.BeginMethodCallForObject($2, @$);
+      drv.Currentfunction.SetCalledMethodForObject("OnConstruct", @$);
+      drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($5), @5);
+      drv.Currentfunction.FinishMethodCall(@$);
+    //  $$ = drv.CurrentClass.MakeTypeFromClassName($2);
+      }
 ;
 
 

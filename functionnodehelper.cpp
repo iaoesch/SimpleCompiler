@@ -410,6 +410,41 @@ void FunctionNodeHelper::SetCalledMethodForObject(std::string MethodName, const 
     std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
 }
 
+void FunctionNodeHelper::BeginConstructorMethodCallForObject(std::shared_ptr< Variables::ClassClass> UsedClass, std::string MethodName, const LocationType &Loc)
+{
+    FunctionCallsPending.push_back(MethodCallInfoType{});
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).NextPositionalParameter = -1;
+
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject = std::make_shared<GlobalVariableClass>("$$this$$", VariableTypeDescriptorClass(ValueTypeDescriptor(ObjectReferenceDescriptorClass(UsedClass))), VariableClass::StorageClass::Global|VariableClass::StorageClass::RW);
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass = UsedClass;
+
+    std::shared_ptr<Variables::MethodDefinitionClass> Method = UsedClass->GetMethod(MethodName);
+    if (Method == nullptr) {
+        throw(yy::parser::syntax_error(Loc, "Function: Method not found in Class '" + UsedClass->GetName() + "' (or its parent(s)"));
+    }
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod = Method;
+
+    // make assignement for this (first parameter)
+    std::shared_ptr<VariableClass> Thisreference = Method->GetParameterByIndex(0);
+    if (Thisreference == nullptr) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer not found");
+    }
+    if ( ! Thisreference->Type().IsKindOf(TypeDescriptorClass::Type::ObjectReference)) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer not found, wrong type for first parameter");
+    }
+    // class D public B
+    // d->mb B is Base of d d is derived from B
+    // b->mb B is same as b
+    // d->md D is same as d
+    if (! UsedClass->IsSameOrDerivedFrom(*Thisreference->Type().GetTypeDetails<ObjectReferenceDescriptorClass>().GetClass())) {
+        throw INTERNAL_ERROR_OBJECT ("this pointer for wrong class");
+    }
+    auto ToAssign = std::make_shared<VariableValueClass>(Thisreference, Loc);
+    auto Assignee = std::make_shared<VariableValueClass>(std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject, Loc);
+    std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement = std::make_shared<AssignementClass>(Assignee, ToAssign, Loc);
+}
+
+
 void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> > &&Assignements, const LocationType &Loc)
 {
     if (FunctionCallsPending.empty()) {
@@ -426,11 +461,6 @@ std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const Lo
     }
     //FunctionCallClass(std::shared_ptr<Variables::FunctionDefinitionBaseClass> f, std::list<std::shared_ptr<StatementClass>> a, const LocationType &Loc) : ValueClass(Loc), TheFunction(f), Assignements(a) {}
 
-    FunctionCallClass f(
-        std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod,
-        std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
-        Loc);
-
     return std::make_shared<MethodCallClass>(
                std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod,
                std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
@@ -438,6 +468,21 @@ std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishMethodCall(const Lo
                Loc);
 
 }
+
+std::shared_ptr<FunctionCallClass> FunctionNodeHelper::FinishConstructorMethodCall(const LocationType &Loc)
+{
+    if (FunctionCallsPending.empty()) {
+        throw(INTERNAL_ERROR_OBJECT("<FinishMethodCall()> Not inside functioncall"));
+    }
+
+    return std::make_shared<InstanceConstructionClass>(
+                                std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements,
+                                std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedObject,
+                                std::get<MethodCallInfoType>(FunctionCallsPending.back()).UsedClass,
+                                Loc);
+
+}
+
 void FunctionNodeHelper::StartCodeDefinition() {
     if (FunctionsDefinitonsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<GetReference()> Not inside function"));

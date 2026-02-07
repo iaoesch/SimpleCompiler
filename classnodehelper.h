@@ -16,7 +16,7 @@ class StatementClass;
 class ReferementClass;
 class AssignementClass;
 class VariableContextClass;
-class InstanceClass;
+class InstanceConstructionClass;
 
 namespace Variables {
 
@@ -68,7 +68,8 @@ public:
 
     std::unique_ptr<VariableTypeDescriptorClass> MakeTypeFromClassName(std::string ClassName);
 
-    std::shared_ptr<InstanceClass> MakeObjectFromClassName(std::string ClassName, const LocationType &l);
+    std::shared_ptr<InstanceConstructionClass> MakeObjectFromClassName(std::string ClassName, const LocationType &l);
+   // std::shared_ptr<InstanceClass> MakeObjectFromClassName(std::string ClassName, const LocationType &l);
 };
 
 #endif // CLASSNODEHELPER_H
