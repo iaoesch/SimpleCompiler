@@ -466,8 +466,7 @@ void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::sh
     if (FunctionCallsPending.empty()) {
         throw(INTERNAL_ERROR_OBJECT("<SetCalledMethodForObject()> Not inside functioncall"));
     }
-    if ((!Assignements.empty())
-        && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod != nullptr)
+    if (   (std::get<MethodCallInfoType>(FunctionCallsPending.back()).CurrentMethod != nullptr)
         && (std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement != nullptr)) {
        std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements = std::move(Assignements);
        std::get<MethodCallInfoType>(FunctionCallsPending.back()).Assignements.push_front(std::get<MethodCallInfoType>(FunctionCallsPending.back()).ThisAssignement);
@@ -478,7 +477,11 @@ void FunctionNodeHelper::SetParameterAssignListForCalledMethod(std::list<std::sh
             throw INTERNAL_ERROR_OBJECT ("No constructor to call, but assignements not empty");
         }
     } else {
-        throw INTERNAL_ERROR_OBJECT ("No assignements for Constructor oder Assignements but no constructor");
+        if (Assignements.empty()) {
+            throw INTERNAL_ERROR_OBJECT ("No assignements for Constructor");
+        } else {
+            throw INTERNAL_ERROR_OBJECT ("Assignements but no constructor");
+        }
     }
 }
 

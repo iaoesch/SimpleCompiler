@@ -93,6 +93,8 @@ blank [ \t]
 
 "method"      return yy::parser::make_METHOD (loc);
 "taking"      return yy::parser::make_TAKING (loc);
+"nothing"      return yy::parser::make_NOTHING (loc);
+
   /*"returning"      return yy::parser::make_RETURNING (loc); */
   /*"of"      return yy::parser::make_OF (loc); */
 "endmethod"      return yy::parser::make_ENDMETHOD (loc);

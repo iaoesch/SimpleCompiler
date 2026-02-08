@@ -566,6 +566,84 @@ void TestClass::BuildAllTests()
     Unexpected.push_back("w");
 
     TestVector.push_back({"object overwritten method call using this", Code, Expected, Unexpected, NoException});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method TestMethod taking a,b returning integer of class TestClass:\n"
+           "x := a + b;\n"
+           "returning w;\n"
+           "endmethod\n"
+           "method OnCreate taking a of class TestClass:\n"
+           "w := a;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass with [a:=55];\n"
+           "print(o);\n"
+           "z := tell o to TestMethod with [a:=7, b:=11];"
+           "print(z);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["z"] = MakeVariable("z", 55LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object constructor method call", Code, Expected, Unexpected, NoException});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method TestMethod taking a,b returning integer of class TestClass:\n"
+           "x := a + b;\n"
+           "returning w;\n"
+           "endmethod\n"
+           "method OnCreate taking a of class TestClass:\n"
+           "print(\"in Costructor\", a);"
+           "w := a;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to TestMethod with [a:=7, b:=11];"
+           "print(z);\n"
+        ;
+
+    Expected.clear();
+    Unexpected.clear();
+    TestVector.push_back({"object has parametrized constructor but no parameters on construction", Code, Expected, Unexpected, RuntimeException});
+
+    Code = "class TestClass \n"
+           "w as integer; \n"
+           "endclass; \n"
+           "method TestMethod taking a,b returning integer of class TestClass:\n"
+           "x := a + b;\n"
+           "returning w;\n"
+           "endmethod\n"
+           "method OnCreate taking nothing of class TestClass:\n"
+           "w := 79;\n"
+           "endmethod\n"
+           "o as TestClass;\n"
+           "o := new TestClass;\n"
+           "print(o);\n"
+           "z := tell o to TestMethod with [a:=7, b:=11];"
+           "print(z);\n"
+        ;
+
+    Expected.clear();
+    Expected["TestClass"] = MakeVariable("a", std::vector<Variables::VariableContentClass>{Variables::VariableContentClass::MakeEmpty(ValueTypeDescriptorClass(TypeDescriptorClass::Type::Integer))});
+    Expected["z"] = MakeVariable("z", 79LL);
+    Unexpected.clear();
+    Unexpected.push_back("a");
+    Unexpected.push_back("b");
+    Unexpected.push_back("x");
+    Unexpected.push_back("w");
+
+    TestVector.push_back({"object argumentless constructor method call", Code, Expected, Unexpected, NoException});
 }
 
 std::vector<std::string> TestClass::DoAllTests()

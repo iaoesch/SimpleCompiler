@@ -107,6 +107,7 @@
   ON      "on"
   METHOD "method"
   TAKING "taking"
+  NOTHING "nothing"
   ENDMETHOD "endmethod"
   NEW "new"
 
@@ -555,6 +556,11 @@ returntype.opt:
 ;
 
 argumentlist:
+  "nothing"            {}
+| nonemptyargumentlist {}
+;
+
+nonemptyargumentlist:
   "identifier"           {drv.Currentfunction.AddParameter($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @1);}
 | argumentlist "," "identifier" {drv.Currentfunction.AddParameter($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @3);}
 ;
@@ -638,11 +644,11 @@ primary:
 | sendmessage   { $$ = $1;}
 | "new" "identifier"
       {
-         drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnConstruct", @2);
+         drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnCreate", @2);
          drv.Currentfunction.SetParameterAssignListForCalledMethod(std::list<std::shared_ptr<StatementClass> >(), @$);
          $$ = drv.Currentfunction.FinishConstructorMethodCall(@$);
       }
-| "new" "identifier" {drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnConstruct", @2);} "with" "[" messageparameterlist "]" {
+| "new" "identifier" {drv.Currentfunction.BeginConstructorMethodCallForObject($2, "OnCreate", @2);} "with" "[" messageparameterlist "]" {
       drv.Currentfunction.SetParameterAssignListForCalledMethod(std::move($6), @6);
       $$ = drv.Currentfunction.FinishConstructorMethodCall(@$);
       }
