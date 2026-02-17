@@ -93,6 +93,8 @@ blank [ \t]
 
 "method"      return yy::parser::make_METHOD (loc);
 "taking"      return yy::parser::make_TAKING (loc);
+"passing"      return yy::parser::make_PASSING (loc);
+"parent"       return yy::parser::make_PARENT (loc);
 "nothing"      return yy::parser::make_NOTHING (loc);
 
   /*"returning"      return yy::parser::make_RETURNING (loc); */

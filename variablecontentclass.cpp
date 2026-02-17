@@ -1199,6 +1199,16 @@ ClassClass::GetMethod(std::string Name) const {
     }
 }
 
+std::shared_ptr<MethodDefinitionClass>
+ClassClass::GetMethodForThisClassOnly(std::string Name) const {
+    auto it = Methodes.find(Name);
+    if (it != Methodes.end()) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
+}
+
 void ClassClass::AddMethod(std::string Name, std::shared_ptr<MethodDefinitionClass> Method)
 {
     if (Method == nullptr) {

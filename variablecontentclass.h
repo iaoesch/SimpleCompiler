@@ -117,6 +117,8 @@ public:
     uint32_t GetStorageTemplateSize(){return GetStorageTemplateFirstOffset() + GetObjectVariableReferences().size();}
 
     std::shared_ptr<MethodDefinitionClass> GetMethod(std::string Name) const;
+    std::shared_ptr<MethodDefinitionClass> GetMethodForThisClassOnly(std::string Name) const;
+
     void AddMethod(std::string Name, std::shared_ptr<MethodDefinitionClass> Method);
 
     VariableContentClass const &GetInitialVariableContentForOffset(uint32_t Offset) const

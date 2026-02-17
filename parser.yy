@@ -107,6 +107,8 @@
   ON      "on"
   METHOD "method"
   TAKING "taking"
+  PASSING "passing"
+  PARENT "parent"
   NOTHING "nothing"
   ENDMETHOD "endmethod"
   NEW "new"
@@ -478,7 +480,7 @@ methodedefinition:
    returntype.opt
    "of"
    "class"
-   "identifier" ":" {
+   "identifier" baseclassinit.opt ":" {
                        drv.Currentfunction.SetReturnType(std::move($6));
                        //drv.Currentfunction.Set($5, @5);
                        drv.Currentfunction.EndParameterDefinition();
@@ -487,10 +489,25 @@ methodedefinition:
                     }
    statements
    "endmethod"      {
-                       drv.Currentfunction.Set($12, @12);
+                       drv.Currentfunction.Set($13, @13);
                        drv.Currentfunction.EndCodeDefinition();
                        drv.Currentfunction.EndMethodDefinition(@$);
                     }
+;
+
+baseclassinit.opt:
+   %empty
+|  "passing" "[" messageparameterlist "]" "to" "parent"
+|  "passing" baseclassinitlist
+;
+
+baseclassinitlist:
+   namedbaseclassinit
+|  baseclassinitlist "," namedbaseclassinit
+;
+
+namedbaseclassinit:
+  "[" messageparameterlist "]" "to" "identifier"
 ;
 
 Anonymeousfunctiondefinition:
@@ -562,7 +579,7 @@ argumentlist:
 
 nonemptyargumentlist:
   "identifier"           {drv.Currentfunction.AddParameter($1, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @1);}
-| argumentlist "," "identifier" {drv.Currentfunction.AddParameter($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @3);}
+| nonemptyargumentlist "," "identifier" {drv.Currentfunction.AddParameter($3, VariableTypeDescriptorClass(TypeDescriptorClass::Type::Dynamic), @3);}
 ;
 
 %left or;

@@ -1176,7 +1176,8 @@ Variables::VariableContentClass InstanceConstructionClass::Evaluate(Environment 
     if (Env.DoEvaluateFunctions) {
         std::shared_ptr<Variables::ObjectClass> Instance = TheClass->CreateInstance();
         ThisStorage->SetValue(Instance);
-        std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = TheClass->GetMethod(ConstructorName);
+
+        std::shared_ptr<Variables::MethodDefinitionClass> TheMethod = TheClass->GetMethodForThisClassOnly(ConstructorName);
         if (TheMethod != nullptr) {
             if (ParameterListLength == 0) {
                 throw INTERNAL_ERROR_OBJECT("Constructorcall without this... ");
